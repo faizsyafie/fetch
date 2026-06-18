@@ -1,0 +1,197 @@
+import Parser from "rss-parser";
+import { subDays, isAfter, parseISO, isValid } from "date-fns";
+import type { Company, NewsArticle, NewsSource, TimeFrameDays } from "./types";
+
+const parser = new Parser({
+  timeout: 15000,
+  headers: {
+    "User-Agent":
+      "CreditNewsAnalyst/1.0 (RSS reader for credit research; +https://github.com)",
+    Accept: "application/rss+xml, application/xml, text/xml",
+  },
+});
+
+function parseArticleDate(value?: string): Date | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (isValid(parsed)) return parsed;
+  const iso = parseISO(value);
+  return isValid(iso) ? iso : null;
+}
+
+function buildGoogleNewsUrl(
+  query: string,
+  days: TimeFrameDays,
+  domain?: string
+): string {
+  const whenClause = days <= 1 ? "when:1d" : `when:${days}d`;
+  const domainClause = domain ? ` site:${domain}` : "";
+  const encoded = encodeURIComponent(`${query} ${whenClause}${domainClause}`);
+  return `https://news.google.com/rss/search?q=${encoded}&hl=en-US&gl=US&ceid=US:en`;
+}
+
+function companyMatches(text: string, company: Company): boolean {
+  const haystack = text.toLowerCase();
+  const name = company.name.toLowerCase();
+  if (haystack.includes(name)) return true;
+  if (company.ticker && haystack.includes(company.ticker.toLowerCase())) {
+    return true;
+  }
+  return false;
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/\s*-\s*[^-]+$/i, "")
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function articleId(link: string, companyId: string, sourceId: string): string {
+  return `${sourceId}-${companyId}-${Buffer.from(link).toString("base64url").slice(0, 24)}`;
+}
+
+async function fetchFeed(url: string) {
+  try {
+    return await parser.parseURL(url);
+  } catch {
+    return null;
+  }
+}
+
+function mapFeedItem(
+  item: Parser.Item,
+  company: Company,
+  source: NewsSource,
+  cutoff: Date
+): NewsArticle | null {
+  const pubDate = parseArticleDate(item.isoDate || item.pubDate);
+  if (!pubDate || !isAfter(pubDate, cutoff)) return null;
+
+  const title = item.title?.trim() ?? "Untitled";
+  const summary = stripHtml(item.contentSnippet || item.content || "");
+  const link = item.link?.trim() ?? "";
+
+  if (!link) return null;
+  if (!companyMatches(`${title} ${summary}`, company)) return null;
+
+  return {
+    id: articleId(link, company.id, source.id),
+    title,
+    link,
+    pubDate: pubDate.toISOString(),
+    summary: summary.slice(0, 400),
+    source: source.name,
+    sourceId: source.id,
+    company: company.name,
+    companyId: company.id,
+  };
+}
+
+async function fetchCompanySourceArticles(
+  company: Company,
+  source: NewsSource,
+  days: TimeFrameDays,
+  cutoff: Date
+): Promise<{ articles: NewsArticle[]; errors: string[] }> {
+  const articles: NewsArticle[] = [];
+  const errors: string[] = [];
+
+  const googleUrl = buildGoogleNewsUrl(company.name, days, source.domain);
+  const googleFeed = await fetchFeed(googleUrl);
+
+  if (googleFeed?.items?.length) {
+    for (const item of googleFeed.items) {
+      const article = mapFeedItem(item, company, source, cutoff);
+      if (article) articles.push(article);
+    }
+  } else if (source.feedUrls.length === 0) {
+    errors.push(
+      `No articles returned for ${company.name} on ${source.name} (Google News).`
+    );
+  }
+
+  for (const feedUrl of source.feedUrls) {
+    const feed = await fetchFeed(feedUrl);
+    if (!feed?.items?.length) {
+      errors.push(`Could not load feed: ${feedUrl}`);
+      continue;
+    }
+
+    for (const item of feed.items) {
+      const article = mapFeedItem(item, company, source, cutoff);
+      if (article) articles.push(article);
+    }
+  }
+
+  return { articles, errors };
+}
+
+export async function fetchNewsForWatchlist(
+  companies: Company[],
+  sources: NewsSource[],
+  days: TimeFrameDays
+): Promise<{ articles: NewsArticle[]; errors: string[] }> {
+  const enabledSources = sources.filter((s) => s.enabled);
+  const cutoff = subDays(new Date(), days);
+  const allArticles: NewsArticle[] = [];
+  const errors: string[] = [];
+
+  if (companies.length === 0) {
+    return { articles: [], errors: ["Add at least one company to your watchlist."] };
+  }
+
+  if (enabledSources.length === 0) {
+    return { articles: [], errors: ["Enable at least one news source."] };
+  }
+
+  const tasks = companies.flatMap((company) =>
+    enabledSources.map(async (source) => {
+      const result = await fetchCompanySourceArticles(
+        company,
+        source,
+        days,
+        cutoff
+      );
+      return result;
+    })
+  );
+
+  const results = await Promise.all(tasks);
+
+  for (const result of results) {
+    allArticles.push(...result.articles);
+    errors.push(...result.errors);
+  }
+
+  const unique = new Map<string, NewsArticle>();
+  for (const article of allArticles) {
+    const key = `${article.companyId}:${normalizeTitle(article.title)}`;
+    const existing = unique.get(key);
+    if (!existing) {
+      unique.set(key, article);
+      continue;
+    }
+    if (
+      existing.link.includes("news.google.com") &&
+      !article.link.includes("news.google.com")
+    ) {
+      unique.set(key, article);
+    }
+  }
+
+  const sorted = Array.from(unique.values()).sort(
+    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+  );
+
+  return { articles: sorted, errors: [...new Set(errors)] };
+}

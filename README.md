@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Credit News Analyst
 
-## Getting Started
+A credit analyst dashboard for monitoring company-specific news from public RSS feeds. Build a custom watchlist by industry, choose sources and time windows, and review aggregated headlines in one place.
 
-First, run the development server:
+## Features
+
+- **Industry watchlists** — Consumer, Energy, Information Technology, and Communications
+- **Custom company lists** — Add or remove companies; load sample names per sector
+- **Configurable sources** — Bloomberg (official RSS), Reuters and The Edge Singapore (via Google News RSS), plus custom domains and direct feed URLs
+- **Time frame filters** — Last 1, 3, 10, 15, or 30 days
+- **Persistent preferences** — Watchlist and source settings saved in the browser
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Select industries and add companies to the sidebar watchlist.
+2. Enable or customize news sources (Bloomberg, Reuters, The Edge Singapore, or your own).
+3. Pick a time frame and click **Fetch news**.
+4. The app queries Google News RSS (company + source domain) and Bloomberg direct feeds, then filters articles by company name, ticker, and publication date.
 
-## Learn More
+## Tech stack
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- rss-parser
+- date-fns
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Reuters and The Edge Singapore do not expose stable public RSS feeds; the app uses Google News RSS as a proxy filtered by domain.
+- Bloomberg category feeds are scanned and matched against your watchlist keywords.
+- Some publishers limit full article text in RSS summaries; headlines link out to the original source.
