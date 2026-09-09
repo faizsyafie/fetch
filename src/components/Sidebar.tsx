@@ -169,6 +169,7 @@ export function Sidebar({
   const [dragOverIndustry, setDragOverIndustry] = useState<Industry | null>(
     null
   );
+  const [sourcesListExpanded, setSourcesListExpanded] = useState(true);
   const resizeState = useRef<{ startX: number; startWidth: number } | null>(
     null
   );
@@ -607,20 +608,33 @@ export function Sidebar({
               🔗 Edit Sources
             </button>
 
-            <p className="mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
-              Sources
-            </p>
-            <div className="space-y-1">
-              {enabledSources.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
-                >
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                  <span className="truncate">{s.name}</span>
-                </div>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => setSourcesListExpanded((v) => !v)}
+              aria-expanded={sourcesListExpanded}
+              className="mb-1.5 mt-3 flex w-full items-center justify-between text-[10px] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+            >
+              <span>Sources ({enabledSources.length})</span>
+              <span
+                aria-hidden="true"
+                className={`transition-transform ${sourcesListExpanded ? "rotate-0" : "-rotate-90"}`}
+              >
+                ▾
+              </span>
+            </button>
+            {sourcesListExpanded && (
+              <div className="space-y-1">
+                {enabledSources.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
+                  >
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                    <span className="truncate">{s.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mt-2 flex items-center justify-between text-[10px] text-brand-400 dark:text-brand-600">
               <span>
                 Last {days} day{days !== 1 ? "s" : ""}

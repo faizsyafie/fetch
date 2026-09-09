@@ -1,4 +1,4 @@
-import type { NewsTopicId } from "./types";
+import type { NewsTopicId, TopicArticle } from "./types";
 
 export interface NewsTopicSource {
   name: string;
@@ -11,6 +11,18 @@ export interface NewsTopic {
   emoji: string;
   sources: NewsTopicSource[];
 }
+
+// Shared "nothing fetched yet" shape for the three columns' state.
+export const EMPTY_NEWS_ARTICLES: Record<NewsTopicId, TopicArticle[]> = {
+  world: [],
+  malaysia: [],
+  economy: [],
+};
+export const EMPTY_NEWS_ERRORS: Record<NewsTopicId, string[]> = {
+  world: [],
+  malaysia: [],
+  economy: [],
+};
 
 // The News board's three fixed columns. Unlike company tracking, these pull
 // every recent item from their sources directly — no keyword matching — so
