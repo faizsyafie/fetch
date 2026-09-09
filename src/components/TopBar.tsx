@@ -188,7 +188,8 @@ export function TopBar({
             type="button"
             onClick={onOpenCustomize}
             title="Customize appearance"
-            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
+            aria-label="Customize appearance"
+            className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
           >
             <span aria-hidden="true">🎨</span>
           </button>
@@ -198,10 +199,10 @@ export function TopBar({
           type="button"
           onClick={onOpenTutorial}
           title="Open tutorial"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
+          aria-label="Open tutorial"
+          className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
         >
           <span aria-hidden="true">❓</span>
-          Tutorial
         </button>
 
         <div data-tour="topbar-user">
