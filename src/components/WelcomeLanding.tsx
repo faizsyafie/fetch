@@ -26,7 +26,7 @@ export function WelcomeLanding({
 }: WelcomeLandingProps) {
   const [lineIndex, setLineIndex] = useState(0);
   const fullLogoSrc =
-    theme === "dark" ? "/full-logo-dark.png" : "/full-logo-light.png";
+    theme === "dark" ? "/full-logo-dark-new.png" : "/full-logo-light-new.png";
 
   useEffect(() => {
     const interval = setInterval(() => {
