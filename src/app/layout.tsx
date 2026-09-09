@@ -14,9 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Credit News Analyst | RSS Company Monitor",
+  title: "fetch | Daily RSS Company Monitor",
   description:
     "Monitor Bloomberg, Reuters, The Edge Singapore and custom RSS feeds for companies across Consumer, Energy, IT and Communications.",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

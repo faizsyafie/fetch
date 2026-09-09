@@ -448,6 +448,7 @@ function DashboardForProfile({
       className="flex h-screen flex-col overflow-hidden lg:flex-row"
     >
       <Sidebar
+        theme={theme}
         companies={preferences.companies}
         industries={preferences.industries}
         industryEmojis={preferences.industryEmojis}
