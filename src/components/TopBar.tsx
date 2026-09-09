@@ -23,6 +23,7 @@ import { UserMenu } from "@/components/UserMenu";
 import type { Theme } from "@/hooks/useTheme";
 
 interface TopBarProps {
+  mode: "companies" | "news";
   profileName: string;
   onLogOut: () => void;
   activeIndustry: Industry;
@@ -54,9 +55,18 @@ interface TopBarProps {
   onOpenTutorial: () => void;
   onOpenCustomize: () => void;
   onCollapseAll: () => void;
+  // News mode: the same time-range/refresh concept, bound to its own state
+  // rather than the Companies preferences, since the two fetches are
+  // independent.
+  newsDays: TimeFrameDays;
+  onSetNewsDays: (days: TimeFrameDays) => void;
+  newsLoading: boolean;
+  onRefreshNews: () => void;
+  newsStatusLabel: string;
 }
 
 export function TopBar({
+  mode,
   profileName,
   onLogOut,
   activeIndustry,
@@ -88,8 +98,14 @@ export function TopBar({
   onOpenTutorial,
   onOpenCustomize,
   onCollapseAll,
+  newsDays,
+  onSetNewsDays,
+  newsLoading,
+  onRefreshNews,
+  newsStatusLabel,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
+  const isNews = mode === "news";
   const isSearching = searchQuery.trim().length > 0;
   const isVirtualIndustry =
     activeIndustry === ALL_INDUSTRY || activeIndustry === WATCHLIST_INDUSTRY;
@@ -97,6 +113,8 @@ export function TopBar({
   const enabledSources = sources.filter((s) => s.enabled);
   const emoji = getIndustryEmoji(activeIndustry, industryEmojis);
   const accentPreset = ACCENT_PRESETS[accent];
+  const activeDays = isNews ? newsDays : days;
+  const handleSetDays = isNews ? onSetNewsDays : onSetDays;
 
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
@@ -110,7 +128,14 @@ export function TopBar({
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 text-[15px] font-bold uppercase tracking-wide text-brand-900 dark:text-white">
-            {isSearching ? (
+            {isNews ? (
+              <>
+                <span className="text-base" aria-hidden="true">
+                  📰
+                </span>
+                {isSearching ? "Search Results" : "News"}
+              </>
+            ) : isSearching ? (
               "Search Results"
             ) : (
               <>
@@ -122,18 +147,22 @@ export function TopBar({
           <div
             className="mt-0.5 truncate text-[11px] text-brand-500 dark:text-brand-500"
             title={
-              isSearching
+              isNews || isSearching
                 ? undefined
                 : `Sources: ${enabledSources.map((s) => s.name).join(", ")}`
             }
           >
-            {isSearching
-              ? `${matchedCount} matched`
-              : `${companiesInIndustry.length} compan${
-                  companiesInIndustry.length !== 1 ? "ies" : "y"
-                } · ${enabledSources.length} source${
-                  enabledSources.length !== 1 ? "s" : ""
-                } · last ${days}d`}
+            {isNews
+              ? isSearching
+                ? `Filtering articles for "${searchQuery.trim()}"`
+                : newsStatusLabel
+              : isSearching
+                ? `${matchedCount} matched`
+                : `${companiesInIndustry.length} compan${
+                    companiesInIndustry.length !== 1 ? "ies" : "y"
+                  } · ${enabledSources.length} source${
+                    enabledSources.length !== 1 ? "s" : ""
+                  } · last ${days}d`}
           </div>
         </div>
 
@@ -145,9 +174,9 @@ export function TopBar({
             <button
               key={opt.days}
               type="button"
-              onClick={() => onSetDays(opt.days)}
+              onClick={() => handleSetDays(opt.days)}
               className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                days === opt.days
+                activeDays === opt.days
                   ? `${accentPreset.solid} text-white shadow-sm`
                   : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
               }`}
@@ -165,7 +194,7 @@ export function TopBar({
             id="company-search-input"
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
-            placeholder="Search companies…"
+            placeholder={isNews ? "Search articles…" : "Search companies…"}
             className={`w-44 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-7 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
           />
         </div>
@@ -210,55 +239,68 @@ export function TopBar({
         </div>
       </div>
 
-      <div data-tour="topbar-fetch" className="mt-2 flex flex-wrap items-center gap-1">
-        <div className="flex items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50">
+      {isNews ? (
+        <div data-tour="topbar-fetch" className="mt-2 flex flex-wrap items-center gap-1">
           <button
             type="button"
-            onClick={onSelectAll}
-            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
+            onClick={onRefreshNews}
+            disabled={newsLoading}
+            className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
           >
-            Select all
-          </button>
-          <button
-            type="button"
-            onClick={onClearSelection}
-            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-          >
-            Clear
+            {newsLoading ? "Refreshing…" : "↻ Refresh"}
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onCollapseAll}
-          className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
-        >
-          Collapse all
-        </button>
-        {!isSearching && (
+      ) : (
+        <div data-tour="topbar-fetch" className="mt-2 flex flex-wrap items-center gap-1">
+          <div className="flex items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50">
+            <button
+              type="button"
+              onClick={onSelectAll}
+              className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              onClick={onClearSelection}
+              className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
+            >
+              Clear
+            </button>
+          </div>
           <button
             type="button"
-            onClick={onFetchAll}
-            disabled={batchRunning || companiesInIndustry.length === 0}
-            className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
+            onClick={onCollapseAll}
+            className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
           >
-            Fetch all
+            Collapse all
           </button>
-        )}
-        {selectedCount > 0 && (
-          <button
-            type="button"
-            onClick={onFetchSelected}
-            disabled={batchRunning}
-            className={`rounded-md ${accentPreset.solid} px-3 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solidHover} disabled:cursor-not-allowed disabled:bg-brand-400`}
-          >
-            {batchRunning
-              ? `Fetching… (${loadingCount} active)`
-              : `🔍 Fetch News (${selectedCount})`}
-          </button>
-        )}
-      </div>
+          {!isSearching && (
+            <button
+              type="button"
+              onClick={onFetchAll}
+              disabled={batchRunning || companiesInIndustry.length === 0}
+              className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
+            >
+              Fetch all
+            </button>
+          )}
+          {selectedCount > 0 && (
+            <button
+              type="button"
+              onClick={onFetchSelected}
+              disabled={batchRunning}
+              className={`rounded-md ${accentPreset.solid} px-3 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solidHover} disabled:cursor-not-allowed disabled:bg-brand-400`}
+            >
+              {batchRunning
+                ? `Fetching… (${loadingCount} active)`
+                : `🔍 Fetch News (${selectedCount})`}
+            </button>
+          )}
+        </div>
+      )}
 
-      {editMode && !isSearching && !isVirtualIndustry && (
+      {!isNews && editMode && !isSearching && !isVirtualIndustry && (
         <div
           className={`mt-2 rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
         >

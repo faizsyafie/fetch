@@ -6,6 +6,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
 import { NewsBoard } from "@/components/NewsBoard";
+import { PigeonWatermark } from "@/components/PigeonWatermark";
 import { ProfilePicker } from "@/components/ProfilePicker";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -26,8 +27,19 @@ import {
   FONT_SCALE_PRESETS,
   WATCHLIST_INDUSTRY,
 } from "@/lib/defaults";
+import {
+  EMPTY_NEWS_ARTICLES,
+  EMPTY_NEWS_ERRORS,
+  NEWS_TOPICS,
+} from "@/lib/newsTopics";
 import { TOUR_STEPS } from "@/lib/tourSteps";
-import type { Company, FetchNewsResponse } from "@/lib/types";
+import type {
+  Company,
+  FetchNewsResponse,
+  NewsTopicId,
+  TimeFrameDays,
+  TopicArticle,
+} from "@/lib/types";
 
 const BATCH_SIZE = 3;
 
@@ -119,10 +131,70 @@ function DashboardForProfile({
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [mode, setMode] = useState<"companies" | "news">("companies");
+  const [newsDays, setNewsDaysState] = useState<TimeFrameDays>(7);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsArticlesByTopic, setNewsArticlesByTopic] =
+    useState<Record<NewsTopicId, TopicArticle[]>>(EMPTY_NEWS_ARTICLES);
+  const [newsErrorsByTopic, setNewsErrorsByTopic] =
+    useState<Record<NewsTopicId, string[]>>(EMPTY_NEWS_ERRORS);
+  const [newsFetchedAt, setNewsFetchedAt] = useState<number | null>(null);
 
   const toggleMode = useCallback(() => {
     setMode((prev) => (prev === "companies" ? "news" : "companies"));
+    setSearchQuery("");
+    setSelected(new Set());
+    setFocusedIndex(null);
   }, []);
+
+  const fetchNewsBoard = useCallback(async (days: TimeFrameDays) => {
+    setNewsLoading(true);
+    try {
+      const response = await fetch("/api/topic-news", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days }),
+      });
+      if (!response.ok) throw new Error("Failed to fetch news.");
+      const data = await response.json();
+
+      const nextArticles = { ...EMPTY_NEWS_ARTICLES };
+      const nextErrors = { ...EMPTY_NEWS_ERRORS };
+      for (const topic of NEWS_TOPICS) {
+        const result = data.topics?.[topic.id];
+        nextArticles[topic.id] = result?.articles ?? [];
+        nextErrors[topic.id] = result?.errors ?? [];
+      }
+      setNewsArticlesByTopic(nextArticles);
+      setNewsErrorsByTopic(nextErrors);
+      setNewsFetchedAt(Date.now());
+    } catch {
+      setNewsErrorsByTopic({
+        world: ["Failed to fetch news."],
+        malaysia: ["Failed to fetch news."],
+        economy: ["Failed to fetch news."],
+      });
+    } finally {
+      setNewsLoading(false);
+    }
+  }, []);
+
+  const setNewsDays = useCallback(
+    (days: TimeFrameDays) => {
+      setNewsDaysState(days);
+      void fetchNewsBoard(days);
+    },
+    [fetchNewsBoard]
+  );
+
+  // Refresh as soon as the board is switched into — i.e. every time the
+  // user flips to News mode — with no background polling afterward.
+  useEffect(() => {
+    if (mode === "news") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void fetchNewsBoard(newsDays);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   const expandedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -165,11 +237,38 @@ function DashboardForProfile({
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       return sortWithPinned(
-        preferences.companies.filter((c) => c.name.toLowerCase().includes(q))
+        preferences.companies.filter(
+          (c) =>
+            c.name.toLowerCase().includes(q) ||
+            c.industry.toLowerCase().includes(q) ||
+            (c.ticker?.toLowerCase().includes(q) ?? false) ||
+            (c.notes?.toLowerCase().includes(q) ?? false)
+        )
       );
     }
     return companiesInIndustry;
   }, [searchQuery, preferences.companies, companiesInIndustry]);
+
+  // "Search the whole page" for News mode: filter each column's articles by
+  // title, summary or source rather than restricting to company names.
+  const visibleNewsArticlesByTopic = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return newsArticlesByTopic;
+    const filtered: Record<NewsTopicId, TopicArticle[]> = {
+      world: [],
+      malaysia: [],
+      economy: [],
+    };
+    for (const topic of NEWS_TOPICS) {
+      filtered[topic.id] = newsArticlesByTopic[topic.id].filter(
+        (a) =>
+          a.title.toLowerCase().includes(q) ||
+          a.summary.toLowerCase().includes(q) ||
+          a.source.toLowerCase().includes(q)
+      );
+    }
+    return filtered;
+  }, [searchQuery, newsArticlesByTopic]);
 
   const enabledSourceNames = useMemo(
     () => preferences.sources.filter((s) => s.enabled).map((s) => s.name),
@@ -237,6 +336,7 @@ function DashboardForProfile({
 
   const openCompany = useCallback(
     (company: Company) => {
+      setMode("companies");
       setActiveIndustry(company.industry);
       setSearchQuery("");
       setSelected(new Set());
@@ -329,6 +429,7 @@ function DashboardForProfile({
 
   const handleSelectIndustry = useCallback(
     (industry: string) => {
+      setMode("companies");
       setActiveIndustry(industry);
       setSearchQuery("");
       setSelected(new Set());
@@ -360,6 +461,10 @@ function DashboardForProfile({
   const lastUpdatedLabel = lastFetchedAt
     ? `Updated ${formatDistanceToNow(lastFetchedAt, { addSuffix: true })}`
     : null;
+
+  const newsStatusLabel = newsFetchedAt
+    ? `Updated ${formatDistanceToNow(newsFetchedAt, { addSuffix: true })}`
+    : "World, Malaysia and Economy headlines";
 
   // Keyboard shortcuts: "/" focuses search, j/k or arrows move the focused
   // row, Enter expands it, and Ctrl/Cmd+K opens the command palette.
@@ -485,13 +590,10 @@ function DashboardForProfile({
       />
 
       <div
-        className={`flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
+        className={`relative flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
       >
-        {mode === "news" ? (
-          <NewsBoard theme={theme} />
-        ) : (
-          <>
         <TopBar
+          mode={mode}
           profileName={profileName}
           onLogOut={onLogOut}
           activeIndustry={preferences.activeIndustry}
@@ -525,51 +627,66 @@ function DashboardForProfile({
           onOpenTutorial={() => setTutorialOpen(true)}
           onOpenCustomize={() => setCustomizeOpen(true)}
           onCollapseAll={collapseAll}
+          newsDays={newsDays}
+          onSetNewsDays={setNewsDays}
+          newsLoading={newsLoading}
+          onRefreshNews={() => void fetchNewsBoard(newsDays)}
+          newsStatusLabel={newsStatusLabel}
         />
 
-        {sourcesOpen && (
-          <SourcesPanel
-            sources={preferences.sources}
-            onAddSource={addSource}
-            onRemoveSource={removeSource}
-            onResetSources={resetSources}
-            onClearCache={clearCache}
-            onOpenSuggestions={() => setSuggestionsOpen(true)}
+        {mode === "news" ? (
+          <NewsBoard
+            theme={theme}
+            articlesByTopic={visibleNewsArticlesByTopic}
+            errorsByTopic={newsErrorsByTopic}
+            loading={newsLoading}
           />
-        )}
+        ) : (
+          <>
+            {sourcesOpen && (
+              <SourcesPanel
+                sources={preferences.sources}
+                onAddSource={addSource}
+                onRemoveSource={removeSource}
+                onResetSources={resetSources}
+                onClearCache={clearCache}
+                onOpenSuggestions={() => setSuggestionsOpen(true)}
+              />
+            )}
 
-        <CompanyList
-          companies={visibleCompanies}
-          industries={preferences.industries}
-          showIndustryLabel={
-            searchQuery.trim().length > 0 || isVirtualIndustry
-          }
-          selected={selected}
-          expanded={expanded}
-          newsCache={newsCache}
-          loadingSet={loadingSet}
-          days={preferences.days}
-          sourceNames={enabledSourceNames}
-          density={uiSettings.density}
-          background={uiSettings.background}
-          focusedId={focusedId}
-          isArticleSeen={isSeen}
-          enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
-          emptyMessage={
-            searchQuery.trim()
-              ? "No companies matched."
-              : preferences.activeIndustry === WATCHLIST_INDUSTRY
-                ? "No companies starred yet. Click ⭐ on a company to add it here."
-                : "No companies. Click ✏️ Edit Lists to add some."
-          }
-          onToggleSelect={toggleSelect}
-          onToggleExpand={toggleExpand}
-          onRefresh={refreshCompany}
-          onTogglePin={togglePinCompany}
-          onToggleStar={toggleStarCompany}
-          onUpdateNotes={updateCompanyNotes}
-          onReorder={handleReorderCompanies}
-        />
+            <CompanyList
+              companies={visibleCompanies}
+              industries={preferences.industries}
+              showIndustryLabel={
+                searchQuery.trim().length > 0 || isVirtualIndustry
+              }
+              selected={selected}
+              expanded={expanded}
+              newsCache={newsCache}
+              loadingSet={loadingSet}
+              days={preferences.days}
+              sourceNames={enabledSourceNames}
+              density={uiSettings.density}
+              background={uiSettings.background}
+              focusedId={focusedId}
+              isArticleSeen={isSeen}
+              enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
+              emptyMessage={
+                searchQuery.trim()
+                  ? "No companies matched."
+                  : preferences.activeIndustry === WATCHLIST_INDUSTRY
+                    ? "No companies starred yet. Click ⭐ on a company to add it here."
+                    : "No companies. Click ✏️ Edit Lists to add some."
+              }
+              onToggleSelect={toggleSelect}
+              onToggleExpand={toggleExpand}
+              onRefresh={refreshCompany}
+              onTogglePin={togglePinCompany}
+              onToggleStar={toggleStarCompany}
+              onUpdateNotes={updateCompanyNotes}
+              onReorder={handleReorderCompanies}
+            />
+            <PigeonWatermark theme={theme} />
           </>
         )}
       </div>
