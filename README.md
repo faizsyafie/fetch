@@ -1,6 +1,6 @@
-# Credit News Analyst
+# Company News Tracker
 
-A credit analyst dashboard for monitoring company-specific news from public RSS feeds. Build a custom watchlist by industry, choose sources and time windows, and review aggregated headlines in one place.
+A dashboard for credit analysts aiming to monitor company-specific news from public RSS feeds. Build a custom watchlist by industry, choose sources and time windows, and review aggregated headlines in one place.
 
 ## Features
 
