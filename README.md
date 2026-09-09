@@ -13,6 +13,7 @@ A dashboard for credit analysts aiming to monitor company-specific news from pub
 ## Getting started
 
 Can just open https://newstracker-ten.vercel.app/ :)
+First time opening (on company wifi) may take some time 
 
 ## How it works
 
