@@ -592,6 +592,8 @@ function DashboardForProfile({
       <div
         className={`relative flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
       >
+        <PigeonWatermark theme={theme} />
+
         <TopBar
           mode={mode}
           profileName={profileName}
@@ -636,7 +638,6 @@ function DashboardForProfile({
 
         {mode === "news" ? (
           <NewsBoard
-            theme={theme}
             articlesByTopic={visibleNewsArticlesByTopic}
             errorsByTopic={newsErrorsByTopic}
             loading={newsLoading}
@@ -686,7 +687,6 @@ function DashboardForProfile({
               onUpdateNotes={updateCompanyNotes}
               onReorder={handleReorderCompanies}
             />
-            <PigeonWatermark theme={theme} />
           </>
         )}
       </div>
