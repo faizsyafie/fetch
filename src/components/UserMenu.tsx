@@ -47,13 +47,19 @@ export function UserMenu({ name, onLogOut }: UserMenuProps) {
               Shared profile
             </p>
           </div>
+          <a
+            href="/about"
+            className="block w-full px-3 py-2 text-left text-xs font-medium text-brand-600 transition-colors hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-800"
+          >
+            ℹ️ About
+          </a>
           <button
             type="button"
             onClick={() => {
               setOpen(false);
               onLogOut();
             }}
-            className="w-full px-3 py-2 text-left text-xs font-medium text-red-600 transition-colors hover:bg-brand-50 dark:text-red-400 dark:hover:bg-brand-800"
+            className="w-full border-t border-brand-200 px-3 py-2 text-left text-xs font-medium text-red-600 transition-colors hover:bg-brand-50 dark:border-brand-800 dark:text-red-400 dark:hover:bg-brand-800"
           >
             Log out
           </button>
