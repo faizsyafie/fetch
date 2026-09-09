@@ -1,10 +1,6 @@
-export type TimeFrameDays = 1 | 3 | 10 | 15 | 30;
+export type TimeFrameDays = 1 | 3 | 7 | 14 | 30;
 
-export type Industry =
-  | "Consumer"
-  | "Energy"
-  | "Information Technology"
-  | "Communications";
+export type Industry = string;
 
 export interface Company {
   id: string;
@@ -50,5 +46,6 @@ export interface AppPreferences {
   companies: Company[];
   sources: NewsSource[];
   days: TimeFrameDays;
-  selectedIndustries: Industry[];
+  industries: Industry[];
+  activeIndustry: Industry;
 }

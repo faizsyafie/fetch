@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_SOURCES,
+  INDUSTRIES,
   SAMPLE_COMPANIES,
   STORAGE_KEY,
 } from "@/lib/defaults";
@@ -15,15 +16,11 @@ import type {
 } from "@/lib/types";
 
 const DEFAULT_PREFERENCES: AppPreferences = {
-  companies: SAMPLE_COMPANIES.slice(0, 6),
+  companies: SAMPLE_COMPANIES,
   sources: DEFAULT_SOURCES,
-  days: 10,
-  selectedIndustries: [
-    "Consumer",
-    "Energy",
-    "Information Technology",
-    "Communications",
-  ],
+  days: 7,
+  industries: INDUSTRIES,
+  activeIndustry: INDUSTRIES[0],
 };
 
 function loadPreferences(): AppPreferences {
@@ -32,10 +29,17 @@ function loadPreferences(): AppPreferences {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFERENCES;
     const parsed = JSON.parse(raw) as AppPreferences;
+    const industries = parsed.industries?.length
+      ? parsed.industries
+      : INDUSTRIES;
     return {
       ...DEFAULT_PREFERENCES,
       ...parsed,
       sources: parsed.sources?.length ? parsed.sources : DEFAULT_SOURCES,
+      industries,
+      activeIndustry: industries.includes(parsed.activeIndustry)
+        ? parsed.activeIndustry
+        : industries[0],
     };
   } catch {
     return DEFAULT_PREFERENCES;
@@ -84,12 +88,52 @@ export function usePreferences() {
     }));
   }, []);
 
-  const toggleIndustry = useCallback((industry: Industry) => {
+  const setActiveIndustry = useCallback((industry: Industry) => {
+    setPreferences((prev) => ({ ...prev, activeIndustry: industry }));
+  }, []);
+
+  const addIndustry = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
     setPreferences((prev) => {
-      const selected = prev.selectedIndustries.includes(industry)
-        ? prev.selectedIndustries.filter((i) => i !== industry)
-        : [...prev.selectedIndustries, industry];
-      return { ...prev, selectedIndustries: selected };
+      if (prev.industries.includes(trimmed)) return prev;
+      return {
+        ...prev,
+        industries: [...prev.industries, trimmed],
+        activeIndustry: trimmed,
+      };
+    });
+  }, []);
+
+  const renameIndustry = useCallback((oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    setPreferences((prev) => {
+      if (!trimmed || trimmed === oldName || prev.industries.includes(trimmed)) {
+        return prev;
+      }
+      return {
+        ...prev,
+        industries: prev.industries.map((i) => (i === oldName ? trimmed : i)),
+        companies: prev.companies.map((c) =>
+          c.industry === oldName ? { ...c, industry: trimmed } : c
+        ),
+        activeIndustry:
+          prev.activeIndustry === oldName ? trimmed : prev.activeIndustry,
+      };
+    });
+  }, []);
+
+  const removeIndustry = useCallback((name: string) => {
+    setPreferences((prev) => {
+      const industries = prev.industries.filter((i) => i !== name);
+      if (industries.length === 0) return prev;
+      return {
+        ...prev,
+        industries,
+        companies: prev.companies.filter((c) => c.industry !== name),
+        activeIndustry:
+          prev.activeIndustry === name ? industries[0] : prev.activeIndustry,
+      };
     });
   }, []);
 
@@ -158,7 +202,10 @@ export function usePreferences() {
     hydrated,
     addCompany,
     removeCompany,
-    toggleIndustry,
+    setActiveIndustry,
+    addIndustry,
+    renameIndustry,
+    removeIndustry,
     setDays,
     toggleSource,
     addSource,
