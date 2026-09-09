@@ -48,4 +48,5 @@ export interface AppPreferences {
   days: TimeFrameDays;
   industries: Industry[];
   activeIndustry: Industry;
+  industryEmojis: Record<Industry, string>;
 }

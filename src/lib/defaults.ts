@@ -15,9 +15,27 @@ export const INDUSTRY_ICONS: Record<string, string> = {
   Materials: "⚗️",
 };
 
+export const DEFAULT_INDUSTRY_EMOJI = "📁";
+
 export function industryIcon(industry: Industry): string {
-  return INDUSTRY_ICONS[industry] ?? "📁";
+  return INDUSTRY_ICONS[industry] ?? DEFAULT_INDUSTRY_EMOJI;
 }
+
+export function defaultIndustryEmojis(
+  industries: Industry[]
+): Record<Industry, string> {
+  return Object.fromEntries(
+    industries.map((industry) => [industry, industryIcon(industry)])
+  );
+}
+
+// A compact, curated set for the industry emoji picker — no external
+// emoji-picker dependency required.
+export const EMOJI_PICKER_OPTIONS: string[] = [
+  "📁", "🛍️", "🛒", "⚡", "💻", "📡", "🏭", "⚗️", "🏦", "💰",
+  "📈", "📉", "🛢️", "🚗", "✈️", "🏗️", "🌾", "🏥", "🎮", "📱",
+  "🔋", "🌐", "🚢", "🏠", "💵", "⛏️", "🧪", "🛰️", "📞", "🏬",
+];
 
 interface IndustryPalette {
   accent: string;

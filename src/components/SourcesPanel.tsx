@@ -33,15 +33,15 @@ export function SourcesPanel({
   }
 
   return (
-    <div className="border-b border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-950">
+    <div className="border-b border-slate-200 bg-white px-5 py-3 dark:border-slate-800/80 dark:bg-slate-900">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+        <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
           News Sources
         </h3>
         <button
           type="button"
           onClick={onResetSources}
-          className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+          className="text-[11px] text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
         >
           Reset defaults
         </button>
@@ -50,7 +50,7 @@ export function SourcesPanel({
         {sources.map((source) => (
           <span
             key={source.id}
-            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition-colors hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:border-slate-600"
           >
             {source.name}
             <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">
@@ -74,14 +74,14 @@ export function SourcesPanel({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Display name (e.g. Reuters)"
-          className="w-36 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          className="w-36 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs outline-none transition-colors focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800/70 dark:text-white"
         />
         <input
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           placeholder="Domain (e.g. reuters.com)"
-          className="w-44 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          className="w-44 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs outline-none transition-colors focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800/70 dark:text-white"
         />
         <button
           type="button"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { Sidebar } from "@/components/Sidebar";
 import { SourcesPanel } from "@/components/SourcesPanel";
@@ -21,6 +22,7 @@ export default function Dashboard() {
     addIndustry,
     renameIndustry,
     removeIndustry,
+    setIndustryEmoji,
     setDays,
     addSource,
     removeSource,
@@ -38,6 +40,7 @@ export default function Dashboard() {
   );
   const [loadingSet, setLoadingSet] = useState<Set<string>>(new Set());
   const [batchRunning, setBatchRunning] = useState(false);
+  const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
 
   const companiesInIndustry = useMemo(
     () =>
@@ -79,6 +82,7 @@ export default function Dashboard() {
         if (!response.ok) throw new Error("Failed to fetch news.");
         const data = (await response.json()) as FetchNewsResponse;
         setNewsCache((prev) => ({ ...prev, [company.id]: data.articles }));
+        setLastFetchedAt(Date.now());
       } catch {
         setNewsCache((prev) => ({ ...prev, [company.id]: "error" }));
       } finally {
@@ -185,6 +189,10 @@ export default function Dashboard() {
 
   const clearCache = useCallback(() => setNewsCache({}), []);
 
+  const lastUpdatedLabel = lastFetchedAt
+    ? `Updated ${formatDistanceToNow(lastFetchedAt, { addSuffix: true })}`
+    : null;
+
   if (!hydrated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100 text-slate-400 dark:bg-slate-950 dark:text-slate-500">
@@ -198,23 +206,27 @@ export default function Dashboard() {
       <Sidebar
         companies={preferences.companies}
         industries={preferences.industries}
+        industryEmojis={preferences.industryEmojis}
         activeIndustry={preferences.activeIndustry}
         sources={preferences.sources}
         days={preferences.days}
         editMode={editMode}
         sourcesOpen={sourcesOpen}
+        lastUpdatedLabel={lastUpdatedLabel}
         onSelectIndustry={handleSelectIndustry}
         onAddIndustry={addIndustry}
         onRenameIndustry={renameIndustry}
         onRemoveIndustry={removeIndustry}
+        onSetIndustryEmoji={setIndustryEmoji}
         onToggleEditMode={() => setEditMode((v) => !v)}
         onToggleSourcesPanel={() => setSourcesOpen((v) => !v)}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col bg-slate-50 dark:bg-slate-900">
+      <div className="flex min-h-0 flex-1 flex-col bg-slate-50 dark:bg-slate-950">
         <TopBar
           activeIndustry={preferences.activeIndustry}
           industries={preferences.industries}
+          industryEmojis={preferences.industryEmojis}
           companiesInIndustry={companiesInIndustry}
           matchedCount={visibleCompanies.length}
           searchQuery={searchQuery}
