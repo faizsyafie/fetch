@@ -290,8 +290,8 @@ export const FONT_FAMILY_PRESETS: Record<
   { label: string; stack: string }
 > = {
   system: {
-    label: "System sans",
-    stack: "var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif",
+    label: "Poppins",
+    stack: "var(--font-poppins), ui-sans-serif, system-ui, sans-serif",
   },
   serif: {
     label: "Serif",

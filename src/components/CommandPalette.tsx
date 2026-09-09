@@ -96,30 +96,30 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/40 pt-[12vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-brand-950/40 pt-[12vh]"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+        className="w-full max-w-lg overflow-hidden rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 border-b border-slate-200 px-3 py-2.5 dark:border-slate-800">
-          <span className="text-slate-400 dark:text-slate-500">🔍</span>
+        <div className="flex items-center gap-2 border-b border-brand-200 px-3 py-2.5 dark:border-brand-800">
+          <span className="text-brand-400 dark:text-brand-500">🔍</span>
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Jump to a company or industry…"
-            className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-600"
+            className="w-full bg-transparent text-sm text-brand-900 outline-none placeholder:text-brand-400 dark:text-white dark:placeholder:text-brand-600"
           />
-          <kbd className="rounded border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+          <kbd className="rounded border border-brand-200 px-1.5 py-0.5 text-[10px] text-brand-400 dark:border-brand-700 dark:text-brand-500">
             Esc
           </kbd>
         </div>
         <div className="max-h-80 overflow-y-auto py-1">
           {results.length === 0 && (
-            <div className="px-3 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+            <div className="px-3 py-6 text-center text-xs text-brand-400 dark:text-brand-500">
               No matches.
             </div>
           )}
@@ -132,15 +132,15 @@ export function CommandPalette({
               className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors ${
                 i === activeIndex
                   ? "bg-blue-50 dark:bg-blue-500/10"
-                  : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  : "hover:bg-brand-50 dark:hover:bg-brand-800/50"
               }`}
             >
               <span className="shrink-0 text-base">{result.emoji}</span>
-              <span className="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">
+              <span className="min-w-0 flex-1 truncate font-medium text-brand-900 dark:text-white">
                 {result.label}
               </span>
               {result.sublabel && (
-                <span className="shrink-0 text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="shrink-0 text-[11px] text-brand-400 dark:text-brand-500">
                   {result.sublabel}
                 </span>
               )}

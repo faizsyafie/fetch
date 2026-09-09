@@ -41,6 +41,7 @@ export default function Dashboard() {
     profileName,
     hydrated: profileHydrated,
     setProfileName,
+    clearProfile,
   } = useProfile();
 
   if (!profileHydrated) {
@@ -51,10 +52,18 @@ export default function Dashboard() {
     return <ProfilePicker onPick={setProfileName} />;
   }
 
-  return <DashboardForProfile profileName={profileName} />;
+  return (
+    <DashboardForProfile profileName={profileName} onLogOut={clearProfile} />
+  );
 }
 
-function DashboardForProfile({ profileName }: { profileName: string }) {
+function DashboardForProfile({
+  profileName,
+  onLogOut,
+}: {
+  profileName: string;
+  onLogOut: () => void;
+}) {
   const {
     preferences,
     hydrated: prefsHydrated,
@@ -467,6 +476,8 @@ function DashboardForProfile({ profileName }: { profileName: string }) {
         className={`flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
       >
         <TopBar
+          profileName={profileName}
+          onLogOut={onLogOut}
           activeIndustry={preferences.activeIndustry}
           industries={preferences.industries}
           industryEmojis={preferences.industryEmojis}

@@ -60,7 +60,7 @@ export function CompanyList({
 
   if (companies.length === 0) {
     return (
-      <div className="mt-16 text-center text-sm text-slate-400 dark:text-slate-500">
+      <div className="mt-16 text-center text-sm text-brand-400 dark:text-brand-500">
         {emptyMessage}
       </div>
     );
@@ -122,10 +122,10 @@ export function CompanyList({
             }}
             className={`overflow-hidden rounded-md border transition-all duration-150 ${
               isSelected
-                ? "border-blue-500/70 bg-white ring-1 ring-blue-500/40 dark:bg-slate-900"
+                ? "border-blue-500/70 bg-white ring-1 ring-blue-500/40 dark:bg-brand-900"
                 : isOpen
-                  ? "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900"
-                  : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
+                  ? "border-brand-300 bg-white dark:border-brand-700 dark:bg-brand-900"
+                  : "border-brand-200 bg-white hover:border-brand-300 dark:border-brand-800 dark:bg-brand-900 dark:hover:border-brand-700 dark:hover:bg-brand-800/60"
             } ${isFocused ? "ring-2 ring-amber-400/70 dark:ring-amber-400/50" : ""} ${
               dragOverId === company.id && dragId !== company.id
                 ? "border-t-2 border-t-blue-500"
@@ -142,7 +142,7 @@ export function CompanyList({
               className={`flex items-center pl-3 pr-2.5 ${compact ? "py-0.5" : "py-1.5"}`}
             >
               {enableDrag && (
-                <span className="mr-1 shrink-0 cursor-grab text-[10px] text-slate-300 active:cursor-grabbing dark:text-slate-600">
+                <span className="mr-1 shrink-0 cursor-grab text-[10px] text-brand-300 active:cursor-grabbing dark:text-brand-600">
                   ⠿
                 </span>
               )}
@@ -153,7 +153,7 @@ export function CompanyList({
                 className={`mr-2.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[10px] text-white transition-colors ${
                   isSelected
                     ? `${palette.accent} border-transparent`
-                    : "border-slate-300 bg-white hover:border-slate-400 dark:border-slate-600 dark:bg-transparent dark:hover:border-slate-500"
+                    : "border-brand-300 bg-white hover:border-brand-400 dark:border-brand-600 dark:bg-transparent dark:hover:border-brand-500"
                 }`}
               >
                 {isSelected ? "✓" : ""}
@@ -174,13 +174,13 @@ export function CompanyList({
               >
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`truncate font-semibold leading-tight text-slate-900 dark:text-white ${
+                    className={`truncate font-semibold leading-tight text-brand-900 dark:text-white ${
                       compact ? "text-xs" : "text-[13px]"
                     }`}
                   >
                     {company.name}
                     {showIndustryLabel && (
-                      <span className="ml-1.5 font-normal text-slate-400 dark:text-slate-500">
+                      <span className="ml-1.5 font-normal text-brand-400 dark:text-brand-500">
                         — {company.industry}
                       </span>
                     )}
@@ -211,7 +211,7 @@ export function CompanyList({
                   title={
                     company.starred ? "Remove from Watchlist" : "Add to Watchlist"
                   }
-                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
                     company.starred
                       ? "opacity-100"
                       : "opacity-25 hover:opacity-60"
@@ -227,7 +227,7 @@ export function CompanyList({
                   }}
                   aria-label={company.pinned ? "Unpin company" : "Pin company"}
                   title={company.pinned ? "Unpin" : "Pin to top"}
-                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
                     company.pinned
                       ? "opacity-100"
                       : "opacity-25 hover:opacity-60"
@@ -236,7 +236,7 @@ export function CompanyList({
                   📌
                 </button>
                 {news && !isLoading && news !== "error" && (
-                  <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
+                  <span className="text-[11px] tabular-nums text-brand-400 dark:text-brand-500">
                     {news.length === 0
                       ? "No results"
                       : `${news.length} article${news.length !== 1 ? "s" : ""}`}
@@ -252,21 +252,21 @@ export function CompanyList({
                       e.stopPropagation();
                       onRefresh(company);
                     }}
-                    className="rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    className="rounded px-1 py-0.5 text-xs text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
                     aria-label={`Refresh ${company.name}`}
                   >
                     ↻
                   </button>
                 )}
                 {isLoading ? (
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-500 dark:border-slate-700 dark:border-t-blue-400">
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand-300 border-t-blue-500 dark:border-brand-700 dark:border-t-blue-400">
                     <span className="sr-only">Loading</span>
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => onToggleExpand(company)}
-                    className="flex h-5 w-5 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                    className="flex h-5 w-5 items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-800 dark:hover:text-brand-300"
                     aria-label={isOpen ? "Collapse" : "Expand"}
                   >
                     <span
@@ -286,17 +286,17 @@ export function CompanyList({
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
               <div className="overflow-hidden">
-                <div className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/40">
+                <div className="border-t border-brand-200 bg-brand-50 dark:border-brand-800 dark:bg-brand-950/40">
                   <div className="px-4 py-2">
                     <input
                       value={company.notes ?? ""}
                       onChange={(e) => onUpdateNotes(company.id, e.target.value)}
                       placeholder="Add a private note…"
-                      className="w-full rounded border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                      className="w-full rounded border border-brand-200 bg-white px-2 py-1 text-[11px] text-brand-700 outline-none focus:border-blue-500 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-200"
                     />
                   </div>
                   {isLoading && (
-                    <div className="px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="px-4 py-2.5 text-xs text-brand-500 dark:text-brand-400">
                       🔍 Searching {sourceNames.join(", ")}…
                     </div>
                   )}
@@ -306,7 +306,7 @@ export function CompanyList({
                     </div>
                   )}
                   {!isLoading && Array.isArray(news) && news.length === 0 && (
-                    <div className="px-4 py-2.5 text-xs text-slate-400 dark:text-slate-500">
+                    <div className="px-4 py-2.5 text-xs text-brand-400 dark:text-brand-500">
                       No articles in the last {days} day{days !== 1 ? "s" : ""}{" "}
                       from configured sources.
                     </div>
@@ -319,23 +319,23 @@ export function CompanyList({
                         href={article.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`block px-4 py-2.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 ${
+                        className={`block px-4 py-2.5 transition-colors hover:bg-brand-100 dark:hover:bg-brand-800/60 ${
                           isArticleSeen(article.id) ? "opacity-70" : ""
                         } ${
                           i !== news.length - 1
-                            ? "border-b border-slate-200 dark:border-slate-800"
+                            ? "border-b border-brand-200 dark:border-brand-800"
                             : ""
                         }`}
                       >
                         <div className="flex items-start gap-1.5">
-                          <span className="mt-0.5 shrink-0 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          <span className="mt-0.5 shrink-0 rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-bold text-brand-600 dark:bg-brand-800 dark:text-brand-300">
                             {article.source}
                           </span>
                           <div className="min-w-0">
-                            <div className="text-xs font-medium leading-snug text-slate-800 dark:text-slate-200">
+                            <div className="text-xs font-medium leading-snug text-brand-800 dark:text-brand-200">
                               {article.title}
                             </div>
-                            <div className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">
+                            <div className="mt-0.5 text-[10px] text-brand-400 dark:text-brand-500">
                               {formatDistanceToNow(new Date(article.pubDate), {
                                 addSuffix: true,
                               })}{" "}

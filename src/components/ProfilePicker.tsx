@@ -32,12 +32,12 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-slate-100 px-4 dark:bg-slate-950">
-      <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+    <div className="flex h-screen items-center justify-center bg-brand-100 px-4 dark:bg-brand-950">
+      <div className="w-full max-w-sm rounded-lg border border-brand-200 bg-white p-6 shadow-sm dark:border-brand-800 dark:bg-brand-900">
+        <h1 className="text-lg font-bold text-brand-900 dark:text-white">
           Who&rsquo;s viewing?
         </h1>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-1 text-xs text-brand-500 dark:text-brand-400">
           Your team&rsquo;s watchlist, industries, and sources sync under
           this name. No password — just pick or type your name.
         </p>
@@ -48,7 +48,7 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            className="w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900 outline-none focus:border-blue-500 dark:border-brand-700 dark:bg-brand-950 dark:text-white"
           />
           <button
             type="submit"
@@ -61,7 +61,7 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
 
         {existingProfiles.length > 0 && (
           <div className="mt-4">
-            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Or pick an existing profile
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -70,7 +70,7 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
                   key={profile}
                   type="button"
                   onClick={() => onPick(profile)}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-200 dark:hover:bg-brand-700"
                 >
                   {profile}
                 </button>

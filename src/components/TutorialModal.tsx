@@ -64,36 +64,36 @@ export function TutorialModal({ onClose }: TutorialModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+        className="w-full max-w-md overflow-hidden rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+        <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
             Tutorial · {page + 1}/{SLIDES.length}
           </span>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close tutorial"
-            className="rounded px-1.5 py-0.5 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="rounded px-1.5 py-0.5 text-sm text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
             ✕
           </button>
         </div>
 
         <div className="px-5 py-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+          <h2 className="text-base font-bold text-brand-900 dark:text-white">
             {slide.title}
           </h2>
           <ul className="mt-3 space-y-2">
             {slide.points.map((point) => (
               <li
                 key={point}
-                className="flex items-start gap-2 text-sm leading-snug text-slate-600 dark:text-slate-300"
+                className="flex items-start gap-2 text-sm leading-snug text-brand-600 dark:text-brand-300"
               >
                 <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-blue-500" />
                 {point}
@@ -102,7 +102,7 @@ export function TutorialModal({ onClose }: TutorialModalProps) {
           </ul>
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+        <div className="flex items-center justify-between border-t border-brand-200 px-4 py-3 dark:border-brand-800">
           <div className="flex items-center gap-1">
             {SLIDES.map((s, i) => (
               <span
@@ -110,7 +110,7 @@ export function TutorialModal({ onClose }: TutorialModalProps) {
                 className={`h-1.5 w-1.5 rounded-full ${
                   i === page
                     ? "bg-blue-500"
-                    : "bg-slate-200 dark:bg-slate-700"
+                    : "bg-brand-200 dark:bg-brand-700"
                 }`}
               />
             ))}
@@ -120,7 +120,7 @@ export function TutorialModal({ onClose }: TutorialModalProps) {
               <button
                 type="button"
                 onClick={() => setPage((p) => p - 1)}
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-brand-600 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-800"
               >
                 Back
               </button>

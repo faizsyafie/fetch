@@ -35,9 +35,9 @@ export function SourcesPanel({
   }
 
   return (
-    <div className="border-b border-slate-200 bg-white px-5 py-3 dark:border-slate-800/80 dark:bg-slate-900">
+    <div className="border-b border-brand-200 bg-white px-5 py-3 dark:border-brand-800/80 dark:bg-brand-900">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+        <h3 className="text-[11px] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
           News Sources
         </h3>
         <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ export function SourcesPanel({
           <button
             type="button"
             onClick={onResetSources}
-            className="text-[11px] text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
+            className="text-[11px] text-brand-400 transition-colors hover:text-brand-700 dark:hover:text-brand-200"
           >
             Reset defaults
           </button>
@@ -61,10 +61,10 @@ export function SourcesPanel({
         {sources.map((source) => (
           <span
             key={source.id}
-            className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 transition-colors hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:border-slate-600"
+            className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-100 px-2.5 py-1 text-[11px] font-semibold text-brand-700 transition-colors hover:border-brand-300 dark:border-brand-700 dark:bg-brand-800/70 dark:text-brand-300 dark:hover:border-brand-600"
           >
             {source.name}
-            <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">
+            <span className="text-[10px] font-normal text-brand-400 dark:text-brand-500">
               ({source.domain})
             </span>
             {!source.isDefault && (
@@ -85,14 +85,14 @@ export function SourcesPanel({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Display name (e.g. Reuters)"
-          className="w-36 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs outline-none transition-colors focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800/70 dark:text-white"
+          className="w-36 rounded-md border border-brand-200 px-2.5 py-1.5 text-xs outline-none transition-colors focus:border-blue-500 dark:border-brand-700 dark:bg-brand-800/70 dark:text-white"
         />
         <input
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleAdd()}
           placeholder="Domain (e.g. reuters.com)"
-          className="w-44 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs outline-none transition-colors focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800/70 dark:text-white"
+          className="w-44 rounded-md border border-brand-200 px-2.5 py-1.5 text-xs outline-none transition-colors focus:border-blue-500 dark:border-brand-700 dark:bg-brand-800/70 dark:text-white"
         />
         <button
           type="button"
@@ -102,7 +102,7 @@ export function SourcesPanel({
           + Add
         </button>
       </div>
-      <p className="mt-1.5 text-[10px] text-slate-400 dark:text-slate-500">
+      <p className="mt-1.5 text-[10px] text-brand-400 dark:text-brand-500">
         Sources are matched by domain and used as feed filters. Clearing the
         cache forces a re-fetch with the new source list.{" "}
         <button

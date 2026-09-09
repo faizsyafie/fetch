@@ -33,22 +33,22 @@ export function CustomizePanel({
 }: CustomizePanelProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
+          <h2 className="text-sm font-bold text-brand-900 dark:text-white">
             Customize
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close customize panel"
-            className="rounded px-1.5 py-0.5 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            className="rounded px-1.5 py-0.5 text-sm text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
             ✕
           </button>
@@ -56,7 +56,7 @@ export function CustomizePanel({
 
         <div className="space-y-5 px-4 py-4">
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Accent color
             </p>
             <div className="flex flex-wrap gap-2">
@@ -70,7 +70,7 @@ export function CustomizePanel({
                     title={preset.label}
                     className={`flex h-8 w-8 items-center justify-center rounded-full ${preset.swatch} transition-transform ${
                       accent === key
-                        ? "ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900"
+                        ? "ring-2 ring-offset-2 ring-brand-900 dark:ring-white dark:ring-offset-brand-900"
                         : "hover:scale-110"
                     }`}
                   >
@@ -84,7 +84,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Background tone
             </p>
             <div className="flex flex-wrap gap-2">
@@ -98,8 +98,8 @@ export function CustomizePanel({
                       onClick={() => onSetBackground(key)}
                       className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                         background === key
-                          ? "border-slate-900 bg-slate-100 text-slate-900 dark:border-white dark:bg-slate-800 dark:text-white"
-                          : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                          ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
+                          : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
                       }`}
                     >
                       <span
@@ -114,7 +114,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Font
             </p>
             <div className="flex flex-wrap gap-2">
@@ -127,8 +127,8 @@ export function CustomizePanel({
                     style={{ fontFamily: FONT_FAMILY_PRESETS[key].stack }}
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                       fontFamily === key
-                        ? "border-slate-900 bg-slate-100 text-slate-900 dark:border-white dark:bg-slate-800 dark:text-white"
-                        : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
+                        : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
                     }`}
                   >
                     {FONT_FAMILY_PRESETS[key].label}
@@ -139,7 +139,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Font size
             </p>
             <div className="flex flex-wrap gap-2">
@@ -150,15 +150,15 @@ export function CustomizePanel({
                   onClick={() => onSetFontScale(key)}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                     fontScale === key
-                      ? "border-slate-900 bg-slate-100 text-slate-900 dark:border-white dark:bg-slate-800 dark:text-white"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
+                      : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
                   }`}
                 >
                   {FONT_SCALE_PRESETS[key].label}
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-600">
+            <p className="mt-2 text-[10px] text-brand-400 dark:text-brand-600">
               Font size is applied as an overall page zoom, so it may render
               slightly differently across browsers.
             </p>
