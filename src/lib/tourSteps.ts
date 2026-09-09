@@ -31,6 +31,14 @@ export const TOUR_STEPS: TourStep[] = [
     placement: "right",
   },
   {
+    id: "mode-toggle",
+    selector: '[data-tour="mode-toggle"]',
+    title: "General news, too",
+    description:
+      "Flip this switch (or click the logo) to jump to General — a board of three columns, World, Malaysia and Economy, each pulling straight from curated RSS feeds with no company matching involved. It refreshes as soon as you open it; flip back to Companies any time.",
+    placement: "right",
+  },
+  {
     id: "sidebar-manage",
     selector: '[data-tour="sidebar-manage"]',
     title: "Edit lists & sources",

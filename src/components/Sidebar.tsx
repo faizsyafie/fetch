@@ -49,6 +49,54 @@ interface SidebarProps {
   onToggleCollapsed: () => void;
 }
 
+// Segmented pill switch between the Companies tracker and the General news
+// board — a more discoverable second way to do what clicking the logo
+// already does (same toggle handler either way).
+function ModeSwitch({
+  mode,
+  onToggle,
+}: {
+  mode: "companies" | "news";
+  onToggle: () => void;
+}) {
+  const isNews = mode === "news";
+  const label = isNews ? "Switch to Companies" : "Switch to General news";
+
+  return (
+    <button
+      type="button"
+      data-tour="mode-toggle"
+      onClick={onToggle}
+      role="switch"
+      aria-checked={isNews}
+      title={label}
+      aria-label={label}
+      className="relative flex w-full items-center rounded-full border border-brand-200 bg-white p-0.5 dark:border-brand-700 dark:bg-brand-950/50"
+    >
+      <span
+        aria-hidden="true"
+        className={`absolute inset-y-0.5 w-[calc(50%-2px)] rounded-full bg-blue-600 shadow-sm transition-all duration-300 ease-in-out ${
+          isNews ? "left-[calc(50%+2px)]" : "left-0.5"
+        }`}
+      />
+      <span
+        className={`relative z-10 flex-1 rounded-full py-1 text-center text-[11px] font-semibold transition-colors ${
+          isNews ? "text-brand-400 dark:text-brand-500" : "text-white"
+        }`}
+      >
+        Companies
+      </span>
+      <span
+        className={`relative z-10 flex-1 rounded-full py-1 text-center text-[11px] font-semibold transition-colors ${
+          isNews ? "text-white" : "text-brand-400 dark:text-brand-500"
+        }`}
+      >
+        General
+      </span>
+    </button>
+  );
+}
+
 function EmojiPicker({
   onPick,
   onClose,
@@ -246,11 +294,9 @@ export function Sidebar({
         </button>
       )}
 
-      {mode === "news" && !collapsed && (
-        <div className="border-b border-brand-200 px-4 py-2 dark:border-brand-800/80">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
-            News
-          </p>
+      {!collapsed && (
+        <div className="border-b border-brand-200 px-4 py-2.5 dark:border-brand-800/80">
+          <ModeSwitch mode={mode} onToggle={onLogoClick} />
         </div>
       )}
 

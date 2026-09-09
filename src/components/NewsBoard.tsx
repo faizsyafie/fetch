@@ -125,20 +125,24 @@ export function NewsBoard({ theme }: NewsBoardProps) {
           />
         ))}
 
-        {/* A fun little easter egg, not a focal point — faded out via a
-            radial mask so its flat corners never show a hard edge against
-            the page background in either theme. */}
+        {/* A fun little easter egg, not a focal point. Three equal-width
+            columns rarely leave real empty space in this corner, so this
+            paints on top (z-20) rather than relying on a gap that may not
+            exist — kept faint enough, and pointer-events-none, to never
+            compete with the cards underneath. The radial mask fades its
+            flat corners out so there's never a hard edge against the page
+            background in either theme. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={pigeonSrc}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-2 right-2 h-48 w-48 select-none opacity-[0.12]"
+          className="pointer-events-none absolute bottom-3 right-3 z-20 h-40 w-40 select-none opacity-25"
           style={{
             maskImage:
-              "radial-gradient(circle at 65% 65%, black 0%, black 35%, transparent 72%)",
+              "radial-gradient(circle at 65% 65%, black 0%, black 45%, transparent 78%)",
             WebkitMaskImage:
-              "radial-gradient(circle at 65% 65%, black 0%, black 35%, transparent 72%)",
+              "radial-gradient(circle at 65% 65%, black 0%, black 45%, transparent 78%)",
           }}
         />
       </div>

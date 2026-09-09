@@ -22,7 +22,7 @@ export function NewsColumn({ topic, articles, errors, loading }: NewsColumnProps
   const showEmpty = !loading && articles.length === 0;
 
   return (
-    <div className="flex h-full min-w-[280px] flex-1 flex-col overflow-hidden rounded-lg border border-brand-200 bg-white/70 dark:border-brand-800 dark:bg-brand-900/70">
+    <div className="flex h-full min-w-[280px] max-w-sm flex-1 flex-col overflow-hidden rounded-lg border border-brand-200 bg-white/70 dark:border-brand-800 dark:bg-brand-900/70">
       <div className="flex items-center justify-between border-b border-brand-200 px-3 py-2.5 dark:border-brand-800">
         <div className="flex items-center gap-1.5 text-sm font-bold text-brand-900 dark:text-white">
           <span aria-hidden="true">{topic.emoji}</span>
