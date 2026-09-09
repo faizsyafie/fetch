@@ -1,6 +1,13 @@
 import Parser from "rss-parser";
 import { subDays, isAfter, parseISO, isValid } from "date-fns";
-import type { Company, NewsArticle, NewsSource, TimeFrameDays } from "./types";
+import type { NewsTopic } from "./newsTopics";
+import type {
+  Company,
+  NewsArticle,
+  NewsSource,
+  TimeFrameDays,
+  TopicArticle,
+} from "./types";
 
 const parser = new Parser({
   timeout: 15000,
@@ -194,4 +201,96 @@ export async function fetchNewsForWatchlist(
   );
 
   return { articles: sorted, errors: [...new Set(errors)] };
+}
+
+const MAX_ARTICLES_PER_TOPIC = 30;
+
+function extractImageUrl(item: Parser.Item): string | null {
+  // rss-parser exposes <enclosure> out of the box; most other thumbnail
+  // formats (media:content, media:thumbnail) need custom field config we
+  // don't otherwise use, so this covers the common case without a second
+  // parser instance. Cards render fine with no image either way.
+  const url = item.enclosure?.url;
+  return url && /^https?:\/\//.test(url) ? url : null;
+}
+
+function topicArticleId(topicId: string, link: string): string {
+  return `${topicId}-${Buffer.from(link).toString("base64url").slice(0, 24)}`;
+}
+
+async function fetchTopicSourceArticles(
+  topic: NewsTopic,
+  source: NewsTopic["sources"][number],
+  cutoff: Date
+): Promise<{ articles: TopicArticle[]; error: string | null }> {
+  const feed = await fetchFeed(source.feedUrl);
+  if (!feed?.items?.length) {
+    return { articles: [], error: `Could not load feed: ${source.name}` };
+  }
+
+  const articles: TopicArticle[] = [];
+  for (const item of feed.items) {
+    const pubDate = parseArticleDate(item.isoDate || item.pubDate);
+    if (!pubDate || !isAfter(pubDate, cutoff)) continue;
+
+    const title = item.title?.trim();
+    const link = item.link?.trim();
+    if (!title || !link) continue;
+
+    articles.push({
+      id: topicArticleId(topic.id, link),
+      title,
+      link,
+      pubDate: pubDate.toISOString(),
+      summary: stripHtml(item.contentSnippet || item.content || "").slice(0, 240),
+      source: source.name,
+      topic: topic.id,
+      imageUrl: extractImageUrl(item),
+    });
+  }
+
+  return { articles, error: null };
+}
+
+/**
+ * Fetches every topic's columns in parallel. Unlike company tracking, there's
+ * no keyword filter — every recent item from a topic's sources belongs in
+ * that column, deduped by normalized headline (outlets sometimes syndicate
+ * the same story to more than one of their own feeds).
+ */
+export async function fetchTopicNews(
+  topics: NewsTopic[],
+  days: TimeFrameDays
+): Promise<Record<string, { articles: TopicArticle[]; errors: string[] }>> {
+  const cutoff = subDays(new Date(), days);
+
+  const entries = await Promise.all(
+    topics.map(async (topic) => {
+      const results = await Promise.all(
+        topic.sources.map((source) =>
+          fetchTopicSourceArticles(topic, source, cutoff)
+        )
+      );
+
+      const errors: string[] = [];
+      const unique = new Map<string, TopicArticle>();
+      for (const result of results) {
+        if (result.error) errors.push(result.error);
+        for (const article of result.articles) {
+          const key = normalizeTitle(article.title);
+          if (!unique.has(key)) unique.set(key, article);
+        }
+      }
+
+      const sorted = Array.from(unique.values())
+        .sort(
+          (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+        )
+        .slice(0, MAX_ARTICLES_PER_TOPIC);
+
+      return [topic.id, { articles: sorted, errors }] as const;
+    })
+  );
+
+  return Object.fromEntries(entries);
 }

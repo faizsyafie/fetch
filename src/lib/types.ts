@@ -66,6 +66,19 @@ export interface UiSettings {
   background: Background;
 }
 
+export type NewsTopicId = "world" | "malaysia" | "economy";
+
+export interface TopicArticle {
+  id: string;
+  title: string;
+  link: string;
+  pubDate: string;
+  summary: string;
+  source: string;
+  topic: NewsTopicId;
+  imageUrl: string | null;
+}
+
 export interface SuggestedSource {
   name: string;
   domain: string;
