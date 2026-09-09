@@ -8,7 +8,7 @@ Fetch flies across the web collecting company news so you don't have to. Built f
 
 No endless tab switching. No manually checking multiple websites. Just point Fetch at the companies you care about and let it bring the news home.
 
-🌐 Live App: [https://newstracker-ten.vercel.app/](https://fetchforme.vercel.app/)
+🌐 Live App: [https://fetchforme.vercel.app/]
 
 ---
 
@@ -36,7 +36,7 @@ Think of it as your digital news pigeon. It fetches. You analyse.
 
 Simply open:
 
-👉 [https://newstracker-ten.vercel.app/](https://fetchforme.vercel.app/)
+👉 [https://fetchforme.vercel.app/]
 
 **Note:** The first load on a corporate network may take slightly longer as feeds are retrieved and cached.
 
