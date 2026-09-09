@@ -7,23 +7,23 @@ interface LogoProps {
   compact?: boolean;
 }
 
-// The source PNGs are 2000x2000 square with the artwork (bird + wordmark)
-// occupying a horizontal band across the middle, cream/charcoal background
-// baked in (no transparency). object-fit: cover + a wide/short container
-// crops out the surrounding padding to show just that band.
+// icon-light/dark.png: square headshot crop of the bird, background baked
+// in to match the theme. text-light/dark.png: wordmark only ("fetch"),
+// also with the theme background baked in — object-contain so the whole
+// word shows without cropping, letterboxing blends into the sidebar's own
+// matching background.
 export function Logo({ theme, compact = false }: LogoProps) {
-  const fullLogoSrc =
-    theme === "dark" ? "/full-logo-dark.png" : "/full-logo-light.png";
+  const iconSrc = theme === "dark" ? "/icon-dark.png" : "/icon-light.png";
+  const textSrc = theme === "dark" ? "/text-dark.png" : "/text-light.png";
 
   if (compact) {
     return (
       <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/icon.png"
+          src={iconSrc}
           alt="fetch"
           className="h-full w-full object-cover"
-          style={{ objectPosition: "60% 45%" }}
         />
       </div>
     );
@@ -33,10 +33,9 @@ export function Logo({ theme, compact = false }: LogoProps) {
     <div className="h-8 w-28 shrink-0 overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={fullLogoSrc}
+        src={textSrc}
         alt="fetch — Daily RSS"
-        className="h-full w-full object-cover"
-        style={{ objectPosition: "center 47%" }}
+        className="h-full w-full object-contain"
       />
     </div>
   );
