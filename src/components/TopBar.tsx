@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { industryIcon, industryPalette, TIME_FRAME_OPTIONS } from "@/lib/defaults";
+import { DEFAULT_INDUSTRY_EMOJI, industryPalette, TIME_FRAME_OPTIONS } from "@/lib/defaults";
 import type { Company, Industry, NewsSource, TimeFrameDays } from "@/lib/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import type { Theme } from "@/hooks/useTheme";
@@ -9,6 +9,7 @@ import type { Theme } from "@/hooks/useTheme";
 interface TopBarProps {
   activeIndustry: Industry;
   industries: Industry[];
+  industryEmojis: Record<Industry, string>;
   companiesInIndustry: Company[];
   matchedCount: number;
   searchQuery: string;
@@ -32,6 +33,7 @@ interface TopBarProps {
 export function TopBar({
   activeIndustry,
   industries,
+  industryEmojis,
   companiesInIndustry,
   matchedCount,
   searchQuery,
@@ -54,6 +56,8 @@ export function TopBar({
   const [tagInput, setTagInput] = useState("");
   const isSearching = searchQuery.trim().length > 0;
   const palette = industryPalette(activeIndustry, industries);
+  const enabledSources = sources.filter((s) => s.enabled);
+  const emoji = industryEmojis[activeIndustry] ?? DEFAULT_INDUSTRY_EMOJI;
 
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
@@ -63,75 +67,90 @@ export function TopBar({
   }
 
   return (
-    <div className="border-b border-slate-200 bg-white px-5 py-3 dark:border-slate-800 dark:bg-slate-950">
+    <div className="border-b border-slate-200 bg-white px-5 py-3 dark:border-slate-800/80 dark:bg-slate-900">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1">
-          <div className="text-base font-bold text-slate-900 dark:text-white">
-            {isSearching
-              ? "Search Results"
-              : `${industryIcon(activeIndustry)} ${activeIndustry}`}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 text-[15px] font-bold uppercase tracking-wide text-slate-900 dark:text-white">
+            {isSearching ? (
+              "Search Results"
+            ) : (
+              <>
+                <span className="text-base">{emoji}</span>
+                {activeIndustry}
+              </>
+            )}
           </div>
-          <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <div
+            className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-500"
+            title={
+              isSearching
+                ? undefined
+                : `Sources: ${enabledSources.map((s) => s.name).join(", ")}`
+            }
+          >
             {isSearching
               ? `${matchedCount} matched`
-              : `${companiesInIndustry.length} companies · ${sources
-                  .filter((s) => s.enabled)
-                  .map((s) => s.name)
-                  .join(", ")} · last ${days}d`}
+              : `${companiesInIndustry.length} companies · ${enabledSources.length} source${
+                  enabledSources.length !== 1 ? "s" : ""
+                } · last ${days}d`}
           </div>
         </div>
 
-        <div className="flex items-center gap-0.5 rounded-lg bg-slate-100 px-1.5 py-1 dark:bg-slate-900">
-          <span className="mr-0.5 text-[11px] text-slate-400 dark:text-slate-500">
-            ⏱
-          </span>
+        <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-800 dark:bg-slate-950/50">
           {TIME_FRAME_OPTIONS.map((opt) => (
             <button
               key={opt.days}
               type="button"
               onClick={() => onSetDays(opt.days)}
-              className={`rounded px-2 py-1 text-[11px] transition ${
+              className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
                 days === opt.days
-                  ? "bg-blue-600 font-bold text-white"
-                  : "text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800"
               }`}
             >
-              {opt.label}
+              {opt.label.toUpperCase()}
             </button>
           ))}
         </div>
 
-        <input
-          value={searchQuery}
-          onChange={(e) => onSearch(e.target.value)}
-          placeholder="Search companies…"
-          className="w-44 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-        />
+        <div className="relative shrink-0">
+          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500">
+            🔍
+          </span>
+          <input
+            value={searchQuery}
+            onChange={(e) => onSearch(e.target.value)}
+            placeholder="Search companies…"
+            className="w-44 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-7 pr-3 text-xs text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:placeholder:text-slate-600 dark:focus:bg-slate-950"
+          />
+        </div>
 
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <button
-          type="button"
-          onClick={onSelectAll}
-          className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          Select All
-        </button>
-        <button
-          type="button"
-          onClick={onClearSelection}
-          className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          Clear
-        </button>
+      <div className="mt-2 flex flex-wrap items-center gap-1">
+        <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-800 dark:bg-slate-950/50">
+          <button
+            type="button"
+            onClick={onSelectAll}
+            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            Select all
+          </button>
+          <button
+            type="button"
+            onClick={onClearSelection}
+            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            Clear
+          </button>
+        </div>
         {selectedCount > 0 && (
           <button
             type="button"
             onClick={onFetchSelected}
             disabled={batchRunning}
-            className="rounded-md bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="rounded-md bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {batchRunning
               ? `Fetching… (${loadingCount} active)`

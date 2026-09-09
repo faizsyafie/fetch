@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  DEFAULT_INDUSTRY_EMOJI,
   DEFAULT_SOURCES,
   INDUSTRIES,
   SAMPLE_COMPANIES,
   STORAGE_KEY,
+  defaultIndustryEmojis,
 } from "@/lib/defaults";
 import type {
   AppPreferences,
@@ -21,6 +23,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   days: 7,
   industries: INDUSTRIES,
   activeIndustry: INDUSTRIES[0],
+  industryEmojis: defaultIndustryEmojis(INDUSTRIES),
 };
 
 function loadPreferences(): AppPreferences {
@@ -32,6 +35,7 @@ function loadPreferences(): AppPreferences {
     const industries = parsed.industries?.length
       ? parsed.industries
       : INDUSTRIES;
+    const industryEmojis = { ...defaultIndustryEmojis(industries), ...parsed.industryEmojis };
     return {
       ...DEFAULT_PREFERENCES,
       ...parsed,
@@ -40,6 +44,7 @@ function loadPreferences(): AppPreferences {
       activeIndustry: industries.includes(parsed.activeIndustry)
         ? parsed.activeIndustry
         : industries[0],
+      industryEmojis,
     };
   } catch {
     return DEFAULT_PREFERENCES;
@@ -101,6 +106,10 @@ export function usePreferences() {
         ...prev,
         industries: [...prev.industries, trimmed],
         activeIndustry: trimmed,
+        industryEmojis: {
+          ...prev.industryEmojis,
+          [trimmed]: DEFAULT_INDUSTRY_EMOJI,
+        },
       };
     });
   }, []);
@@ -111,6 +120,7 @@ export function usePreferences() {
       if (!trimmed || trimmed === oldName || prev.industries.includes(trimmed)) {
         return prev;
       }
+      const { [oldName]: emoji, ...restEmojis } = prev.industryEmojis;
       return {
         ...prev,
         industries: prev.industries.map((i) => (i === oldName ? trimmed : i)),
@@ -119,6 +129,10 @@ export function usePreferences() {
         ),
         activeIndustry:
           prev.activeIndustry === oldName ? trimmed : prev.activeIndustry,
+        industryEmojis: {
+          ...restEmojis,
+          [trimmed]: emoji ?? DEFAULT_INDUSTRY_EMOJI,
+        },
       };
     });
   }, []);
@@ -127,14 +141,27 @@ export function usePreferences() {
     setPreferences((prev) => {
       const industries = prev.industries.filter((i) => i !== name);
       if (industries.length === 0) return prev;
+      const industryEmojis = Object.fromEntries(
+        Object.entries(prev.industryEmojis).filter(([key]) => key !== name)
+      );
       return {
         ...prev,
         industries,
         companies: prev.companies.filter((c) => c.industry !== name),
         activeIndustry:
           prev.activeIndustry === name ? industries[0] : prev.activeIndustry,
+        industryEmojis,
       };
     });
+  }, []);
+
+  const setIndustryEmoji = useCallback((industry: Industry, emoji: string) => {
+    const trimmed = emoji.trim();
+    if (!trimmed) return;
+    setPreferences((prev) => ({
+      ...prev,
+      industryEmojis: { ...prev.industryEmojis, [industry]: trimmed },
+    }));
   }, []);
 
   const setDays = useCallback((days: TimeFrameDays) => {
@@ -206,6 +233,7 @@ export function usePreferences() {
     addIndustry,
     renameIndustry,
     removeIndustry,
+    setIndustryEmoji,
     setDays,
     toggleSource,
     addSource,
