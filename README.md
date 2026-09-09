@@ -4,20 +4,15 @@ A dashboard for credit analysts aiming to monitor company-specific news from pub
 
 ## Features
 
-- **Industry watchlists** — Consumer, Energy, Information Technology, and Communications
-- **Custom company lists** — Add or remove companies; load sample names per sector
+- **Industry watchlists** — Group your companies by sector i.e Energy, Industrials etc.
+- **Custom company lists** — Add or remove companies
 - **Configurable sources** — Bloomberg (official RSS), Reuters and The Edge Singapore (via Google News RSS), plus custom domains and direct feed URLs
 - **Time frame filters** — Last 1, 3, 10, 15, or 30 days
 - **Persistent preferences** — Watchlist and source settings saved in the browser
 
 ## Getting started
 
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
+Can just open https://newstracker-ten.vercel.app/ :)
 
 ## How it works
 
@@ -33,9 +28,3 @@ Open [http://localhost:3000](http://localhost:3000).
 - Tailwind CSS
 - rss-parser
 - date-fns
-
-## Notes
-
-- Reuters and The Edge Singapore do not expose stable public RSS feeds; the app uses Google News RSS as a proxy filtered by domain.
-- Bloomberg category feeds are scanned and matched against your watchlist keywords.
-- Some publishers limit full article text in RSS summaries; headlines link out to the original source.
