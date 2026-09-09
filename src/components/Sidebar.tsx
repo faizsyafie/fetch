@@ -18,8 +18,10 @@ import type {
   TimeFrameDays,
 } from "@/lib/types";
 import { Logo } from "@/components/Logo";
+import type { Theme } from "@/hooks/useTheme";
 
 interface SidebarProps {
+  theme: Theme;
   companies: Company[];
   industries: Industry[];
   industryEmojis: Record<Industry, string>;
@@ -81,6 +83,7 @@ function EmojiPicker({
 }
 
 export function Sidebar({
+  theme,
   companies,
   industries,
   industryEmojis,
@@ -202,7 +205,7 @@ export function Sidebar({
       <div
         className={`flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800/80`}
       >
-        <Logo compact={collapsed} />
+        <Logo theme={theme} compact={collapsed} />
         {!collapsed && (
           <button
             type="button"
