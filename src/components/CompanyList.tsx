@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { industryPalette } from "@/lib/defaults";
-import type { Company, Density, Industry, NewsArticle } from "@/lib/types";
+import { BACKGROUND_PRESETS, industryPalette } from "@/lib/defaults";
+import type { Background, Company, Density, Industry, NewsArticle } from "@/lib/types";
 
 export type NewsCacheEntry = NewsArticle[] | "error";
 
@@ -19,6 +19,7 @@ interface CompanyListProps {
   sourceNames: string[];
   emptyMessage: string;
   density: Density;
+  background: Background;
   focusedId: string | null;
   isArticleSeen: (articleId: string) => boolean;
   enableDrag: boolean;
@@ -43,6 +44,7 @@ export function CompanyList({
   sourceNames,
   emptyMessage,
   density,
+  background,
   focusedId,
   isArticleSeen,
   enableDrag,
@@ -57,6 +59,7 @@ export function CompanyList({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const compact = density === "compact";
+  const cardClass = BACKGROUND_PRESETS[background].cardClass;
 
   if (companies.length === 0) {
     return (
@@ -120,12 +123,12 @@ export function CompanyList({
               setDragId(null);
               setDragOverId(null);
             }}
-            className={`overflow-hidden rounded-md border transition-all duration-150 ${
+            className={`overflow-hidden rounded-md border transition-all duration-150 ${cardClass} ${
               isSelected
-                ? "border-blue-500/70 bg-white ring-1 ring-blue-500/40 dark:bg-brand-900"
+                ? "border-blue-500/70 ring-1 ring-blue-500/40"
                 : isOpen
-                  ? "border-brand-300 bg-white dark:border-brand-700 dark:bg-brand-900"
-                  : "border-brand-200 bg-white hover:border-brand-300 dark:border-brand-800 dark:bg-brand-900 dark:hover:border-brand-700 dark:hover:bg-brand-800/60"
+                  ? "border-brand-300 dark:border-brand-700"
+                  : "border-brand-200 hover:border-brand-300 dark:border-brand-800 dark:hover:border-brand-700"
             } ${isFocused ? "ring-2 ring-amber-400/70 dark:ring-amber-400/50" : ""} ${
               dragOverId === company.id && dragId !== company.id
                 ? "border-t-2 border-t-blue-500"

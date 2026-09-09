@@ -314,22 +314,27 @@ export const FONT_SCALE_PRESETS: Record<
 
 export const BACKGROUND_PRESETS: Record<
   Background,
-  { label: string; swatch: string; pageClass: string }
+  { label: string; swatch: string; pageClass: string; cardClass: string }
 > = {
   slate: {
     label: "Slate",
     swatch: "bg-slate-500",
-    pageClass: "bg-slate-50 dark:bg-slate-950",
+    pageClass: "bg-slate-200 dark:bg-slate-950",
+    cardClass:
+      "bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60",
   },
   zinc: {
     label: "Zinc",
     swatch: "bg-zinc-500",
-    pageClass: "bg-zinc-50 dark:bg-zinc-950",
+    pageClass: "bg-zinc-200 dark:bg-zinc-950",
+    cardClass: "bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800/60",
   },
   stone: {
     label: "Stone",
     swatch: "bg-stone-500",
-    pageClass: "bg-stone-50 dark:bg-stone-950",
+    pageClass: "bg-stone-200 dark:bg-stone-950",
+    cardClass:
+      "bg-stone-50 dark:bg-stone-900 dark:hover:bg-stone-800/60",
   },
 };
 

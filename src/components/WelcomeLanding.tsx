@@ -11,6 +11,7 @@ const ROTATING_LINES = [
 
 interface WelcomeLandingProps {
   name: string;
+  theme: "light" | "dark";
   onDismiss: () => void;
   onOpenTutorial: () => void;
   onFetchNews: () => void;
@@ -18,11 +19,14 @@ interface WelcomeLandingProps {
 
 export function WelcomeLanding({
   name,
+  theme,
   onDismiss,
   onOpenTutorial,
   onFetchNews,
 }: WelcomeLandingProps) {
   const [lineIndex, setLineIndex] = useState(0);
+  const fullLogoSrc =
+    theme === "dark" ? "/full-logo-dark.png" : "/full-logo-light.png";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -32,11 +36,14 @@ export function WelcomeLanding({
   }, []);
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center bg-brand-100 px-4 text-center dark:bg-brand-950">
-      <p className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-        Credit News Analyst
-      </p>
-      <h1 className="mt-2 text-3xl font-bold text-brand-900 dark:text-white">
+    <div className="flex h-screen flex-col items-center justify-center bg-brand-50 px-4 text-center dark:bg-brand-900">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={fullLogoSrc}
+        alt="fetch — Daily RSS"
+        className="h-40 w-auto max-w-full object-contain sm:h-52"
+      />
+      <h1 className="mt-6 text-3xl font-bold text-brand-900 dark:text-white">
         Welcome, {name}
       </h1>
       <p
@@ -50,14 +57,14 @@ export function WelcomeLanding({
         <button
           type="button"
           onClick={onOpenTutorial}
-          className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-200 dark:hover:bg-brand-800"
+          className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-200 dark:hover:bg-brand-700"
         >
           ❓ View the tutorial
         </button>
         <button
           type="button"
           onClick={onFetchNews}
-          className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-200 dark:hover:bg-brand-800"
+          className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-200 dark:hover:bg-brand-700"
         >
           🔍 Fetch some news
         </button>

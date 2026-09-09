@@ -3,13 +3,13 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f7f3ea;
-  --foreground: #2b2622;
+  --background: #fcf9f2;
+  --foreground: #342d2d;
 }
 
 .dark {
-  --background: #211d1a;
-  --foreground: #f7f3ea;
+  --background: #342d2d;
+  --foreground: #fcf9f2;
 }
 
 @theme inline {
@@ -18,20 +18,23 @@
   --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
 
-  /* Warm neutral scale matching the fetch logo's cream/charcoal palette —
-     used for base chrome (surfaces, borders, body text) in place of the
-     default Tailwind slate. */
-  --color-brand-50: #f7f3ea;
-  --color-brand-100: #efe9db;
-  --color-brand-200: #e1d8c4;
-  --color-brand-300: #c9bca0;
-  --color-brand-400: #a6987a;
-  --color-brand-500: #7d7160;
-  --color-brand-600: #5a5148;
-  --color-brand-700: #423b34;
-  --color-brand-800: #322c27;
-  --color-brand-900: #2b2622;
-  --color-brand-950: #211d1a;
+  /* Warm neutral scale matching the fetch logo's exact cream/charcoal
+     background colours — used for base chrome (surfaces, borders, body
+     text) in place of the default Tailwind slate. brand-50 (#fcf9f2) and
+     brand-900 (#342d2d) are the logo's own light/dark backgrounds, so any
+     surface showing the logo (landing page, sidebar) uses those two tones
+     exactly. */
+  --color-brand-50: #fcf9f2;
+  --color-brand-100: #f0ebdd;
+  --color-brand-200: #e2dac5;
+  --color-brand-300: #cabda1;
+  --color-brand-400: #a7987a;
+  --color-brand-500: #7e7160;
+  --color-brand-600: #5b5148;
+  --color-brand-700: #443b35;
+  --color-brand-800: #383130;
+  --color-brand-900: #342d2d;
+  --color-brand-950: #262121;
 }
 
 body {
