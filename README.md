@@ -1,4 +1,5 @@
 <br>
+
 # 🕊️ Fetch: Daily RSS
 
 *Like a carrier pigeon, credit analysts never rest...*
@@ -23,43 +24,11 @@ Think of it as your digital news pigeon. It fetches. You analyse.
 
 ## Features
 
-### 🏭 Industry Watchlists
-Group companies into sectors such as:
-
-- Energy
-- Industrials
-- Telecommunications
-- Consumer
-- Utilities
-- and more
-
-### 📋 Custom Company Lists
-Create and manage your own company universe.
-
-- Add companies
-- Remove companies
-- Organize names within industries
-
-### 📰 Flexible News Sources
-Monitor headlines from:
-
-- Bloomberg (official RSS feeds)
-- Reuters (via Google News RSS)
-- The Edge Singapore (via Google News RSS)
-- Custom domains
-- Direct RSS feed URLs
-
-### ⏱️ Adjustable Time Windows
-Filter news by publication date:
-
-- Last 1 day
-- Last 3 days
-- Last 10 days
-- Last 15 days
-- Last 30 days
-
-### 💾 Persistent Preferences
-Your watchlists and source settings are saved locally in your browser, so you can pick up where you left off.
+🏭 Industry Watchlists: Group companies into your specific sectors.
+📋 Custom Company Lists: Create and manage your own company universe.
+📰 Flexible News Sources: Monitor headlines from multiple sources.
+⏱️ Adjustable Time Windows: Filter news by publication date.
+💾 Persistent Preferences: Your watchlists and source settings are saved, so you can pick up where you left off.
 
 ---
 
