@@ -22,6 +22,9 @@ import type { Theme } from "@/hooks/useTheme";
 
 interface SidebarProps {
   theme: Theme;
+  mode: "companies" | "news";
+  onLogoClick: () => void;
+  logoTitle: string;
   companies: Company[];
   industries: Industry[];
   industryEmojis: Record<Industry, string>;
@@ -84,6 +87,9 @@ function EmojiPicker({
 
 export function Sidebar({
   theme,
+  mode,
+  onLogoClick,
+  logoTitle,
   companies,
   industries,
   industryEmojis,
@@ -206,7 +212,15 @@ export function Sidebar({
         data-tour="sidebar-header"
         className={`flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800/80`}
       >
-        <Logo theme={theme} compact={collapsed} />
+        <button
+          type="button"
+          onClick={onLogoClick}
+          title={logoTitle}
+          aria-label={logoTitle}
+          className="rounded-md transition-opacity hover:opacity-80"
+        >
+          <Logo theme={theme} compact={collapsed} />
+        </button>
         {!collapsed && (
           <button
             type="button"
@@ -232,21 +246,31 @@ export function Sidebar({
         </button>
       )}
 
-      {!collapsed && (
+      {mode === "news" && !collapsed && (
         <div className="border-b border-brand-200 px-4 py-2 dark:border-brand-800/80">
           <p className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
-            Industries
-          </p>
-          <p className="mt-0.5 text-[11px] text-brand-400 dark:text-brand-600">
-            {companies.length} companies
+            News
           </p>
         </div>
       )}
 
-      <div
-        data-tour="sidebar-industries"
-        className="flex-1 overflow-y-auto overflow-x-hidden py-1"
-      >
+      {mode === "companies" && (
+        <>
+          {!collapsed && (
+            <div className="border-b border-brand-200 px-4 py-2 dark:border-brand-800/80">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
+                Industries
+              </p>
+              <p className="mt-0.5 text-[11px] text-brand-400 dark:text-brand-600">
+                {companies.length} companies
+              </p>
+            </div>
+          )}
+
+          <div
+            data-tour="sidebar-industries"
+            className="flex-1 overflow-y-auto overflow-x-hidden py-1"
+          >
         {pinnedRows.map(({ key, emoji, count }) => {
           const isActive = key === activeIndustry;
           if (collapsed) {
@@ -560,6 +584,8 @@ export function Sidebar({
           </>
         )}
       </div>
+        </>
+      )}
     </aside>
   );
 }

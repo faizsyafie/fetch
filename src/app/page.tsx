@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
+import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -117,6 +118,11 @@ function DashboardForProfile({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [mode, setMode] = useState<"companies" | "news">("companies");
+
+  const toggleMode = useCallback(() => {
+    setMode((prev) => (prev === "companies" ? "news" : "companies"));
+  }, []);
 
   const expandedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -451,6 +457,9 @@ function DashboardForProfile({
     >
       <Sidebar
         theme={theme}
+        mode={mode}
+        onLogoClick={toggleMode}
+        logoTitle={mode === "companies" ? "Switch to News" : "Switch to Companies"}
         companies={preferences.companies}
         industries={preferences.industries}
         industryEmojis={preferences.industryEmojis}
@@ -478,6 +487,10 @@ function DashboardForProfile({
       <div
         className={`flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
       >
+        {mode === "news" ? (
+          <NewsBoard theme={theme} />
+        ) : (
+          <>
         <TopBar
           profileName={profileName}
           onLogOut={onLogOut}
@@ -557,6 +570,8 @@ function DashboardForProfile({
           onUpdateNotes={updateCompanyNotes}
           onReorder={handleReorderCompanies}
         />
+          </>
+        )}
       </div>
 
       {commandPaletteOpen && (
