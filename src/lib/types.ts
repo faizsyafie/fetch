@@ -8,6 +8,7 @@ export interface Company {
   industry: Industry;
   ticker?: string;
   pinned?: boolean;
+  starred?: boolean;
   notes?: string;
 }
 
@@ -46,11 +47,31 @@ export interface FetchNewsResponse {
 
 export type Density = "comfortable" | "compact";
 
+export type AccentColor = "blue" | "emerald" | "violet" | "rose" | "amber";
+
+export type FontFamily = "system" | "serif" | "mono";
+
+export type FontScale = "sm" | "md" | "lg";
+
+export type Background = "slate" | "zinc" | "stone";
+
 export interface UiSettings {
   sidebarWidth: number;
   sidebarCollapsed: boolean;
   density: Density;
   tutorialSeen: boolean;
+  accent: AccentColor;
+  fontFamily: FontFamily;
+  fontScale: FontScale;
+  background: Background;
+}
+
+export interface SuggestedSource {
+  name: string;
+  domain: string;
+  feedUrl: string | null;
+  description: string;
+  region: "US" | "UK/EU" | "Asia-Pacific";
 }
 
 export interface AppPreferences {

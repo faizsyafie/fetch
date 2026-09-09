@@ -7,13 +7,24 @@ import {
   MIN_SIDEBAR_WIDTH,
   UI_STORAGE_KEY,
 } from "@/lib/defaults";
-import type { Density, UiSettings } from "@/lib/types";
+import type {
+  AccentColor,
+  Background,
+  Density,
+  FontFamily,
+  FontScale,
+  UiSettings,
+} from "@/lib/types";
 
 const DEFAULT_UI_SETTINGS: UiSettings = {
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   sidebarCollapsed: false,
   density: "comfortable",
   tutorialSeen: false,
+  accent: "blue",
+  fontFamily: "system",
+  fontScale: "md",
+  background: "slate",
 };
 
 const UI_SETTINGS_EVENT = "credit-news-analyst-ui-change";
@@ -117,6 +128,34 @@ export function useUiSettings() {
     update((prev) => ({ ...prev, tutorialSeen: true }));
   }, [update]);
 
+  const setAccent = useCallback(
+    (accent: AccentColor) => {
+      update((prev) => ({ ...prev, accent }));
+    },
+    [update]
+  );
+
+  const setFontFamily = useCallback(
+    (fontFamily: FontFamily) => {
+      update((prev) => ({ ...prev, fontFamily }));
+    },
+    [update]
+  );
+
+  const setFontScale = useCallback(
+    (fontScale: FontScale) => {
+      update((prev) => ({ ...prev, fontScale }));
+    },
+    [update]
+  );
+
+  const setBackground = useCallback(
+    (background: Background) => {
+      update((prev) => ({ ...prev, background }));
+    },
+    [update]
+  );
+
   return {
     settings,
     hydrated: true,
@@ -124,5 +163,9 @@ export function useUiSettings() {
     toggleSidebarCollapsed,
     setDensity,
     markTutorialSeen,
+    setAccent,
+    setFontFamily,
+    setFontScale,
+    setBackground,
   };
 }

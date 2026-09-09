@@ -4,15 +4,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
+import { CustomizePanel } from "@/components/CustomizePanel";
+import { ProfilePicker } from "@/components/ProfilePicker";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesPanel } from "@/components/SourcesPanel";
+import { SuggestedSources } from "@/components/SuggestedSources";
 import { TopBar } from "@/components/TopBar";
 import { TutorialModal } from "@/components/TutorialModal";
+import { WelcomeLanding } from "@/components/WelcomeLanding";
+import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSeenArticles } from "@/hooks/useSeenArticles";
 import { useTheme } from "@/hooks/useTheme";
 import { readUiSettings, useUiSettings } from "@/hooks/useUiSettings";
+import {
+  ALL_INDUSTRY,
+  BACKGROUND_PRESETS,
+  FONT_FAMILY_PRESETS,
+  FONT_SCALE_PRESETS,
+  WATCHLIST_INDUSTRY,
+} from "@/lib/defaults";
 import type { Company, FetchNewsResponse } from "@/lib/types";
 
 const BATCH_SIZE = 3;
@@ -26,11 +38,30 @@ function sortWithPinned(companies: Company[]): Company[] {
 
 export default function Dashboard() {
   const {
+    profileName,
+    hydrated: profileHydrated,
+    setProfileName,
+  } = useProfile();
+
+  if (!profileHydrated) {
+    return <SkeletonLoader />;
+  }
+
+  if (!profileName) {
+    return <ProfilePicker onPick={setProfileName} />;
+  }
+
+  return <DashboardForProfile profileName={profileName} />;
+}
+
+function DashboardForProfile({ profileName }: { profileName: string }) {
+  const {
     preferences,
     hydrated: prefsHydrated,
     addCompany,
     removeCompany,
     togglePinCompany,
+    toggleStarCompany,
     updateCompanyNotes,
     reorderCompaniesInIndustry,
     reorderIndustries,
@@ -43,7 +74,7 @@ export default function Dashboard() {
     addSource,
     removeSource,
     resetSources,
-  } = usePreferences();
+  } = usePreferences(profileName);
   const { theme, toggleTheme } = useTheme();
   const {
     settings: uiSettings,
@@ -52,6 +83,10 @@ export default function Dashboard() {
     toggleSidebarCollapsed,
     setDensity,
     markTutorialSeen,
+    setAccent,
+    setFontFamily,
+    setFontScale,
+    setBackground,
   } = useUiSettings();
   const { hydrated: seenHydrated, markSeen, isSeen } = useSeenArticles();
 
@@ -69,6 +104,9 @@ export default function Dashboard() {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const expandedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -89,15 +127,23 @@ export default function Dashboard() {
     if (!readUiSettings().tutorialSeen) setTutorialOpen(true);
   }, []);
 
-  const companiesInIndustry = useMemo(
-    () =>
-      sortWithPinned(
-        preferences.companies.filter(
-          (c) => c.industry === preferences.activeIndustry
-        )
-      ),
-    [preferences.companies, preferences.activeIndustry]
-  );
+  const isVirtualIndustry =
+    preferences.activeIndustry === ALL_INDUSTRY ||
+    preferences.activeIndustry === WATCHLIST_INDUSTRY;
+
+  const companiesInIndustry = useMemo(() => {
+    if (preferences.activeIndustry === ALL_INDUSTRY) {
+      return sortWithPinned(preferences.companies);
+    }
+    if (preferences.activeIndustry === WATCHLIST_INDUSTRY) {
+      return sortWithPinned(preferences.companies.filter((c) => c.starred));
+    }
+    return sortWithPinned(
+      preferences.companies.filter(
+        (c) => c.industry === preferences.activeIndustry
+      )
+    );
+  }, [preferences.companies, preferences.activeIndustry]);
 
   const visibleCompanies = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -227,6 +273,7 @@ export default function Dashboard() {
   }, [visibleCompanies]);
 
   const clearSelection = useCallback(() => setSelected(new Set()), []);
+  const collapseAll = useCallback(() => setExpanded(new Set()), []);
 
   const runBatchFetch = useCallback(
     async (targets: Company[]) => {
@@ -283,10 +330,15 @@ export default function Dashboard() {
 
   const handleReorderCompanies = useCallback(
     (orderedIds: string[]) => {
-      if (searchQuery.trim()) return;
+      if (searchQuery.trim() || isVirtualIndustry) return;
       reorderCompaniesInIndustry(preferences.activeIndustry, orderedIds);
     },
-    [searchQuery, reorderCompaniesInIndustry, preferences.activeIndustry]
+    [
+      searchQuery,
+      isVirtualIndustry,
+      reorderCompaniesInIndustry,
+      preferences.activeIndustry,
+    ]
   );
 
   const lastUpdatedLabel = lastFetchedAt
@@ -305,6 +357,8 @@ export default function Dashboard() {
       if (e.key === "Escape") {
         setCommandPaletteOpen(false);
         setTutorialOpen(false);
+        setCustomizeOpen(false);
+        setSuggestionsOpen(false);
         return;
       }
 
@@ -353,11 +407,37 @@ export default function Dashboard() {
     return <SkeletonLoader />;
   }
 
+  if (showWelcome) {
+    return (
+      <WelcomeLanding
+        name={profileName}
+        onDismiss={() => setShowWelcome(false)}
+        onOpenTutorial={() => {
+          setShowWelcome(false);
+          setTutorialOpen(true);
+        }}
+        onFetchNews={() => {
+          setShowWelcome(false);
+          fetchAllInIndustry();
+        }}
+      />
+    );
+  }
+
   const focusedId =
     focusedIndex != null ? visibleCompanies[focusedIndex]?.id ?? null : null;
 
+  const fontStyle: React.CSSProperties = {
+    fontFamily: FONT_FAMILY_PRESETS[uiSettings.fontFamily].stack,
+  };
+  (fontStyle as Record<string, string | number>).zoom =
+    FONT_SCALE_PRESETS[uiSettings.fontScale].value;
+
   return (
-    <div className="flex h-screen flex-col overflow-hidden lg:flex-row">
+    <div
+      style={fontStyle}
+      className="flex h-screen flex-col overflow-hidden lg:flex-row"
+    >
       <Sidebar
         companies={preferences.companies}
         industries={preferences.industries}
@@ -370,6 +450,7 @@ export default function Dashboard() {
         lastUpdatedLabel={lastUpdatedLabel}
         width={uiSettings.sidebarWidth}
         collapsed={uiSettings.sidebarCollapsed}
+        accent={uiSettings.accent}
         onSelectIndustry={handleSelectIndustry}
         onAddIndustry={addIndustry}
         onRenameIndustry={renameIndustry}
@@ -382,7 +463,9 @@ export default function Dashboard() {
         onToggleCollapsed={toggleSidebarCollapsed}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col bg-slate-50 dark:bg-slate-950">
+      <div
+        className={`flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
+      >
         <TopBar
           activeIndustry={preferences.activeIndustry}
           industries={preferences.industries}
@@ -398,6 +481,7 @@ export default function Dashboard() {
           editMode={editMode}
           theme={theme}
           density={uiSettings.density}
+          accent={uiSettings.accent}
           onToggleTheme={toggleTheme}
           onToggleDensity={() =>
             setDensity(uiSettings.density === "compact" ? "comfortable" : "compact")
@@ -412,6 +496,8 @@ export default function Dashboard() {
           onRemoveCompany={removeCompany}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
           onOpenTutorial={() => setTutorialOpen(true)}
+          onOpenCustomize={() => setCustomizeOpen(true)}
+          onCollapseAll={collapseAll}
         />
 
         {sourcesOpen && (
@@ -421,13 +507,16 @@ export default function Dashboard() {
             onRemoveSource={removeSource}
             onResetSources={resetSources}
             onClearCache={clearCache}
+            onOpenSuggestions={() => setSuggestionsOpen(true)}
           />
         )}
 
         <CompanyList
           companies={visibleCompanies}
           industries={preferences.industries}
-          showIndustryLabel={searchQuery.trim().length > 0}
+          showIndustryLabel={
+            searchQuery.trim().length > 0 || isVirtualIndustry
+          }
           selected={selected}
           expanded={expanded}
           newsCache={newsCache}
@@ -437,16 +526,19 @@ export default function Dashboard() {
           density={uiSettings.density}
           focusedId={focusedId}
           isArticleSeen={isSeen}
-          enableDrag={searchQuery.trim().length === 0}
+          enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
           emptyMessage={
             searchQuery.trim()
               ? "No companies matched."
-              : "No companies. Click ✏️ Edit Lists to add some."
+              : preferences.activeIndustry === WATCHLIST_INDUSTRY
+                ? "No companies starred yet. Click ⭐ on a company to add it here."
+                : "No companies. Click ✏️ Edit Lists to add some."
           }
           onToggleSelect={toggleSelect}
           onToggleExpand={toggleExpand}
           onRefresh={refreshCompany}
           onTogglePin={togglePinCompany}
+          onToggleStar={toggleStarCompany}
           onUpdateNotes={updateCompanyNotes}
           onReorder={handleReorderCompanies}
         />
@@ -469,6 +561,28 @@ export default function Dashboard() {
             setTutorialOpen(false);
             markTutorialSeen();
           }}
+        />
+      )}
+
+      {customizeOpen && (
+        <CustomizePanel
+          accent={uiSettings.accent}
+          fontFamily={uiSettings.fontFamily}
+          fontScale={uiSettings.fontScale}
+          background={uiSettings.background}
+          onSetAccent={setAccent}
+          onSetFontFamily={setFontFamily}
+          onSetFontScale={setFontScale}
+          onSetBackground={setBackground}
+          onClose={() => setCustomizeOpen(false)}
+        />
+      )}
+
+      {suggestionsOpen && (
+        <SuggestedSources
+          existingSources={preferences.sources}
+          onAdd={addSource}
+          onClose={() => setSuggestionsOpen(false)}
         />
       )}
     </div>

@@ -1,8 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { DEFAULT_INDUSTRY_EMOJI, industryPalette, TIME_FRAME_OPTIONS } from "@/lib/defaults";
-import type { Company, Density, Industry, NewsSource, TimeFrameDays } from "@/lib/types";
+import {
+  ACCENT_PRESETS,
+  ALL_INDUSTRY,
+  WATCHLIST_INDUSTRY,
+  getIndustryEmoji,
+  industryPalette,
+  TIME_FRAME_OPTIONS,
+} from "@/lib/defaults";
+import type {
+  AccentColor,
+  Company,
+  Density,
+  Industry,
+  NewsSource,
+  TimeFrameDays,
+} from "@/lib/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
 import type { Theme } from "@/hooks/useTheme";
@@ -22,6 +36,7 @@ interface TopBarProps {
   editMode: boolean;
   theme: Theme;
   density: Density;
+  accent: AccentColor;
   onToggleTheme: () => void;
   onToggleDensity: () => void;
   onSearch: (value: string) => void;
@@ -34,6 +49,8 @@ interface TopBarProps {
   onRemoveCompany: (id: string) => void;
   onOpenCommandPalette: () => void;
   onOpenTutorial: () => void;
+  onOpenCustomize: () => void;
+  onCollapseAll: () => void;
 }
 
 export function TopBar({
@@ -51,6 +68,7 @@ export function TopBar({
   editMode,
   theme,
   density,
+  accent,
   onToggleTheme,
   onToggleDensity,
   onSearch,
@@ -63,12 +81,17 @@ export function TopBar({
   onRemoveCompany,
   onOpenCommandPalette,
   onOpenTutorial,
+  onOpenCustomize,
+  onCollapseAll,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
   const isSearching = searchQuery.trim().length > 0;
+  const isVirtualIndustry =
+    activeIndustry === ALL_INDUSTRY || activeIndustry === WATCHLIST_INDUSTRY;
   const palette = industryPalette(activeIndustry, industries);
   const enabledSources = sources.filter((s) => s.enabled);
-  const emoji = industryEmojis[activeIndustry] ?? DEFAULT_INDUSTRY_EMOJI;
+  const emoji = getIndustryEmoji(activeIndustry, industryEmojis);
+  const accentPreset = ACCENT_PRESETS[accent];
 
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
@@ -101,7 +124,9 @@ export function TopBar({
           >
             {isSearching
               ? `${matchedCount} matched`
-              : `${companiesInIndustry.length} companies · ${enabledSources.length} source${
+              : `${companiesInIndustry.length} compan${
+                  companiesInIndustry.length !== 1 ? "ies" : "y"
+                } · ${enabledSources.length} source${
                   enabledSources.length !== 1 ? "s" : ""
                 } · last ${days}d`}
           </div>
@@ -115,7 +140,7 @@ export function TopBar({
               onClick={() => onSetDays(opt.days)}
               className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
                 days === opt.days
-                  ? "bg-blue-600 text-white shadow-sm"
+                  ? `${accentPreset.solid} text-white shadow-sm`
                   : "text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800"
               }`}
             >
@@ -133,7 +158,7 @@ export function TopBar({
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Search companies…"
-            className="w-44 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-7 pr-3 text-xs text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:placeholder:text-slate-600 dark:focus:bg-slate-950"
+            className={`w-44 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-7 pr-3 text-xs text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:${accentPreset.border} focus:bg-white dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:placeholder:text-slate-600 dark:focus:bg-slate-950`}
           />
         </div>
 
@@ -148,6 +173,15 @@ export function TopBar({
 
         <DensityToggle density={density} onToggle={onToggleDensity} />
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+
+        <button
+          type="button"
+          onClick={onOpenCustomize}
+          title="Customize appearance"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+        >
+          <span aria-hidden="true">🎨</span>
+        </button>
 
         <button
           type="button"
@@ -177,6 +211,13 @@ export function TopBar({
             Clear
           </button>
         </div>
+        <button
+          type="button"
+          onClick={onCollapseAll}
+          className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400 dark:hover:bg-slate-800"
+        >
+          Collapse all
+        </button>
         {!isSearching && (
           <button
             type="button"
@@ -192,7 +233,7 @@ export function TopBar({
             type="button"
             onClick={onFetchSelected}
             disabled={batchRunning}
-            className="rounded-md bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className={`rounded-md ${accentPreset.solid} px-3 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solidHover} disabled:cursor-not-allowed disabled:bg-slate-400`}
           >
             {batchRunning
               ? `Fetching… (${loadingCount} active)`
@@ -201,7 +242,7 @@ export function TopBar({
         )}
       </div>
 
-      {editMode && !isSearching && (
+      {editMode && !isSearching && !isVirtualIndustry && (
         <div
           className={`mt-2 rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
         >

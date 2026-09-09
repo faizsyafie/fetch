@@ -26,6 +26,7 @@ interface CompanyListProps {
   onToggleExpand: (company: Company) => void;
   onRefresh: (company: Company) => void;
   onTogglePin: (id: string) => void;
+  onToggleStar: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (orderedIds: string[]) => void;
 }
@@ -49,6 +50,7 @@ export function CompanyList({
   onToggleExpand,
   onRefresh,
   onTogglePin,
+  onToggleStar,
   onUpdateNotes,
   onReorder,
 }: CompanyListProps) {
@@ -118,7 +120,7 @@ export function CompanyList({
               setDragId(null);
               setDragOverId(null);
             }}
-            className={`overflow-hidden rounded-md border transition-colors ${
+            className={`overflow-hidden rounded-md border transition-all duration-150 ${
               isSelected
                 ? "border-blue-500/70 bg-white ring-1 ring-blue-500/40 dark:bg-slate-900"
                 : isOpen
@@ -128,7 +130,13 @@ export function CompanyList({
               dragOverId === company.id && dragId !== company.id
                 ? "border-t-2 border-t-blue-500"
                 : ""
-            } ${dragId === company.id ? "opacity-40" : ""}`}
+            } ${
+              dragId === company.id
+                ? "scale-[0.98] opacity-70 shadow-xl"
+                : dragId
+                  ? "shadow-none"
+                  : ""
+            }`}
           >
             <div
               className={`flex items-center pl-3 pr-2.5 ${compact ? "py-0.5" : "py-1.5"}`}
@@ -171,6 +179,11 @@ export function CompanyList({
                     }`}
                   >
                     {company.name}
+                    {showIndustryLabel && (
+                      <span className="ml-1.5 font-normal text-slate-400 dark:text-slate-500">
+                        — {company.industry}
+                      </span>
+                    )}
                   </span>
                   {unseenCount > 0 && (
                     <span
@@ -181,14 +194,31 @@ export function CompanyList({
                     </span>
                   )}
                 </div>
-                {showIndustryLabel && !compact && (
-                  <div className="text-[10.5px] leading-tight text-slate-500 dark:text-slate-500">
-                    {company.industry}
-                  </div>
-                )}
               </button>
 
               <div className="ml-2 flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleStar(company.id);
+                  }}
+                  aria-label={
+                    company.starred
+                      ? "Remove from Watchlist"
+                      : "Add to Watchlist"
+                  }
+                  title={
+                    company.starred ? "Remove from Watchlist" : "Add to Watchlist"
+                  }
+                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                    company.starred
+                      ? "opacity-100"
+                      : "opacity-25 hover:opacity-60"
+                  }`}
+                >
+                  ⭐
+                </button>
                 <button
                   type="button"
                   onClick={(e) => {
