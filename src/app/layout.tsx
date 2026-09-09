@@ -41,7 +41,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full bg-brand-100 font-sans text-brand-900 dark:bg-brand-950 dark:text-brand-100">
+      <body className="min-h-full bg-brand-50 font-sans text-brand-900 dark:bg-brand-900 dark:text-brand-100">
         {children}
       </body>
     </html>

@@ -190,7 +190,7 @@ export function Sidebar({
   return (
     <aside
       style={{ width: renderedWidth }}
-      className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-brand-200 bg-white text-brand-900 transition-[width] duration-300 ease-in-out dark:border-brand-800/80 dark:bg-brand-900 dark:text-brand-100"
+      className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-brand-200 bg-brand-50 text-brand-900 transition-[width] duration-300 ease-in-out dark:border-brand-800/80 dark:bg-brand-900 dark:text-brand-100"
     >
       {!collapsed && (
         <div

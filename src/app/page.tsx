@@ -420,6 +420,7 @@ function DashboardForProfile({
     return (
       <WelcomeLanding
         name={profileName}
+        theme={theme}
         onDismiss={() => setShowWelcome(false)}
         onOpenTutorial={() => {
           setShowWelcome(false);
@@ -536,6 +537,7 @@ function DashboardForProfile({
           days={preferences.days}
           sourceNames={enabledSourceNames}
           density={uiSettings.density}
+          background={uiSettings.background}
           focusedId={focusedId}
           isArticleSeen={isSeen}
           enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
