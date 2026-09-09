@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   DEFAULT_INDUSTRY_EMOJI,
   DEFAULT_SOURCES,
   INDUSTRIES,
   SAMPLE_COMPANIES,
-  STORAGE_KEY,
   defaultIndustryEmojis,
+  isReservedIndustryName,
 } from "@/lib/defaults";
 import type {
   AppPreferences,
@@ -26,45 +26,94 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   industryEmojis: defaultIndustryEmojis(INDUSTRIES),
 };
 
-function loadPreferences(): AppPreferences {
-  if (typeof window === "undefined") return DEFAULT_PREFERENCES;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_PREFERENCES;
-    const parsed = JSON.parse(raw) as AppPreferences;
-    const industries = parsed.industries?.length
-      ? parsed.industries
-      : INDUSTRIES;
-    const industryEmojis = { ...defaultIndustryEmojis(industries), ...parsed.industryEmojis };
-    return {
-      ...DEFAULT_PREFERENCES,
-      ...parsed,
-      sources: parsed.sources?.length ? parsed.sources : DEFAULT_SOURCES,
-      industries,
-      activeIndustry: industries.includes(parsed.activeIndustry)
-        ? parsed.activeIndustry
-        : industries[0],
-      industryEmojis,
-    };
-  } catch {
-    return DEFAULT_PREFERENCES;
-  }
+function normalizePreferences(
+  parsed: Partial<AppPreferences> | null
+): AppPreferences {
+  if (!parsed) return DEFAULT_PREFERENCES;
+  const industries = parsed.industries?.length ? parsed.industries : INDUSTRIES;
+  const industryEmojis = {
+    ...defaultIndustryEmojis(industries),
+    ...parsed.industryEmojis,
+  };
+  return {
+    ...DEFAULT_PREFERENCES,
+    ...parsed,
+    sources: parsed.sources?.length ? parsed.sources : DEFAULT_SOURCES,
+    industries,
+    activeIndustry: parsed.activeIndustry ?? industries[0],
+    industryEmojis,
+  };
 }
 
-export function usePreferences() {
+const SAVE_DEBOUNCE_MS = 600;
+
+// Preferences are synced to a shared profile on the server (see
+// /api/preferences/[name]) instead of localStorage, so every team member
+// using the same profile name sees the same watchlist/industries/sources.
+export function usePreferences(profileName: string | null) {
   const [preferences, setPreferences] =
     useState<AppPreferences>(DEFAULT_PREFERENCES);
   const [hydrated, setHydrated] = useState(false);
+  const [syncError, setSyncError] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipNextSave = useRef(false);
 
   useEffect(() => {
-    setPreferences(loadPreferences());
-    setHydrated(true);
-  }, []);
+    if (!profileName) {
+      setHydrated(false);
+      return;
+    }
+    let cancelled = false;
+    setHydrated(false);
+    setSyncError(false);
+
+    fetch(`/api/preferences/${encodeURIComponent(profileName)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load preferences.");
+        return res.json();
+      })
+      .then((data: { preferences: Partial<AppPreferences> | null }) => {
+        if (cancelled) return;
+        skipNextSave.current = true;
+        setPreferences(normalizePreferences(data.preferences));
+        setHydrated(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        skipNextSave.current = true;
+        setPreferences(DEFAULT_PREFERENCES);
+        setSyncError(true);
+        setHydrated(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [profileName]);
 
   useEffect(() => {
-    if (!hydrated) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-  }, [preferences, hydrated]);
+    if (!hydrated || !profileName) return;
+    if (skipNextSave.current) {
+      skipNextSave.current = false;
+      return;
+    }
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch(`/api/preferences/${encodeURIComponent(profileName)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(preferences),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to save.");
+          setSyncError(false);
+        })
+        .catch(() => setSyncError(true));
+    }, SAVE_DEBOUNCE_MS);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, [preferences, hydrated, profileName]);
 
   const addCompany = useCallback((name: string, industry: Industry) => {
     const trimmed = name.trim();
@@ -98,6 +147,15 @@ export function usePreferences() {
       ...prev,
       companies: prev.companies.map((c) =>
         c.id === id ? { ...c, pinned: !c.pinned } : c
+      ),
+    }));
+  }, []);
+
+  const toggleStarCompany = useCallback((id: string) => {
+    setPreferences((prev) => ({
+      ...prev,
+      companies: prev.companies.map((c) =>
+        c.id === id ? { ...c, starred: !c.starred } : c
       ),
     }));
   }, []);
@@ -155,7 +213,7 @@ export function usePreferences() {
 
   const addIndustry = useCallback((name: string) => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || isReservedIndustryName(trimmed)) return;
     setPreferences((prev) => {
       if (prev.industries.includes(trimmed)) return prev;
       return {
@@ -172,8 +230,14 @@ export function usePreferences() {
 
   const renameIndustry = useCallback((oldName: string, newName: string) => {
     const trimmed = newName.trim();
+    if (isReservedIndustryName(oldName)) return;
     setPreferences((prev) => {
-      if (!trimmed || trimmed === oldName || prev.industries.includes(trimmed)) {
+      if (
+        !trimmed ||
+        trimmed === oldName ||
+        isReservedIndustryName(trimmed) ||
+        prev.industries.includes(trimmed)
+      ) {
         return prev;
       }
       const { [oldName]: emoji, ...restEmojis } = prev.industryEmojis;
@@ -194,6 +258,7 @@ export function usePreferences() {
   }, []);
 
   const removeIndustry = useCallback((name: string) => {
+    if (isReservedIndustryName(name)) return;
     setPreferences((prev) => {
       const industries = prev.industries.filter((i) => i !== name);
       if (industries.length === 0) return prev;
@@ -238,17 +303,17 @@ export function usePreferences() {
       const trimmedName = name.trim();
       const trimmedDomain = domain.trim();
       if (!trimmedName || !trimmedDomain) return;
-      const source: NewsSource = {
-        id: `source-${Date.now()}`,
-        name: trimmedName,
-        domain: trimmedDomain,
-        feedUrls,
-        enabled: true,
-      };
-      setPreferences((prev) => ({
-        ...prev,
-        sources: [...prev.sources, source],
-      }));
+      setPreferences((prev) => {
+        if (prev.sources.some((s) => s.domain === trimmedDomain)) return prev;
+        const source: NewsSource = {
+          id: `source-${Date.now()}`,
+          name: trimmedName,
+          domain: trimmedDomain,
+          feedUrls,
+          enabled: true,
+        };
+        return { ...prev, sources: [...prev.sources, source] };
+      });
     },
     []
   );
@@ -283,9 +348,11 @@ export function usePreferences() {
   return {
     preferences,
     hydrated,
+    syncError,
     addCompany,
     removeCompany,
     togglePinCompany,
+    toggleStarCompany,
     updateCompanyNotes,
     reorderCompaniesInIndustry,
     reorderIndustries,

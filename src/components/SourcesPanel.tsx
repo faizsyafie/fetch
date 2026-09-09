@@ -9,6 +9,7 @@ interface SourcesPanelProps {
   onRemoveSource: (id: string) => void;
   onResetSources: () => void;
   onClearCache: () => void;
+  onOpenSuggestions: () => void;
 }
 
 export function SourcesPanel({
@@ -17,6 +18,7 @@ export function SourcesPanel({
   onRemoveSource,
   onResetSources,
   onClearCache,
+  onOpenSuggestions,
 }: SourcesPanelProps) {
   const [name, setName] = useState("");
   const [domain, setDomain] = useState("");
@@ -38,13 +40,22 @@ export function SourcesPanel({
         <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
           News Sources
         </h3>
-        <button
-          type="button"
-          onClick={onResetSources}
-          className="text-[11px] text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
-        >
-          Reset defaults
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onOpenSuggestions}
+            className="text-[11px] text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400"
+          >
+            Browse suggestions
+          </button>
+          <button
+            type="button"
+            onClick={onResetSources}
+            className="text-[11px] text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
+          >
+            Reset defaults
+          </button>
+        </div>
       </div>
       <div className="mb-2 flex flex-wrap gap-1.5">
         {sources.map((source) => (
