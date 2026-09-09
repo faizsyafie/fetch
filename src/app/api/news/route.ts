@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchNewsForWatchlist } from "@/lib/rss";
 import type { FetchNewsRequest, TimeFrameDays } from "@/lib/types";
 
-const VALID_DAYS: TimeFrameDays[] = [1, 3, 10, 15, 30];
+const VALID_DAYS: TimeFrameDays[] = [1, 3, 7, 14, 30];
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const days = VALID_DAYS.includes(body.days) ? body.days : 10;
+    const days = VALID_DAYS.includes(body.days) ? body.days : 7;
 
     const { articles, errors } = await fetchNewsForWatchlist(
       body.companies,

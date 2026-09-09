@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { NewsFeed } from "@/components/NewsFeed";
+import { useCallback, useMemo, useState } from "react";
+import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { Sidebar } from "@/components/Sidebar";
+import { SourcesPanel } from "@/components/SourcesPanel";
+import { TopBar } from "@/components/TopBar";
 import { usePreferences } from "@/hooks/usePreferences";
-import type { FetchNewsResponse, NewsArticle } from "@/lib/types";
+import { useTheme } from "@/hooks/useTheme";
+import type { Company, FetchNewsResponse } from "@/lib/types";
+
+const BATCH_SIZE = 3;
 
 export default function Dashboard() {
   const {
@@ -12,112 +17,254 @@ export default function Dashboard() {
     hydrated,
     addCompany,
     removeCompany,
-    toggleIndustry,
+    setActiveIndustry,
+    addIndustry,
+    renameIndustry,
+    removeIndustry,
     setDays,
-    toggleSource,
     addSource,
     removeSource,
-    updateSource,
     resetSources,
-    loadSampleCompanies,
   } = usePreferences();
+  const { theme, toggleTheme } = useTheme();
 
-  const [articles, setArticles] = useState<NewsArticle[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
+    {}
+  );
+  const [loadingSet, setLoadingSet] = useState<Set<string>>(new Set());
+  const [batchRunning, setBatchRunning] = useState(false);
 
-  const visibleCompanies = useMemo(
+  const companiesInIndustry = useMemo(
     () =>
-      preferences.companies.filter((c) =>
-        preferences.selectedIndustries.includes(c.industry)
+      preferences.companies.filter(
+        (c) => c.industry === preferences.activeIndustry
       ),
-    [preferences.companies, preferences.selectedIndustries]
+    [preferences.companies, preferences.activeIndustry]
   );
 
-  const enabledSources = useMemo(
-    () => preferences.sources.filter((s) => s.enabled),
+  const visibleCompanies = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      return preferences.companies.filter((c) =>
+        c.name.toLowerCase().includes(q)
+      );
+    }
+    return companiesInIndustry;
+  }, [searchQuery, preferences.companies, companiesInIndustry]);
+
+  const enabledSourceNames = useMemo(
+    () => preferences.sources.filter((s) => s.enabled).map((s) => s.name),
     [preferences.sources]
   );
 
-  const fetchNews = useCallback(async () => {
-    if (visibleCompanies.length === 0) return;
+  const fetchCompanyNews = useCallback(
+    async (company: Company) => {
+      setLoadingSet((prev) => new Set(prev).add(company.id));
+      try {
+        const response = await fetch("/api/news", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companies: [company],
+            sources: preferences.sources,
+            days: preferences.days,
+          }),
+        });
 
-    setLoading(true);
-    setErrors([]);
-
-    try {
-      const response = await fetch("/api/news", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companies: visibleCompanies,
-          sources: preferences.sources,
-          days: preferences.days,
-        }),
-      });
-
-      if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error ?? "Failed to fetch news.");
+        if (!response.ok) throw new Error("Failed to fetch news.");
+        const data = (await response.json()) as FetchNewsResponse;
+        setNewsCache((prev) => ({ ...prev, [company.id]: data.articles }));
+      } catch {
+        setNewsCache((prev) => ({ ...prev, [company.id]: "error" }));
+      } finally {
+        setLoadingSet((prev) => {
+          const next = new Set(prev);
+          next.delete(company.id);
+          return next;
+        });
       }
+    },
+    [preferences.sources, preferences.days]
+  );
 
-      const data = (await response.json()) as FetchNewsResponse;
-      setArticles(data.articles);
-      setErrors(data.errors);
-      setFetchedAt(data.fetchedAt);
-    } catch (error) {
-      setErrors([
-        error instanceof Error ? error.message : "Unexpected error occurred.",
-      ]);
-      setArticles([]);
-    } finally {
-      setLoading(false);
+  const toggleExpand = useCallback(
+    (company: Company) => {
+      setExpanded((prev) => {
+        const next = new Set(prev);
+        if (next.has(company.id)) {
+          next.delete(company.id);
+        } else {
+          next.add(company.id);
+        }
+        return next;
+      });
+      if (!newsCache[company.id] && !loadingSet.has(company.id)) {
+        void fetchCompanyNews(company);
+      }
+    },
+    [newsCache, loadingSet, fetchCompanyNews]
+  );
+
+  const refreshCompany = useCallback(
+    (company: Company) => {
+      setNewsCache((prev) => {
+        const next = { ...prev };
+        delete next[company.id];
+        return next;
+      });
+      void fetchCompanyNews(company);
+    },
+    [fetchCompanyNews]
+  );
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      visibleCompanies.forEach((c) => next.add(c.id));
+      return next;
+    });
+  }, [visibleCompanies]);
+
+  const clearSelection = useCallback(() => setSelected(new Set()), []);
+
+  const fetchSelected = useCallback(async () => {
+    if (selected.size === 0 || batchRunning) return;
+    setBatchRunning(true);
+    const toFetch = preferences.companies.filter(
+      (c) => selected.has(c.id) && !loadingSet.has(c.id)
+    );
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      toFetch.forEach((c) => next.add(c.id));
+      return next;
+    });
+
+    for (let i = 0; i < toFetch.length; i += BATCH_SIZE) {
+      const batch = toFetch.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map((company) => fetchCompanyNews(company)));
     }
-  }, [visibleCompanies, preferences.sources, preferences.days]);
 
-  useEffect(() => {
-    if (!hydrated || visibleCompanies.length === 0) return;
-    void fetchNews();
-  }, [hydrated, fetchNews, visibleCompanies.length]);
+    setBatchRunning(false);
+  }, [selected, batchRunning, preferences.companies, loadingSet, fetchCompanyNews]);
+
+  const handleSearch = useCallback((value: string) => {
+    setSearchQuery(value);
+    setSelected(new Set());
+  }, []);
+
+  const handleSelectIndustry = useCallback(
+    (industry: string) => {
+      setActiveIndustry(industry);
+      setSearchQuery("");
+      setSelected(new Set());
+    },
+    [setActiveIndustry]
+  );
+
+  const handleAddCompanyTag = useCallback(
+    (name: string) => addCompany(name, preferences.activeIndustry),
+    [addCompany, preferences.activeIndustry]
+  );
+
+  const clearCache = useCallback(() => setNewsCache({}), []);
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-400">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 text-slate-400 dark:bg-slate-950 dark:text-slate-500">
         Loading preferences…
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
+    <div className="flex h-screen flex-col overflow-hidden lg:flex-row">
       <Sidebar
         companies={preferences.companies}
+        industries={preferences.industries}
+        activeIndustry={preferences.activeIndustry}
         sources={preferences.sources}
         days={preferences.days}
-        selectedIndustries={preferences.selectedIndustries}
-        onAddCompany={addCompany}
-        onRemoveCompany={removeCompany}
-        onToggleIndustry={toggleIndustry}
-        onSetDays={setDays}
-        onToggleSource={toggleSource}
-        onAddSource={addSource}
-        onRemoveSource={removeSource}
-        onUpdateSource={updateSource}
-        onResetSources={resetSources}
-        onLoadSamples={loadSampleCompanies}
-        onFetch={fetchNews}
-        loading={loading}
+        editMode={editMode}
+        sourcesOpen={sourcesOpen}
+        onSelectIndustry={handleSelectIndustry}
+        onAddIndustry={addIndustry}
+        onRenameIndustry={renameIndustry}
+        onRemoveIndustry={removeIndustry}
+        onToggleEditMode={() => setEditMode((v) => !v)}
+        onToggleSourcesPanel={() => setSourcesOpen((v) => !v)}
       />
-      <NewsFeed
-        articles={articles}
-        fetchedAt={fetchedAt}
-        errors={errors}
-        loading={loading}
-        companyCount={visibleCompanies.length}
-        sourceCount={enabledSources.length}
-        days={preferences.days}
-      />
+
+      <div className="flex min-h-0 flex-1 flex-col bg-slate-50 dark:bg-slate-900">
+        <TopBar
+          activeIndustry={preferences.activeIndustry}
+          industries={preferences.industries}
+          companiesInIndustry={companiesInIndustry}
+          matchedCount={visibleCompanies.length}
+          searchQuery={searchQuery}
+          days={preferences.days}
+          sources={preferences.sources}
+          selectedCount={selected.size}
+          batchRunning={batchRunning}
+          loadingCount={loadingSet.size}
+          editMode={editMode}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onSearch={handleSearch}
+          onSetDays={setDays}
+          onSelectAll={selectAll}
+          onClearSelection={clearSelection}
+          onFetchSelected={fetchSelected}
+          onAddCompany={handleAddCompanyTag}
+          onRemoveCompany={removeCompany}
+        />
+
+        {sourcesOpen && (
+          <SourcesPanel
+            sources={preferences.sources}
+            onAddSource={addSource}
+            onRemoveSource={removeSource}
+            onResetSources={resetSources}
+            onClearCache={clearCache}
+          />
+        )}
+
+        <CompanyList
+          companies={visibleCompanies}
+          industries={preferences.industries}
+          showIndustryLabel={searchQuery.trim().length > 0}
+          selected={selected}
+          expanded={expanded}
+          newsCache={newsCache}
+          loadingSet={loadingSet}
+          days={preferences.days}
+          sourceNames={enabledSourceNames}
+          emptyMessage={
+            searchQuery.trim()
+              ? "No companies matched."
+              : "No companies. Click ✏️ Edit Lists to add some."
+          }
+          onToggleSelect={toggleSelect}
+          onToggleExpand={toggleExpand}
+          onRefresh={refreshCompany}
+        />
+      </div>
     </div>
   );
 }
