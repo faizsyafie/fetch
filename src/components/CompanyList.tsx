@@ -63,7 +63,10 @@ export function CompanyList({
 
   if (companies.length === 0) {
     return (
-      <div className="mt-16 text-center text-sm text-brand-400 dark:text-brand-500">
+      <div
+        data-tour="company-list"
+        className="mt-16 text-center text-sm text-brand-400 dark:text-brand-500"
+      >
         {emptyMessage}
       </div>
     );
@@ -90,6 +93,7 @@ export function CompanyList({
 
   return (
     <div
+      data-tour="company-list"
       className={`flex-1 overflow-y-auto px-4 py-3 ${compact ? "space-y-0.5" : "space-y-1"}`}
     >
       {companies.map((company) => {

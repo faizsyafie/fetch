@@ -10,8 +10,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesPanel } from "@/components/SourcesPanel";
 import { SuggestedSources } from "@/components/SuggestedSources";
+import { SpotlightTour } from "@/components/SpotlightTour";
 import { TopBar } from "@/components/TopBar";
-import { TutorialModal } from "@/components/TutorialModal";
 import { WelcomeLanding } from "@/components/WelcomeLanding";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -25,6 +25,7 @@ import {
   FONT_SCALE_PRESETS,
   WATCHLIST_INDUSTRY,
 } from "@/lib/defaults";
+import { TOUR_STEPS } from "@/lib/tourSteps";
 import type { Company, FetchNewsResponse } from "@/lib/types";
 
 const BATCH_SIZE = 3;
@@ -570,7 +571,8 @@ function DashboardForProfile({
       )}
 
       {tutorialOpen && (
-        <TutorialModal
+        <SpotlightTour
+          steps={TOUR_STEPS}
           onClose={() => {
             setTutorialOpen(false);
             markTutorialSeen();
