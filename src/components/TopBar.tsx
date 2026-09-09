@@ -137,7 +137,10 @@ export function TopBar({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50">
+        <div
+          data-tour="topbar-timerange"
+          className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
+        >
           {TIME_FRAME_OPTIONS.map((opt) => (
             <button
               key={opt.days}
@@ -154,7 +157,7 @@ export function TopBar({
           ))}
         </div>
 
-        <div className="relative shrink-0">
+        <div data-tour="topbar-search" className="relative shrink-0">
           <span className="pointer-events-none absolute left-2.5 top-1/2 -tranbrand-y-1/2 text-xs text-brand-400 dark:text-brand-500">
             🔍
           </span>
@@ -169,6 +172,7 @@ export function TopBar({
 
         <button
           type="button"
+          data-tour="topbar-command-palette"
           onClick={onOpenCommandPalette}
           title="Command palette (Ctrl/Cmd+K)"
           className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
@@ -176,17 +180,19 @@ export function TopBar({
           <kbd className="text-[10px]">⌘K</kbd>
         </button>
 
-        <DensityToggle density={density} onToggle={onToggleDensity} />
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        <div data-tour="topbar-appearance" className="flex shrink-0 items-center gap-2">
+          <DensityToggle density={density} onToggle={onToggleDensity} />
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
 
-        <button
-          type="button"
-          onClick={onOpenCustomize}
-          title="Customize appearance"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
-        >
-          <span aria-hidden="true">🎨</span>
-        </button>
+          <button
+            type="button"
+            onClick={onOpenCustomize}
+            title="Customize appearance"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
+          >
+            <span aria-hidden="true">🎨</span>
+          </button>
+        </div>
 
         <button
           type="button"
@@ -198,10 +204,12 @@ export function TopBar({
           Tutorial
         </button>
 
-        <UserMenu name={profileName} onLogOut={onLogOut} />
+        <div data-tour="topbar-user">
+          <UserMenu name={profileName} onLogOut={onLogOut} />
+        </div>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1">
+      <div data-tour="topbar-fetch" className="mt-2 flex flex-wrap items-center gap-1">
         <div className="flex items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50">
           <button
             type="button"

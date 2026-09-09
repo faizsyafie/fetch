@@ -203,6 +203,7 @@ export function Sidebar({
       )}
 
       <div
+        data-tour="sidebar-header"
         className={`flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800/80`}
       >
         <Logo theme={theme} compact={collapsed} />
@@ -242,7 +243,10 @@ export function Sidebar({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-1">
+      <div
+        data-tour="sidebar-industries"
+        className="flex-1 overflow-y-auto overflow-x-hidden py-1"
+      >
         {pinnedRows.map(({ key, emoji, count }) => {
           const isActive = key === activeIndustry;
           if (collapsed) {
@@ -473,6 +477,7 @@ export function Sidebar({
       </div>
 
       <div
+        data-tour="sidebar-manage"
         className={`border-t border-brand-200 dark:border-brand-800/80 ${
           collapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
         }`}
