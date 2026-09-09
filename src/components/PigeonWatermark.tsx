@@ -11,14 +11,11 @@ interface PigeonWatermarkProps {
 // (no gap) to look like it's peeking in from the edge.
 //
 // To stay behind real content (news cards, company rows) rather than ever
-// covering text, this relies on DOM order, not a negative z-index: render
-// it as the FIRST child of its `relative` container, before its flex-item
-// siblings, with no z-index override. Flex items paint like z-index:0
-// positioned elements regardless of their own z-index, so a same-level
-// (auto) sibling that comes later in the DOM always paints on top of one
-// that comes earlier — a negative z-index here instead sits behind that
-// container's own compositing layer entirely and disappears, even over
-// empty space, in some browsers.
+// covering text, this is pinned at z-0 while its sibling content wrapper in
+// page.tsx is given `relative z-10` — an explicit stacking context beats
+// same-level DOM order, which doesn't reliably win against descendants that
+// pick up their own stacking context (e.g. rows with a `transition` on
+// transform/opacity).
 export function PigeonWatermark({ theme }: PigeonWatermarkProps) {
   const src = theme === "dark" ? "/bg-pigeon-dark2.png" : "/bg-pigeon-light2.png";
   return (
@@ -27,7 +24,7 @@ export function PigeonWatermark({ theme }: PigeonWatermarkProps) {
       src={src}
       alt=""
       aria-hidden="true"
-      className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 select-none opacity-70"
+      className="pointer-events-none absolute bottom-0 right-0 z-0 h-48 w-48 select-none opacity-40"
     />
   );
 }
