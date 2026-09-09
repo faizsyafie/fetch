@@ -17,6 +17,7 @@ import type {
   NewsSource,
   TimeFrameDays,
 } from "@/lib/types";
+import { Logo } from "@/components/Logo";
 
 interface SidebarProps {
   companies: Company[];
@@ -63,14 +64,14 @@ function EmojiPicker({
   return (
     <div
       ref={ref}
-      className="absolute left-0 top-full z-20 mt-1 grid w-52 grid-cols-6 gap-0.5 rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+      className="absolute left-0 top-full z-20 mt-1 grid w-52 grid-cols-6 gap-0.5 rounded-md border border-brand-200 bg-white p-2 shadow-lg dark:border-brand-700 dark:bg-brand-800"
     >
       {EMOJI_PICKER_OPTIONS.map((emoji) => (
         <button
           key={emoji}
           type="button"
           onClick={() => onPick(emoji)}
-          className="flex h-7 w-7 items-center justify-center rounded text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+          className="flex h-7 w-7 items-center justify-center rounded text-sm hover:bg-brand-100 dark:hover:bg-brand-700"
         >
           {emoji}
         </button>
@@ -186,7 +187,7 @@ export function Sidebar({
   return (
     <aside
       style={{ width: renderedWidth }}
-      className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white text-slate-900 transition-[width] duration-300 ease-in-out dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-100"
+      className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-brand-200 bg-white text-brand-900 transition-[width] duration-300 ease-in-out dark:border-brand-800/80 dark:bg-brand-900 dark:text-brand-100"
     >
       {!collapsed && (
         <div
@@ -199,30 +200,44 @@ export function Sidebar({
       )}
 
       <div
-        className={`flex items-center border-b border-slate-200 py-3 dark:border-slate-800/80 ${
-          collapsed ? "justify-center px-2" : "justify-between px-4"
-        }`}
+        className={`flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800/80`}
       >
+        <Logo compact={collapsed} />
         {!collapsed && (
-          <div className="min-w-0 overflow-hidden whitespace-nowrap">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-              Industries
-            </p>
-            <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-600">
-              {companies.length} companies
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
+          >
+            «
+          </button>
         )}
+      </div>
+
+      {collapsed && (
         <button
           type="button"
           onClick={onToggleCollapsed}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          aria-label="Expand sidebar"
+          title="Expand sidebar"
+          className="mx-auto mt-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
         >
-          {collapsed ? "»" : "«"}
+          »
         </button>
-      </div>
+      )}
+
+      {!collapsed && (
+        <div className="border-b border-brand-200 px-4 py-2 dark:border-brand-800/80">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
+            Industries
+          </p>
+          <p className="mt-0.5 text-[11px] text-brand-400 dark:text-brand-600">
+            {companies.length} companies
+          </p>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-1">
         {pinnedRows.map(({ key, emoji, count }) => {
@@ -236,8 +251,8 @@ export function Sidebar({
                 title={key}
                 className={`mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
                   isActive
-                    ? `${accentPreset.border} bg-slate-100 dark:bg-slate-800/70`
-                    : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                    ? `${accentPreset.border} bg-brand-100 dark:bg-brand-800/70`
+                    : "border-transparent hover:bg-brand-50 dark:hover:bg-brand-800/40"
                 }`}
               >
                 {emoji}
@@ -251,8 +266,8 @@ export function Sidebar({
               onClick={() => onSelectIndustry(key)}
               className={`flex w-full items-center gap-2 whitespace-nowrap border-l-2 py-2 pl-3 pr-3 text-left text-[13px] transition-colors ${
                 isActive
-                  ? `${accentPreset.border} bg-slate-100 font-semibold text-slate-900 dark:bg-slate-800/70 dark:text-white`
-                  : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/40 dark:hover:text-slate-200"
+                  ? `${accentPreset.border} bg-brand-100 font-semibold text-brand-900 dark:bg-brand-800/70 dark:text-white`
+                  : "border-transparent text-brand-500 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-800/40 dark:hover:text-brand-200"
               }`}
             >
               <span className="shrink-0">{emoji}</span>
@@ -260,8 +275,8 @@ export function Sidebar({
               <span
                 className={`shrink-0 tabular-nums ${
                   isActive
-                    ? "text-slate-500 dark:text-slate-300"
-                    : "text-slate-400 dark:text-slate-600"
+                    ? "text-brand-500 dark:text-brand-300"
+                    : "text-brand-400 dark:text-brand-600"
                 }`}
               >
                 {count}
@@ -270,7 +285,7 @@ export function Sidebar({
           );
         })}
 
-        <div className="my-1 border-t border-slate-100 dark:border-slate-800/60" />
+        <div className="my-1 border-t border-brand-100 dark:border-brand-800/60" />
 
         {industries.map((industry) => {
           const count = companies.filter(
@@ -288,8 +303,8 @@ export function Sidebar({
                 title={industry}
                 className={`mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
                   isActive
-                    ? `${accentPreset.border} bg-slate-100 dark:bg-slate-800/70`
-                    : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                    ? `${accentPreset.border} bg-brand-100 dark:bg-brand-800/70`
+                    : "border-transparent hover:bg-brand-50 dark:hover:bg-brand-800/40"
                 }`}
               >
                 {emoji}
@@ -311,7 +326,7 @@ export function Sidebar({
                     if (e.key === "Enter") confirmRename();
                     if (e.key === "Escape") setRenaming(null);
                   }}
-                  className="w-full rounded border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded border border-brand-300 bg-white px-1.5 py-0.5 text-xs text-brand-900 outline-none focus:border-blue-500 dark:border-brand-700 dark:bg-brand-800 dark:text-white"
                 />
                 <button
                   type="button"
@@ -350,12 +365,12 @@ export function Sidebar({
                   : "border-t-2 border-transparent"
               } ${
                 dragIndustry === industry
-                  ? "scale-[0.98] bg-slate-50 opacity-60 shadow-inner dark:bg-slate-800/60"
+                  ? "scale-[0.98] bg-brand-50 opacity-60 shadow-inner dark:bg-brand-800/60"
                   : ""
               }`}
             >
               {editMode && (
-                <span className="pl-1.5 text-[10px] text-slate-300 dark:text-slate-600">
+                <span className="pl-1.5 text-[10px] text-brand-300 dark:text-brand-600">
                   ⠿
                 </span>
               )}
@@ -368,7 +383,7 @@ export function Sidebar({
                         prev === industry ? null : industry
                       )
                     }
-                    className="rounded text-sm leading-none hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="rounded text-sm leading-none hover:bg-brand-100 dark:hover:bg-brand-800"
                     aria-label={`Change emoji for ${industry}`}
                     title="Change emoji"
                   >
@@ -394,8 +409,8 @@ export function Sidebar({
                   editMode ? "pl-2" : "pl-3"
                 } ${
                   isActive
-                    ? `${accentPreset.border} bg-slate-100 font-semibold text-slate-900 dark:bg-slate-800/70 dark:text-white`
-                    : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/40 dark:hover:text-slate-200"
+                    ? `${accentPreset.border} bg-brand-100 font-semibold text-brand-900 dark:bg-brand-800/70 dark:text-white`
+                    : "border-transparent text-brand-500 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-800/40 dark:hover:text-brand-200"
                 }`}
               >
                 {!editMode && <span className="shrink-0">{emoji}</span>}
@@ -403,8 +418,8 @@ export function Sidebar({
                 <span
                   className={`shrink-0 tabular-nums ${
                     isActive
-                      ? "text-slate-500 dark:text-slate-300"
-                      : "text-slate-400 dark:text-slate-600"
+                      ? "text-brand-500 dark:text-brand-300"
+                      : "text-brand-400 dark:text-brand-600"
                   }`}
                 >
                   {count}
@@ -415,7 +430,7 @@ export function Sidebar({
                   <button
                     type="button"
                     onClick={() => startRename(industry)}
-                    className="rounded px-1 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    className="rounded px-1 py-1 text-xs text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
                     aria-label={`Rename ${industry}`}
                   >
                     ✏️
@@ -423,7 +438,7 @@ export function Sidebar({
                   <button
                     type="button"
                     onClick={() => onRemoveIndustry(industry)}
-                    className="rounded px-1 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-red-500 dark:hover:bg-slate-800"
+                    className="rounded px-1 py-1 text-xs text-brand-400 hover:bg-brand-100 hover:text-red-500 dark:hover:bg-brand-800"
                     aria-label={`Delete ${industry}`}
                   >
                     🗑️
@@ -441,7 +456,7 @@ export function Sidebar({
               onChange={(e) => setNewIndustryName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddIndustry()}
               placeholder="New industry…"
-              className="w-full rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded border border-brand-300 bg-white px-1.5 py-1 text-xs text-brand-900 outline-none focus:border-blue-500 dark:border-brand-700 dark:bg-brand-800 dark:text-white"
             />
             <button
               type="button"
@@ -455,7 +470,7 @@ export function Sidebar({
       </div>
 
       <div
-        className={`border-t border-slate-200 dark:border-slate-800/80 ${
+        className={`border-t border-brand-200 dark:border-brand-800/80 ${
           collapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
         }`}
       >
@@ -468,7 +483,7 @@ export function Sidebar({
               className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
                 editMode
                   ? accentPreset.softBg
-                  : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                  : "hover:bg-brand-100 dark:hover:bg-brand-800"
               }`}
             >
               ✏️
@@ -480,7 +495,7 @@ export function Sidebar({
               className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
                 sourcesOpen
                   ? "bg-emerald-100 dark:bg-emerald-500/15"
-                  : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                  : "hover:bg-brand-100 dark:hover:bg-brand-800"
               }`}
             >
               🔗
@@ -488,7 +503,7 @@ export function Sidebar({
           </>
         ) : (
           <>
-            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Manage
             </p>
             <button
@@ -497,7 +512,7 @@ export function Sidebar({
               className={`mb-1.5 w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
                 editMode
                   ? `${accentPreset.softBg} ${accentPreset.text}`
-                  : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                  : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
               }`}
             >
               ✏️ Edit Lists
@@ -508,27 +523,27 @@ export function Sidebar({
               className={`w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
                 sourcesOpen
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-                  : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                  : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
               }`}
             >
               🔗 Edit Sources
             </button>
 
-            <p className="mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">
+            <p className="mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Sources
             </p>
             <div className="space-y-1">
               {enabledSources.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400"
+                  className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
                 >
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                   <span className="truncate">{s.name}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-600">
+            <div className="mt-2 flex items-center justify-between text-[10px] text-brand-400 dark:text-brand-600">
               <span>
                 Last {days} day{days !== 1 ? "s" : ""}
               </span>

@@ -19,9 +19,12 @@ import type {
 } from "@/lib/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { DensityToggle } from "@/components/DensityToggle";
+import { UserMenu } from "@/components/UserMenu";
 import type { Theme } from "@/hooks/useTheme";
 
 interface TopBarProps {
+  profileName: string;
+  onLogOut: () => void;
   activeIndustry: Industry;
   industries: Industry[];
   industryEmojis: Record<Industry, string>;
@@ -54,6 +57,8 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  profileName,
+  onLogOut,
   activeIndustry,
   industries,
   industryEmojis,
@@ -101,10 +106,10 @@ export function TopBar({
   }
 
   return (
-    <div className="border-b border-slate-200 bg-white px-5 py-3 dark:border-slate-800/80 dark:bg-slate-900">
+    <div className="border-b border-brand-200 bg-white px-5 py-3 dark:border-brand-800/80 dark:bg-brand-900">
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 text-[15px] font-bold uppercase tracking-wide text-slate-900 dark:text-white">
+          <div className="flex items-center gap-1.5 text-[15px] font-bold uppercase tracking-wide text-brand-900 dark:text-white">
             {isSearching ? (
               "Search Results"
             ) : (
@@ -115,7 +120,7 @@ export function TopBar({
             )}
           </div>
           <div
-            className="mt-0.5 truncate text-[11px] text-slate-500 dark:text-slate-500"
+            className="mt-0.5 truncate text-[11px] text-brand-500 dark:text-brand-500"
             title={
               isSearching
                 ? undefined
@@ -132,7 +137,7 @@ export function TopBar({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-800 dark:bg-slate-950/50">
+        <div className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50">
           {TIME_FRAME_OPTIONS.map((opt) => (
             <button
               key={opt.days}
@@ -141,7 +146,7 @@ export function TopBar({
               className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
                 days === opt.days
                   ? `${accentPreset.solid} text-white shadow-sm`
-                  : "text-slate-500 hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800"
+                  : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
               }`}
             >
               {opt.label.toUpperCase()}
@@ -150,7 +155,7 @@ export function TopBar({
         </div>
 
         <div className="relative shrink-0">
-          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500">
+          <span className="pointer-events-none absolute left-2.5 top-1/2 -tranbrand-y-1/2 text-xs text-brand-400 dark:text-brand-500">
             🔍
           </span>
           <input
@@ -158,7 +163,7 @@ export function TopBar({
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Search companies…"
-            className={`w-44 rounded-lg border border-slate-200 bg-slate-50 py-1.5 pl-7 pr-3 text-xs text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:${accentPreset.border} focus:bg-white dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:placeholder:text-slate-600 dark:focus:bg-slate-950`}
+            className={`w-44 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-7 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
           />
         </div>
 
@@ -166,7 +171,7 @@ export function TopBar({
           type="button"
           onClick={onOpenCommandPalette}
           title="Command palette (Ctrl/Cmd+K)"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
         >
           <kbd className="text-[10px]">⌘K</kbd>
         </button>
@@ -178,7 +183,7 @@ export function TopBar({
           type="button"
           onClick={onOpenCustomize}
           title="Customize appearance"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
         >
           <span aria-hidden="true">🎨</span>
         </button>
@@ -187,26 +192,28 @@ export function TopBar({
           type="button"
           onClick={onOpenTutorial}
           title="Open tutorial"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
         >
           <span aria-hidden="true">❓</span>
           Tutorial
         </button>
+
+        <UserMenu name={profileName} onLogOut={onLogOut} />
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-1">
-        <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-800 dark:bg-slate-950/50">
+        <div className="flex items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50">
           <button
             type="button"
             onClick={onSelectAll}
-            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
           >
             Select all
           </button>
           <button
             type="button"
             onClick={onClearSelection}
-            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-200/70 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
           >
             Clear
           </button>
@@ -214,7 +221,7 @@ export function TopBar({
         <button
           type="button"
           onClick={onCollapseAll}
-          className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400 dark:hover:bg-slate-800"
+          className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
         >
           Collapse all
         </button>
@@ -223,7 +230,7 @@ export function TopBar({
             type="button"
             onClick={onFetchAll}
             disabled={batchRunning || companiesInIndustry.length === 0}
-            className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400 dark:hover:bg-slate-800"
+            className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
           >
             Fetch all
           </button>
@@ -233,7 +240,7 @@ export function TopBar({
             type="button"
             onClick={onFetchSelected}
             disabled={batchRunning}
-            className={`rounded-md ${accentPreset.solid} px-3 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solidHover} disabled:cursor-not-allowed disabled:bg-slate-400`}
+            className={`rounded-md ${accentPreset.solid} px-3 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solidHover} disabled:cursor-not-allowed disabled:bg-brand-400`}
           >
             {batchRunning
               ? `Fetching… (${loadingCount} active)`
