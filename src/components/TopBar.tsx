@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { DEFAULT_INDUSTRY_EMOJI, industryPalette, TIME_FRAME_OPTIONS } from "@/lib/defaults";
-import type { Company, Industry, NewsSource, TimeFrameDays } from "@/lib/types";
+import type { Company, Density, Industry, NewsSource, TimeFrameDays } from "@/lib/types";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DensityToggle } from "@/components/DensityToggle";
 import type { Theme } from "@/hooks/useTheme";
 
 interface TopBarProps {
@@ -20,14 +21,19 @@ interface TopBarProps {
   loadingCount: number;
   editMode: boolean;
   theme: Theme;
+  density: Density;
   onToggleTheme: () => void;
+  onToggleDensity: () => void;
   onSearch: (value: string) => void;
   onSetDays: (days: TimeFrameDays) => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
   onFetchSelected: () => void;
+  onFetchAll: () => void;
   onAddCompany: (name: string) => void;
   onRemoveCompany: (id: string) => void;
+  onOpenCommandPalette: () => void;
+  onOpenTutorial: () => void;
 }
 
 export function TopBar({
@@ -44,14 +50,19 @@ export function TopBar({
   loadingCount,
   editMode,
   theme,
+  density,
   onToggleTheme,
+  onToggleDensity,
   onSearch,
   onSetDays,
   onSelectAll,
   onClearSelection,
   onFetchSelected,
+  onFetchAll,
   onAddCompany,
   onRemoveCompany,
+  onOpenCommandPalette,
+  onOpenTutorial,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
   const isSearching = searchQuery.trim().length > 0;
@@ -118,6 +129,7 @@ export function TopBar({
             🔍
           </span>
           <input
+            id="company-search-input"
             value={searchQuery}
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Search companies…"
@@ -125,7 +137,27 @@ export function TopBar({
           />
         </div>
 
+        <button
+          type="button"
+          onClick={onOpenCommandPalette}
+          title="Command palette (Ctrl/Cmd+K)"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+        >
+          <kbd className="text-[10px]">⌘K</kbd>
+        </button>
+
+        <DensityToggle density={density} onToggle={onToggleDensity} />
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+
+        <button
+          type="button"
+          onClick={onOpenTutorial}
+          title="Open tutorial"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+        >
+          <span aria-hidden="true">❓</span>
+          Tutorial
+        </button>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-1">
@@ -145,6 +177,16 @@ export function TopBar({
             Clear
           </button>
         </div>
+        {!isSearching && (
+          <button
+            type="button"
+            onClick={onFetchAll}
+            disabled={batchRunning || companiesInIndustry.length === 0}
+            className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400 dark:hover:bg-slate-800"
+          >
+            Fetch all
+          </button>
+        )}
         {selectedCount > 0 && (
           <button
             type="button"

@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { industryPalette } from "@/lib/defaults";
-import type { Company, Industry, NewsArticle } from "@/lib/types";
+import type { Company, Density, Industry, NewsArticle } from "@/lib/types";
 
 export type NewsCacheEntry = NewsArticle[] | "error";
 
@@ -17,9 +18,16 @@ interface CompanyListProps {
   days: number;
   sourceNames: string[];
   emptyMessage: string;
+  density: Density;
+  focusedId: string | null;
+  isArticleSeen: (articleId: string) => boolean;
+  enableDrag: boolean;
   onToggleSelect: (id: string) => void;
   onToggleExpand: (company: Company) => void;
   onRefresh: (company: Company) => void;
+  onTogglePin: (id: string) => void;
+  onUpdateNotes: (id: string, notes: string) => void;
+  onReorder: (orderedIds: string[]) => void;
 }
 
 export function CompanyList({
@@ -33,10 +41,21 @@ export function CompanyList({
   days,
   sourceNames,
   emptyMessage,
+  density,
+  focusedId,
+  isArticleSeen,
+  enableDrag,
   onToggleSelect,
   onToggleExpand,
   onRefresh,
+  onTogglePin,
+  onUpdateNotes,
+  onReorder,
 }: CompanyListProps) {
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const compact = density === "compact";
+
   if (companies.length === 0) {
     return (
       <div className="mt-16 text-center text-sm text-slate-400 dark:text-slate-500">
@@ -45,27 +64,80 @@ export function CompanyList({
     );
   }
 
+  function handleDrop(targetId: string) {
+    if (!dragId || dragId === targetId) {
+      setDragId(null);
+      setDragOverId(null);
+      return;
+    }
+    const ids = companies.map((c) => c.id);
+    const withoutDragged = ids.filter((id) => id !== dragId);
+    const targetIndex = withoutDragged.indexOf(targetId);
+    const reordered = [
+      ...withoutDragged.slice(0, targetIndex),
+      dragId,
+      ...withoutDragged.slice(targetIndex),
+    ];
+    onReorder(reordered);
+    setDragId(null);
+    setDragOverId(null);
+  }
+
   return (
-    <div className="flex-1 space-y-1 overflow-y-auto px-4 py-3">
+    <div
+      className={`flex-1 overflow-y-auto px-4 py-3 ${compact ? "space-y-0.5" : "space-y-1"}`}
+    >
       {companies.map((company) => {
         const palette = industryPalette(company.industry, industries);
         const isOpen = expanded.has(company.id);
         const isSelected = selected.has(company.id);
         const isLoading = loadingSet.has(company.id);
+        const isFocused = focusedId === company.id;
         const news = newsCache[company.id];
+        const unseenCount =
+          Array.isArray(news) && news.length > 0
+            ? news.filter((a) => !isArticleSeen(a.id)).length
+            : 0;
 
         return (
           <div
             key={company.id}
+            data-company-row={company.id}
+            draggable={enableDrag}
+            onDragStart={() => enableDrag && setDragId(company.id)}
+            onDragOver={(e) => {
+              if (!enableDrag) return;
+              e.preventDefault();
+              setDragOverId(company.id);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              handleDrop(company.id);
+            }}
+            onDragEnd={() => {
+              setDragId(null);
+              setDragOverId(null);
+            }}
             className={`overflow-hidden rounded-md border transition-colors ${
               isSelected
                 ? "border-blue-500/70 bg-white ring-1 ring-blue-500/40 dark:bg-slate-900"
                 : isOpen
                   ? "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900"
                   : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800/60"
-            }`}
+            } ${isFocused ? "ring-2 ring-amber-400/70 dark:ring-amber-400/50" : ""} ${
+              dragOverId === company.id && dragId !== company.id
+                ? "border-t-2 border-t-blue-500"
+                : ""
+            } ${dragId === company.id ? "opacity-40" : ""}`}
           >
-            <div className="flex items-center py-1.5 pl-3 pr-2.5">
+            <div
+              className={`flex items-center pl-3 pr-2.5 ${compact ? "py-0.5" : "py-1.5"}`}
+            >
+              {enableDrag && (
+                <span className="mr-1 shrink-0 cursor-grab text-[10px] text-slate-300 active:cursor-grabbing dark:text-slate-600">
+                  ⠿
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => onToggleSelect(company.id)}
@@ -80,7 +152,9 @@ export function CompanyList({
               </button>
 
               <div
-                className={`mr-2.5 flex h-6 w-6 shrink-0 items-center justify-center rounded text-[11px] font-bold ${palette.badgeBg} ${palette.badgeText}`}
+                className={`mr-2.5 flex shrink-0 items-center justify-center rounded text-[11px] font-bold ${palette.badgeBg} ${palette.badgeText} ${
+                  compact ? "h-5 w-5" : "h-6 w-6"
+                }`}
               >
                 {company.name.charAt(0)}
               </div>
@@ -90,17 +164,47 @@ export function CompanyList({
                 onClick={() => onToggleExpand(company)}
                 className="min-w-0 flex-1 cursor-pointer py-0.5 text-left"
               >
-                <div className="truncate text-[13px] font-semibold leading-tight text-slate-900 dark:text-white">
-                  {company.name}
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`truncate font-semibold leading-tight text-slate-900 dark:text-white ${
+                      compact ? "text-xs" : "text-[13px]"
+                    }`}
+                  >
+                    {company.name}
+                  </span>
+                  {unseenCount > 0 && (
+                    <span
+                      className="inline-flex h-4 shrink-0 items-center rounded-full bg-blue-500 px-1.5 text-[9px] font-bold text-white"
+                      title={`${unseenCount} new article${unseenCount !== 1 ? "s" : ""}`}
+                    >
+                      {unseenCount}
+                    </span>
+                  )}
                 </div>
-                {showIndustryLabel && (
+                {showIndustryLabel && !compact && (
                   <div className="text-[10.5px] leading-tight text-slate-500 dark:text-slate-500">
                     {company.industry}
                   </div>
                 )}
               </button>
 
-              <div className="ml-2 flex shrink-0 items-center gap-2">
+              <div className="ml-2 flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTogglePin(company.id);
+                  }}
+                  aria-label={company.pinned ? "Unpin company" : "Pin company"}
+                  title={company.pinned ? "Unpin" : "Pin to top"}
+                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                    company.pinned
+                      ? "opacity-100"
+                      : "opacity-25 hover:opacity-60"
+                  }`}
+                >
+                  📌
+                </button>
                 {news && !isLoading && news !== "error" && (
                   <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
                     {news.length === 0
@@ -153,6 +257,14 @@ export function CompanyList({
             >
               <div className="overflow-hidden">
                 <div className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/40">
+                  <div className="px-4 py-2">
+                    <input
+                      value={company.notes ?? ""}
+                      onChange={(e) => onUpdateNotes(company.id, e.target.value)}
+                      placeholder="Add a private note…"
+                      className="w-full rounded border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                    />
+                  </div>
                   {isLoading && (
                     <div className="px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400">
                       🔍 Searching {sourceNames.join(", ")}…
@@ -178,6 +290,8 @@ export function CompanyList({
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`block px-4 py-2.5 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800/60 ${
+                          isArticleSeen(article.id) ? "opacity-70" : ""
+                        } ${
                           i !== news.length - 1
                             ? "border-b border-slate-200 dark:border-slate-800"
                             : ""

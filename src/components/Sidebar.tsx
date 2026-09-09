@@ -14,13 +14,18 @@ interface SidebarProps {
   editMode: boolean;
   sourcesOpen: boolean;
   lastUpdatedLabel: string | null;
+  width: number;
+  collapsed: boolean;
   onSelectIndustry: (industry: Industry) => void;
   onAddIndustry: (name: string) => void;
   onRenameIndustry: (oldName: string, newName: string) => void;
   onRemoveIndustry: (name: string) => void;
   onSetIndustryEmoji: (industry: Industry, emoji: string) => void;
+  onReorderIndustries: (ordered: Industry[]) => void;
   onToggleEditMode: () => void;
   onToggleSourcesPanel: () => void;
+  onResizeWidth: (width: number) => void;
+  onToggleCollapsed: () => void;
 }
 
 function EmojiPicker({
@@ -69,18 +74,30 @@ export function Sidebar({
   editMode,
   sourcesOpen,
   lastUpdatedLabel,
+  width,
+  collapsed,
   onSelectIndustry,
   onAddIndustry,
   onRenameIndustry,
   onRemoveIndustry,
   onSetIndustryEmoji,
+  onReorderIndustries,
   onToggleEditMode,
   onToggleSourcesPanel,
+  onResizeWidth,
+  onToggleCollapsed,
 }: SidebarProps) {
   const [renaming, setRenaming] = useState<Industry | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [newIndustryName, setNewIndustryName] = useState("");
   const [emojiPickerFor, setEmojiPickerFor] = useState<Industry | null>(null);
+  const [dragIndustry, setDragIndustry] = useState<Industry | null>(null);
+  const [dragOverIndustry, setDragOverIndustry] = useState<Industry | null>(
+    null
+  );
+  const resizeState = useRef<{ startX: number; startWidth: number } | null>(
+    null
+  );
 
   function startRename(industry: Industry) {
     setRenaming(industry);
@@ -97,17 +114,140 @@ export function Sidebar({
     setNewIndustryName("");
   }
 
+  function handleResizeMouseDown(e: React.MouseEvent) {
+    e.preventDefault();
+    resizeState.current = { startX: e.clientX, startWidth: width };
+    function handleMove(moveEvent: MouseEvent) {
+      if (!resizeState.current) return;
+      const delta = moveEvent.clientX - resizeState.current.startX;
+      onResizeWidth(resizeState.current.startWidth + delta);
+    }
+    function handleUp() {
+      resizeState.current = null;
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    }
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+  }
+
+  function handleDrop(target: Industry) {
+    if (!dragIndustry || dragIndustry === target) {
+      setDragIndustry(null);
+      setDragOverIndustry(null);
+      return;
+    }
+    const withoutDragged = industries.filter((i) => i !== dragIndustry);
+    const targetIndex = withoutDragged.indexOf(target);
+    const reordered = [
+      ...withoutDragged.slice(0, targetIndex),
+      dragIndustry,
+      ...withoutDragged.slice(targetIndex),
+    ];
+    onReorderIndustries(reordered);
+    setDragIndustry(null);
+    setDragOverIndustry(null);
+  }
+
   const enabledSources = sources.filter((s) => s.enabled);
 
+  if (collapsed) {
+    return (
+      <aside
+        style={{ width }}
+        className="flex h-full shrink-0 flex-col items-center border-r border-slate-200 bg-white py-3 dark:border-slate-800/80 dark:bg-slate-900"
+      >
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-label="Expand sidebar"
+          title="Expand sidebar"
+          className="mb-3 flex h-7 w-7 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        >
+          »
+        </button>
+        <div className="flex-1 space-y-1 overflow-y-auto">
+          {industries.map((industry) => {
+            const isActive = industry === activeIndustry;
+            const emoji = industryEmojis[industry] ?? DEFAULT_INDUSTRY_EMOJI;
+            return (
+              <button
+                key={industry}
+                type="button"
+                onClick={() => onSelectIndustry(industry)}
+                title={industry}
+                className={`flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
+                  isActive
+                    ? "border-blue-500 bg-slate-100 dark:bg-slate-800/70"
+                    : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                }`}
+              >
+                {emoji}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-2 flex flex-col items-center gap-1 border-t border-slate-200 pt-2 dark:border-slate-800/80">
+          <button
+            type="button"
+            onClick={onToggleEditMode}
+            title="Edit Lists"
+            className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
+              editMode
+                ? "bg-blue-100 dark:bg-blue-500/15"
+                : "hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            ✏️
+          </button>
+          <button
+            type="button"
+            onClick={onToggleSourcesPanel}
+            title="Edit Sources"
+            className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
+              sourcesOpen
+                ? "bg-emerald-100 dark:bg-emerald-500/15"
+                : "hover:bg-slate-100 dark:hover:bg-slate-800"
+            }`}
+          >
+            🔗
+          </button>
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="flex h-full w-full flex-col border-r border-slate-200 bg-white text-slate-900 lg:w-56 lg:shrink-0 dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-100">
-      <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800/80">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-          Industries
-        </p>
-        <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-600">
-          {companies.length} companies
-        </p>
+    <aside
+      style={{ width }}
+      className="relative flex h-full shrink-0 flex-col border-r border-slate-200 bg-white text-slate-900 dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-100"
+    >
+      <div
+        onMouseDown={handleResizeMouseDown}
+        className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+      />
+
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800/80">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+            Industries
+          </p>
+          <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-600">
+            {companies.length} companies
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-label="Collapse sidebar"
+          title="Collapse sidebar"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        >
+          «
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto py-1">
@@ -146,9 +286,38 @@ export function Sidebar({
           }
 
           return (
-            <div key={industry} className="group relative flex items-center">
+            <div
+              key={industry}
+              draggable={editMode}
+              onDragStart={() => setDragIndustry(industry)}
+              onDragOver={(e) => {
+                if (!editMode) return;
+                e.preventDefault();
+                setDragOverIndustry(industry);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleDrop(industry);
+              }}
+              onDragEnd={() => {
+                setDragIndustry(null);
+                setDragOverIndustry(null);
+              }}
+              className={`group relative flex items-center ${
+                editMode ? "cursor-grab active:cursor-grabbing" : ""
+              } ${
+                dragOverIndustry === industry && dragIndustry !== industry
+                  ? "border-t-2 border-blue-500"
+                  : "border-t-2 border-transparent"
+              } ${dragIndustry === industry ? "opacity-40" : ""}`}
+            >
+              {editMode && (
+                <span className="pl-1.5 text-[10px] text-slate-300 dark:text-slate-600">
+                  ⠿
+                </span>
+              )}
               {editMode ? (
-                <div className="relative ml-3 shrink-0">
+                <div className="relative ml-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() =>

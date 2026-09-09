@@ -7,6 +7,8 @@ export interface Company {
   name: string;
   industry: Industry;
   ticker?: string;
+  pinned?: boolean;
+  notes?: string;
 }
 
 export interface NewsSource {
@@ -40,6 +42,15 @@ export interface FetchNewsResponse {
   articles: NewsArticle[];
   fetchedAt: string;
   errors: string[];
+}
+
+export type Density = "comfortable" | "compact";
+
+export interface UiSettings {
+  sidebarWidth: number;
+  sidebarCollapsed: boolean;
+  density: Density;
+  tutorialSeen: boolean;
 }
 
 export interface AppPreferences {

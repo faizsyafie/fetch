@@ -93,6 +93,62 @@ export function usePreferences() {
     }));
   }, []);
 
+  const togglePinCompany = useCallback((id: string) => {
+    setPreferences((prev) => ({
+      ...prev,
+      companies: prev.companies.map((c) =>
+        c.id === id ? { ...c, pinned: !c.pinned } : c
+      ),
+    }));
+  }, []);
+
+  const updateCompanyNotes = useCallback((id: string, notes: string) => {
+    setPreferences((prev) => ({
+      ...prev,
+      companies: prev.companies.map((c) =>
+        c.id === id ? { ...c, notes } : c
+      ),
+    }));
+  }, []);
+
+  const reorderCompaniesInIndustry = useCallback(
+    (industry: Industry, orderedIds: string[]) => {
+      setPreferences((prev) => {
+        const byId = new Map(prev.companies.map((c) => [c.id, c]));
+        const reordered = orderedIds
+          .map((id) => byId.get(id))
+          .filter((c): c is Company => Boolean(c));
+        const firstIndex = prev.companies.findIndex(
+          (c) => c.industry === industry
+        );
+        if (firstIndex === -1) return prev;
+        const others = prev.companies.filter((c) => c.industry !== industry);
+        const precedingOthers = prev.companies
+          .slice(0, firstIndex)
+          .filter((c) => c.industry !== industry).length;
+        const companies = [
+          ...others.slice(0, precedingOthers),
+          ...reordered,
+          ...others.slice(precedingOthers),
+        ];
+        return { ...prev, companies };
+      });
+    },
+    []
+  );
+
+  const reorderIndustries = useCallback((orderedIndustries: Industry[]) => {
+    setPreferences((prev) => {
+      if (
+        orderedIndustries.length !== prev.industries.length ||
+        !orderedIndustries.every((i) => prev.industries.includes(i))
+      ) {
+        return prev;
+      }
+      return { ...prev, industries: orderedIndustries };
+    });
+  }, []);
+
   const setActiveIndustry = useCallback((industry: Industry) => {
     setPreferences((prev) => ({ ...prev, activeIndustry: industry }));
   }, []);
@@ -229,6 +285,10 @@ export function usePreferences() {
     hydrated,
     addCompany,
     removeCompany,
+    togglePinCompany,
+    updateCompanyNotes,
+    reorderCompaniesInIndustry,
+    reorderIndustries,
     setActiveIndustry,
     addIndustry,
     renameIndustry,
