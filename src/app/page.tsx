@@ -5,8 +5,8 @@ import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
+import { DogWatermark } from "@/components/DogWatermark";
 import { NewsBoard } from "@/components/NewsBoard";
-import { PigeonWatermark } from "@/components/PigeonWatermark";
 import { ProfilePicker } from "@/components/ProfilePicker";
 import { Sidebar } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -533,13 +533,17 @@ function DashboardForProfile({
       <WelcomeLanding
         name={profileName}
         theme={theme}
-        onDismiss={() => setShowWelcome(false)}
         onOpenTutorial={() => {
           setShowWelcome(false);
           setTutorialOpen(true);
         }}
-        onFetchNews={() => {
+        onReadGeneralNews={() => {
           setShowWelcome(false);
+          setMode("news");
+        }}
+        onFetchCompanyNews={() => {
+          setShowWelcome(false);
+          setMode("companies");
           fetchAllInIndustry();
         }}
       />
@@ -592,7 +596,7 @@ function DashboardForProfile({
       <div
         className={`relative flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
       >
-        <PigeonWatermark theme={theme} />
+        <DogWatermark theme={theme} />
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <TopBar

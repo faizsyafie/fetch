@@ -11,13 +11,13 @@ export default function AboutPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50 px-4 py-16 text-center dark:bg-brand-900">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/full-logo-light-new.png"
+        src="/full-logo-dog-light.png"
         alt="fetch — Daily RSS"
         className="block h-24 w-auto object-contain dark:hidden sm:h-32"
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/full-logo-dark-new.png"
+        src="/full-logo-dog-dark.png"
         alt="fetch — Daily RSS"
         className="hidden h-24 w-auto object-contain dark:block sm:h-32"
       />
@@ -30,6 +30,11 @@ export default function AboutPage() {
         Malaysia / Economy news board, pulling from RSS feeds so your team
         can keep an eye on what matters without digging through a dozen
         sites.
+      </p>
+      <p className="mt-3 max-w-md text-sm leading-relaxed text-brand-600 dark:text-brand-300">
+        Why a dog? Because that&apos;s what &quot;fetch&quot; is all about —
+        a loyal companion that goes and retrieves what you need, then brings
+        it straight back to you.
       </p>
 
       <div className="mt-8 w-full max-w-xs rounded-lg border border-brand-200 bg-white p-5 text-left shadow-sm dark:border-brand-700 dark:bg-brand-800">
