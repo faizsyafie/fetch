@@ -55,8 +55,8 @@ import { TOUR_STEPS } from "@/lib/tourSteps";
 import type {
   Company,
   FetchNewsResponse,
+  NewsTimeFrame,
   NewsTopicId,
-  TimeFrameDays,
   TopicArticle,
 } from "@/lib/types";
 
@@ -177,7 +177,7 @@ function DashboardForProfile({
     url?: string;
     title?: string;
   } | null>(null);
-  const [newsDays, setNewsDaysState] = useState<TimeFrameDays>(7);
+  const [newsDays, setNewsDaysState] = useState<NewsTimeFrame>("now");
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsArticlesByTopic, setNewsArticlesByTopic] =
     useState<Record<NewsTopicId, TopicArticle[]>>(EMPTY_NEWS_ARTICLES);
@@ -202,7 +202,7 @@ function DashboardForProfile({
     setTutorialOpen(true);
   }, [setMode]);
 
-  const fetchNewsBoard = useCallback(async (days: TimeFrameDays) => {
+  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame) => {
     setNewsLoading(true);
     try {
       const response = await fetch("/api/topic-news", {
@@ -235,7 +235,7 @@ function DashboardForProfile({
   }, []);
 
   const setNewsDays = useCallback(
-    (days: TimeFrameDays) => {
+    (days: NewsTimeFrame) => {
       setNewsDaysState(days);
       void fetchNewsBoard(days);
     },
@@ -738,7 +738,7 @@ function DashboardForProfile({
         onToggleCategoryEditMode={() => setCategoryEditMode((v) => !v)}
       />
 
-      <div className="relative flex min-h-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
         <DogWatermark theme={theme} />
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">

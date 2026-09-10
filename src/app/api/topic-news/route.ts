@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchTopicNews } from "@/lib/rss";
 import { NEWS_TOPICS } from "@/lib/newsTopics";
-import type { TimeFrameDays } from "@/lib/types";
+import type { NewsTimeFrame } from "@/lib/types";
 
-const VALID_DAYS: TimeFrameDays[] = [1, 3, 7, 14, 30];
+const VALID_TIME_FRAMES: NewsTimeFrame[] = ["now", 1, 3, 7, 14];
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const days = VALID_DAYS.includes(body?.days) ? (body.days as TimeFrameDays) : 7;
+    const timeFrame = VALID_TIME_FRAMES.includes(body?.days)
+      ? (body.days as NewsTimeFrame)
+      : "now";
 
-    const topics = await fetchTopicNews(NEWS_TOPICS, days);
+    const topics = await fetchTopicNews(NEWS_TOPICS, timeFrame);
 
     return NextResponse.json({
       topics,

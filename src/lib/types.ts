@@ -1,5 +1,16 @@
 export type TimeFrameDays = 1 | 3 | 7 | 14 | 30;
 
+// The General/News board's own time filter. Unlike Companies (where "last
+// N days" narrows a keyword search that can return anywhere from 0 to
+// hundreds of matches), each topic column here is capped at a flat top-30
+// most-recent items — so a "last N days" reading barely ever changes
+// anything, since the newest 30 items are almost always within a day or two
+// regardless of N. Instead this paginates backward through the archive:
+// "now" is the freshest 30, and "1"/"3"/"7"/"14" mean "the newest 30 items
+// that are at least that many days old," so each option surfaces a
+// genuinely different, older slice instead of repeating the same list.
+export type NewsTimeFrame = "now" | 1 | 3 | 7 | 14;
+
 export type Industry = string;
 
 export interface Company {

@@ -6,9 +6,16 @@ import {
   ALL_INDUSTRY,
   WATCHLIST_INDUSTRY,
   industryPalette,
+  NEWS_TIME_FRAME_OPTIONS,
   TIME_FRAME_OPTIONS,
 } from "@/lib/defaults";
-import type { AccentColor, Company, Industry, TimeFrameDays } from "@/lib/types";
+import type {
+  AccentColor,
+  Company,
+  Industry,
+  NewsTimeFrame,
+  TimeFrameDays,
+} from "@/lib/types";
 import type { AppMode } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 
@@ -31,9 +38,9 @@ interface TopBarProps {
   onOpenSettings: () => void;
   // News mode: the same time-range/refresh concept, bound to its own state
   // rather than the Companies preferences, since the two fetches are
-  // independent.
-  newsDays: TimeFrameDays;
-  onSetNewsDays: (days: TimeFrameDays) => void;
+  // independent — and its own value set/semantics (NewsTimeFrame).
+  newsDays: NewsTimeFrame;
+  onSetNewsDays: (days: NewsTimeFrame) => void;
   newsLoading: boolean;
   onRefreshNews: () => void;
 }
@@ -69,8 +76,6 @@ export function TopBar({
     activeIndustry === ALL_INDUSTRY || activeIndustry === WATCHLIST_INDUSTRY;
   const palette = industryPalette(activeIndustry, industries);
   const accentPreset = ACCENT_PRESETS[accent];
-  const activeDays = isNews ? newsDays : days;
-  const handleSetDays = isNews ? onSetNewsDays : onSetDays;
 
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
@@ -81,9 +86,30 @@ export function TopBar({
 
   return (
     <div className="border-b border-brand-200 bg-white px-5 py-3 dark:border-brand-800/80 dark:bg-brand-900">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {!isSaved && (
+      <div className="flex items-center gap-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          {isNews && (
+            <div
+              data-tour="topbar-timerange"
+              className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
+            >
+              {NEWS_TIME_FRAME_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onSetNewsDays(opt.value)}
+                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                    newsDays === opt.value
+                      ? `${accentPreset.solid} text-white shadow-sm`
+                      : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
+                  }`}
+                >
+                  {opt.label.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          )}
+          {isCompanies && (
             <div
               data-tour="topbar-timerange"
               className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
@@ -92,9 +118,9 @@ export function TopBar({
                 <button
                   key={opt.days}
                   type="button"
-                  onClick={() => handleSetDays(opt.days)}
+                  onClick={() => onSetDays(opt.days)}
                   className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                    activeDays === opt.days
+                    days === opt.days
                       ? `${accentPreset.solid} text-white shadow-sm`
                       : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
                   }`}
@@ -106,26 +132,28 @@ export function TopBar({
           )}
         </div>
 
-        <div data-tour="topbar-search" className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
-            🔍
-          </span>
-          <input
-            id="company-search-input"
-            value={searchQuery}
-            onChange={(e) => onSearch(e.target.value)}
-            placeholder={
-              isNews
-                ? "Search articles…"
-                : isSaved
-                  ? "Search saved links…"
-                  : "Search companies…"
-            }
-            className={`w-80 max-w-full rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
-          />
+        <div className="flex min-w-0 flex-1 justify-center">
+          <div data-tour="topbar-search" className="relative min-w-0 w-80 max-w-full">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
+              🔍
+            </span>
+            <input
+              id="company-search-input"
+              value={searchQuery}
+              onChange={(e) => onSearch(e.target.value)}
+              placeholder={
+                isNews
+                  ? "Search articles…"
+                  : isSaved
+                    ? "Search saved links…"
+                    : "Search companies…"
+              }
+              className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
+            />
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={onOpenTutorial}

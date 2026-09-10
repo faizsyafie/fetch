@@ -5,6 +5,7 @@ import type {
   FontScale,
   Industry,
   NewsSource,
+  NewsTimeFrame,
   SuggestedSource,
   TimeFrameDays,
 } from "./types";
@@ -156,6 +157,16 @@ export const TIME_FRAME_OPTIONS: { label: string; days: TimeFrameDays }[] = [
   { label: "7d", days: 7 },
   { label: "14d", days: 14 },
   { label: "30d", days: 30 },
+];
+
+// The General/News board's own time filter — see the NewsTimeFrame type for
+// why this reads "at least N days old" rather than "within the last N days."
+export const NEWS_TIME_FRAME_OPTIONS: { label: string; value: NewsTimeFrame }[] = [
+  { label: "Now", value: "now" },
+  { label: "1d", value: 1 },
+  { label: "3d", value: 3 },
+  { label: "7d", value: 7 },
+  { label: "14d", value: 14 },
 ];
 
 export const DEFAULT_SOURCES: NewsSource[] = [
