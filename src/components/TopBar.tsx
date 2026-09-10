@@ -23,6 +23,7 @@ interface TopBarProps {
   mode: AppMode;
   profileName: string;
   onLogOut: () => void;
+  onOpenFeedback: () => void;
   activeIndustry: Industry;
   industries: Industry[];
   companiesInIndustry: Company[];
@@ -49,6 +50,7 @@ export function TopBar({
   mode,
   profileName,
   onLogOut,
+  onOpenFeedback,
   activeIndustry,
   industries,
   companiesInIndustry,
@@ -176,7 +178,11 @@ export function TopBar({
           </button>
 
           <div data-tour="topbar-user">
-            <UserMenu name={profileName} onLogOut={onLogOut} />
+            <UserMenu
+              name={profileName}
+              onLogOut={onLogOut}
+              onOpenFeedback={onOpenFeedback}
+            />
           </div>
         </div>
       </div>
