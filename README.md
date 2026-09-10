@@ -1,8 +1,8 @@
 <br>
 
-# 🕊️ Fetch: Daily RSS
+# 🐶 Fetch: Daily RSS
 
-*Like a carrier pigeon, credit analysts never rest...*
+*"Like a loyal retriever, credit analysts never rest..."*
 
 Fetch flies across the web collecting company news so you don't have to. Built for credit analysts, investors, and news junkies, Fetch scans public RSS feeds and aggregates relevant company headlines into a single dashboard.
 
@@ -25,9 +25,13 @@ Think of it as your digital news pigeon. It fetches. You analyse.
 ## Features
 
 🏭 Industry Watchlists: Group companies into your specific sectors.
+
 📋 Custom Company Lists: Create and manage your own company universe.
+
 📰 Flexible News Sources: Monitor headlines from multiple sources.
+
 ⏱️ Adjustable Time Windows: Filter news by publication date.
+
 💾 Persistent Preferences: Your watchlists and source settings are saved, so you can pick up where you left off.
 
 ---
