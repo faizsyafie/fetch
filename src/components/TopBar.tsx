@@ -18,6 +18,7 @@ import type {
 } from "@/lib/types";
 import type { AppMode } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
+import { BoneButton } from "@/components/BoneButton";
 
 interface TopBarProps {
   mode: AppMode;
@@ -91,24 +92,31 @@ export function TopBar({
       <div className="flex items-center gap-3">
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           {isNews && (
-            <div
-              data-tour="topbar-timerange"
-              className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
-            >
-              {NEWS_TIME_FRAME_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => onSetNewsDays(opt.value)}
-                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                    newsDays === opt.value
-                      ? `${accentPreset.solid} text-white shadow-sm`
-                      : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-                  }`}
-                >
-                  {opt.label.toUpperCase()}
-                </button>
-              ))}
+            <div className="flex shrink-0 items-center gap-2">
+              <div
+                data-tour="topbar-timerange"
+                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
+              >
+                {NEWS_TIME_FRAME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => onSetNewsDays(opt.value)}
+                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                      newsDays === opt.value
+                        ? `${accentPreset.solid} text-white shadow-sm`
+                        : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
+                    }`}
+                  >
+                    {opt.label.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <div data-tour="topbar-fetch">
+                <BoneButton onClick={onRefreshNews} disabled={newsLoading} accent={accent}>
+                  {newsLoading ? "Refreshing…" : "Re-fetch!"}
+                </BoneButton>
+              </div>
             </div>
           )}
           {isCompanies && (
@@ -186,19 +194,6 @@ export function TopBar({
           </div>
         </div>
       </div>
-
-      {isNews && (
-        <div data-tour="topbar-fetch" className="mt-2 flex flex-wrap items-center gap-1">
-          <button
-            type="button"
-            onClick={onRefreshNews}
-            disabled={newsLoading}
-            className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
-          >
-            {newsLoading ? "Refreshing…" : "↻ Refresh"}
-          </button>
-        </div>
-      )}
 
       {isCompanies && editMode && !isSearching && !isVirtualIndustry && (
         <div
