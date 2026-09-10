@@ -193,7 +193,7 @@ export const DEFAULT_SOURCES: NewsSource[] = [
   {
     id: "the-edge-malaysia",
     name: "The Edge Malaysia",
-    domain: "theedgemarkets.com",
+    domain: "theedgemalaysia.com",
     feedUrls: [],
     enabled: true,
     isDefault: true,
@@ -404,7 +404,7 @@ export const SUGGESTED_SOURCES: SuggestedSource[] = [
   },
   {
     name: "The Edge Malaysia",
-    domain: "theedgemarkets.com",
+    domain: "theedgemalaysia.com",
     feedUrl: null,
     description: "Malaysia's leading business and investment news outlet.",
     region: "Recommended",
