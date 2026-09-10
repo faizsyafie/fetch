@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ACCENT_PRESETS, EMOJI_PICKER_OPTIONS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
 
@@ -9,6 +10,9 @@ export interface TabBarItem {
   emoji: string;
   label: string;
   count: number;
+  /** When set, renders a colored circle instead of `emoji` — used by
+   *  saved-link categories (see onSetColor) instead of per-item emoji. */
+  swatchColor?: AccentColor;
 }
 
 interface TabBarProps {
@@ -35,12 +39,31 @@ interface TabBarProps {
   onRemove: (key: string) => void;
   onReorder: (ordered: string[]) => void;
   onSetEmoji?: (key: string, emoji: string) => void;
+  /** Mutually exclusive with onSetEmoji — swaps the edit-mode popover from
+   *  an emoji grid to a color-swatch grid (see TabBarItem.swatchColor). */
+  onSetColor?: (key: string, color: AccentColor) => void;
 }
 
+const SWATCH_COLOR_OPTIONS: AccentColor[] = [
+  "blue",
+  "teal",
+  "emerald",
+  "violet",
+  "pink",
+  "rose",
+  "amber",
+];
+
+// Rendered via a portal at a fixed screen position (see anchor below) rather
+// than absolutely inside the pill, so it isn't clipped by the tab row's
+// overflow-x-auto — which, per CSS's overflow-x/y coupling rule, also
+// clips vertical overflow once any axis is non-"visible".
 function EmojiPicker({
+  anchor,
   onPick,
   onClose,
 }: {
+  anchor: { top: number; left: number };
   onPick: (emoji: string) => void;
   onClose: () => void;
 }) {
@@ -50,14 +73,22 @@ function EmojiPicker({
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
     }
+    function handleScroll() {
+      onClose();
+    }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
       ref={ref}
-      className="absolute left-0 top-full z-20 mt-1 grid w-52 grid-cols-6 gap-0.5 rounded-md border border-brand-200 bg-white p-2 shadow-lg dark:border-brand-700 dark:bg-brand-800"
+      style={{ top: anchor.top, left: anchor.left }}
+      className="fixed z-50 grid w-52 grid-cols-6 gap-0.5 rounded-md border border-brand-200 bg-white p-2 shadow-lg dark:border-brand-700 dark:bg-brand-800"
     >
       {EMOJI_PICKER_OPTIONS.map((emoji) => (
         <button
@@ -69,14 +100,68 @@ function EmojiPicker({
           {emoji}
         </button>
       ))}
-    </div>
+    </div>,
+    document.body
+  );
+}
+
+// Same portal/positioning treatment as EmojiPicker, for saved-link
+// categories (which pick a color swatch instead of an emoji glyph).
+function ColorPicker({
+  anchor,
+  current,
+  onPick,
+  onClose,
+}: {
+  anchor: { top: number; left: number };
+  current?: AccentColor;
+  onPick: (color: AccentColor) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    function handleScroll() {
+      onClose();
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      ref={ref}
+      style={{ top: anchor.top, left: anchor.left }}
+      className="fixed z-50 grid grid-cols-4 gap-1.5 rounded-md border border-brand-200 bg-white p-2.5 shadow-lg dark:border-brand-700 dark:bg-brand-800"
+    >
+      {SWATCH_COLOR_OPTIONS.map((color) => (
+        <button
+          key={color}
+          type="button"
+          onClick={() => onPick(color)}
+          aria-label={color}
+          title={color}
+          className={`flex h-6 w-6 items-center justify-center rounded-full ${ACCENT_PRESETS[color].swatch} ${
+            current === color ? "ring-2 ring-offset-2 ring-brand-400 dark:ring-offset-brand-800" : ""
+          }`}
+        />
+      ))}
+    </div>,
+    document.body
   );
 }
 
 // A Google-News-style row of pills below the top bar: pinned virtual views,
 // then the user's own managed list (reorderable/renamable/deletable in edit
 // mode), then a protected trailing fallback, then a "+" to add a new one.
-// Shared by Companies (industries) and Saved News (categories) for visual
+// Shared by Companies (industries) and Buried Bones (categories) for visual
 // continuity between the two pages.
 export function TabBar({
   dataTour,
@@ -94,11 +179,13 @@ export function TabBar({
   onRemove,
   onReorder,
   onSetEmoji,
+  onSetColor,
 }: TabBarProps) {
   const accentPreset = ACCENT_PRESETS[accent];
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
+  const [emojiAnchor, setEmojiAnchor] = useState<{ top: number; left: number } | null>(null);
   const [dragKey, setDragKey] = useState<string | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -206,8 +293,10 @@ export function TabBar({
       >
         <button
           type="button"
-          onClick={() => {
-            if (editable && editMode && onSetEmoji) {
+          onClick={(e) => {
+            if (editable && editMode && (onSetEmoji || onSetColor)) {
+              const rect = e.currentTarget.getBoundingClientRect();
+              setEmojiAnchor({ top: rect.bottom + 4, left: rect.left });
               setEmojiPickerFor((prev) => (prev === item.key ? null : item.key));
             } else {
               onSelect(item.key);
@@ -215,7 +304,14 @@ export function TabBar({
           }}
           className={baseClass}
         >
-          <span aria-hidden="true">{item.emoji}</span>
+          {item.swatchColor ? (
+            <span
+              aria-hidden="true"
+              className={`inline-block h-2.5 w-2.5 rounded-full ${ACCENT_PRESETS[item.swatchColor].swatch}`}
+            />
+          ) : (
+            <span aria-hidden="true">{item.emoji}</span>
+          )}
           <span>{item.label}</span>
           <span
             className={`tabular-nums ${isActive ? "text-white/80" : "text-brand-400 dark:text-brand-500"}`}
@@ -245,15 +341,6 @@ export function TabBar({
             </button>
           </>
         )}
-        {editable && emojiPickerFor === item.key && onSetEmoji && (
-          <EmojiPicker
-            onPick={(picked) => {
-              onSetEmoji(item.key, picked);
-              setEmojiPickerFor(null);
-            }}
-            onClose={() => setEmojiPickerFor(null)}
-          />
-        )}
       </div>
     );
   }
@@ -263,7 +350,9 @@ export function TabBar({
       data-tour={dataTour}
       className="flex min-w-0 items-center justify-between gap-3 border-b border-brand-200 bg-white px-5 py-2.5 dark:border-brand-800/80 dark:bg-brand-900"
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+      <div
+        className={`flex min-w-0 flex-1 items-center gap-2 overflow-x-auto ${editMode ? "py-2" : ""}`}
+      >
         {pinnedItems.map((item) => renderPill(item, false))}
         {pinnedItems.length > 0 && (items.length > 0 || trailingItem) && (
           <div className="h-5 shrink-0 border-l border-brand-200 dark:border-brand-700" />
@@ -313,6 +402,28 @@ export function TabBar({
       </div>
 
       {actions}
+
+      {emojiPickerFor && emojiAnchor && onSetEmoji && (
+        <EmojiPicker
+          anchor={emojiAnchor}
+          onPick={(picked) => {
+            onSetEmoji(emojiPickerFor, picked);
+            setEmojiPickerFor(null);
+          }}
+          onClose={() => setEmojiPickerFor(null)}
+        />
+      )}
+      {emojiPickerFor && emojiAnchor && onSetColor && (
+        <ColorPicker
+          anchor={emojiAnchor}
+          current={items.find((i) => i.key === emojiPickerFor)?.swatchColor}
+          onPick={(picked) => {
+            onSetColor(emojiPickerFor, picked);
+            setEmojiPickerFor(null);
+          }}
+          onClose={() => setEmojiPickerFor(null)}
+        />
+      )}
     </div>
   );
 }

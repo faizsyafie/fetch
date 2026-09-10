@@ -71,7 +71,19 @@ export type FontFamily = "system" | "serif" | "mono";
 
 export type FontScale = "sm" | "md" | "lg";
 
-export type NewsTopicId = "world" | "malaysia" | "economy" | "tech";
+export type NewsTopicId =
+  | "world"
+  | "malaysia"
+  | "generalEconomy"
+  | "tech"
+  | "energy"
+  | "financials"
+  | "healthcare"
+  | "consumer"
+  | "industrials"
+  | "materials"
+  | "monetaryPolicy"
+  | "tradeGeopolitics";
 
 export interface UiSettings {
   sidebarWidth: number;
@@ -132,5 +144,6 @@ export interface AppPreferences {
   industryEmojis: Record<Industry, string>;
   links: SavedLink[];
   linkCategories: string[];
+  linkCategoryColors: Record<string, AccentColor>;
   activeLinkCategory: string;
 }

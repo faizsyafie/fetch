@@ -2,7 +2,6 @@
 
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
-import { BoneIcon } from "@/components/icons/BoneIcon";
 
 interface CompanyActionsProps {
   dataTour?: string;
@@ -60,14 +59,24 @@ export function CompanyActions({
         type="button"
         onClick={onFetch}
         disabled={fetchDisabled}
-        className={`group flex items-center gap-1 rounded-md ${accentPreset.solid} px-3 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solidHover} disabled:cursor-not-allowed disabled:bg-brand-400`}
+        className={`relative isolate rounded-full px-4 py-1.5 text-[11px] font-semibold text-white transition-transform ${
+          fetchDisabled ? "cursor-not-allowed bg-brand-400" : `${accentPreset.solid} hover:animate-bone-jump`
+        }`}
       >
-        <span aria-hidden="true" className="text-[13px] leading-none">
-          🐾
-        </span>
-        <span className="grid h-3 w-3 scale-0 place-items-center opacity-0 transition-[transform,opacity] duration-150 group-hover:scale-100 group-hover:opacity-100">
-          <BoneIcon className="h-3 w-3 text-white group-hover:animate-bone-wiggle" />
-        </span>
+        {/* Four corner knobs turn the pill into a bone silhouette — bg
+            matches the bar exactly, so the shape reads as one solid bone
+            regardless of how wide the label text makes the bar. */}
+        {(["-top-1 -left-1", "-top-1 -right-1", "-bottom-1 -left-1", "-bottom-1 -right-1"] as const).map(
+          (pos) => (
+            <span
+              key={pos}
+              aria-hidden="true"
+              className={`absolute -z-10 h-3 w-3 rounded-full ${pos} ${
+                fetchDisabled ? "bg-brand-400" : accentPreset.solid
+              }`}
+            />
+          )
+        )}
         {batchRunning
           ? `Fetching… (${loadingCount})`
           : selectedCount > 0

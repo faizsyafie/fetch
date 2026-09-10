@@ -126,7 +126,7 @@ export function SourcesModal({
           </div>
         </div>
 
-        <div className="overflow-y-auto px-4 py-3">
+        <div className={`overflow-y-auto px-4 pb-3 ${sources.length > 0 ? "" : "pt-3"}`}>
           {sources.length > 0 && (
             <div className="sticky top-0 z-10 -mx-4 mb-4 border-b border-brand-200 bg-white px-4 pb-3 dark:border-brand-800 dark:bg-brand-900">
               <p className="mb-1.5 pt-3 text-[11px] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">

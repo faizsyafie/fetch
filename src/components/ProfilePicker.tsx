@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Logo } from "@/components/Logo";
+import { useTheme } from "@/hooks/useTheme";
 
 interface ProfilePickerProps {
   onPick: (name: string) => void;
 }
 
 export function ProfilePicker({ onPick }: ProfilePickerProps) {
+  const { theme } = useTheme();
   const [name, setName] = useState("");
   const [existingProfiles, setExistingProfiles] = useState<string[]>([]);
   const [loadError, setLoadError] = useState(false);
@@ -32,14 +35,15 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-brand-100 px-4 dark:bg-brand-950">
-      <div className="w-full max-w-sm rounded-lg border border-brand-200 bg-white p-6 shadow-sm dark:border-brand-800 dark:bg-brand-900">
+    <div className="flex h-screen flex-col items-center justify-center bg-brand-100 px-4 dark:bg-brand-950">
+      <Logo theme={theme} large />
+      <div className="mt-6 w-full max-w-sm rounded-lg border border-brand-200 bg-white p-6 shadow-sm dark:border-brand-800 dark:bg-brand-900">
         <h1 className="text-lg font-bold text-brand-900 dark:text-white">
-          Who&rsquo;s viewing?
+          Who let the dog out? 🐾
         </h1>
         <p className="mt-1 text-xs text-brand-500 dark:text-brand-400">
           Your team&rsquo;s watchlist, industries, and sources sync under
-          this name. No password — just pick or type your name.
+          this name. Let us know who you are — just pick or type your name.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4">

@@ -5,6 +5,9 @@ import type { Theme } from "@/hooks/useTheme";
 interface LogoProps {
   theme: Theme;
   compact?: boolean;
+  /** A large, centered rendering for standalone screens (e.g. the profile
+   *  picker) rather than the compact sidebar header treatment. */
+  large?: boolean;
 }
 
 // icon-dog-*-new.png: square headshot crop of the dog, background baked in
@@ -12,7 +15,7 @@ interface LogoProps {
 // the theme background baked in — object-contain so the whole word shows
 // without cropping, letterboxing blends into the sidebar's own matching
 // background.
-export function Logo({ theme, compact = false }: LogoProps) {
+export function Logo({ theme, compact = false, large = false }: LogoProps) {
   const iconSrc =
     theme === "dark" ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
   const textSrc =
@@ -32,12 +35,14 @@ export function Logo({ theme, compact = false }: LogoProps) {
   }
 
   return (
-    <div className="h-8 w-28 shrink-0 overflow-hidden">
+    <div
+      className={`shrink-0 overflow-hidden ${large ? "mx-auto h-16 w-56" : "h-8 w-28"}`}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={textSrc}
         alt="fetch — Daily RSS"
-        className="h-full w-full object-contain object-left"
+        className={`h-full w-full object-contain ${large ? "" : "object-left"}`}
       />
     </div>
   );

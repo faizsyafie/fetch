@@ -14,6 +14,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyActions } from "@/components/CompanyActions";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
+import { EditThemesModal } from "@/components/EditThemesModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { DogWatermark } from "@/components/DogWatermark";
 import { NewsBoard } from "@/components/NewsBoard";
@@ -36,7 +37,6 @@ import {
   ALL_LINKS_CATEGORY,
   ALL_LINKS_EMOJI,
   DEFAULT_INDUSTRY_EMOJI,
-  DEFAULT_LINK_CATEGORY_EMOJI,
   FONT_FAMILY_PRESETS,
   FONT_SCALE_PRESETS,
   PINNED_LINKS_CATEGORY,
@@ -45,6 +45,7 @@ import {
   UNCATEGORIZED_LINKS_EMOJI,
   WATCHLIST_INDUSTRY,
   getIndustryEmoji,
+  linkCategoryColor,
 } from "@/lib/defaults";
 import {
   EMPTY_NEWS_ARTICLES,
@@ -126,6 +127,7 @@ function DashboardForProfile({
     renameLinkCategory,
     removeLinkCategory,
     reorderLinkCategories,
+    setLinkCategoryColor,
   } = usePreferences(profileName);
   const { theme, toggleTheme } = useTheme();
   const {
@@ -146,6 +148,7 @@ function DashboardForProfile({
   const [editMode, setEditMode] = useState(false);
   const [categoryEditMode, setCategoryEditMode] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [themesOpen, setThemesOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
@@ -202,13 +205,13 @@ function DashboardForProfile({
     setTutorialOpen(true);
   }, [setMode]);
 
-  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame) => {
+  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[]) => {
     setNewsLoading(true);
     try {
       const response = await fetch("/api/topic-news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ days }),
+        body: JSON.stringify({ days, topics }),
       });
       if (!response.ok) throw new Error("Failed to fetch news.");
       const data = await response.json();
@@ -223,12 +226,11 @@ function DashboardForProfile({
       setNewsArticlesByTopic(nextArticles);
       setNewsErrorsByTopic(nextErrors);
     } catch {
-      setNewsErrorsByTopic({
-        world: ["Failed to fetch news."],
-        malaysia: ["Failed to fetch news."],
-        economy: ["Failed to fetch news."],
-        tech: ["Failed to fetch news."],
-      });
+      setNewsErrorsByTopic(
+        Object.fromEntries(
+          NEWS_TOPICS.map((topic) => [topic.id, ["Failed to fetch news."]])
+        ) as Record<NewsTopicId, string[]>
+      );
     } finally {
       setNewsLoading(false);
     }
@@ -237,9 +239,9 @@ function DashboardForProfile({
   const setNewsDays = useCallback(
     (days: NewsTimeFrame) => {
       setNewsDaysState(days);
-      void fetchNewsBoard(days);
+      void fetchNewsBoard(days, uiSettings.newsTopicOrder);
     },
-    [fetchNewsBoard]
+    [fetchNewsBoard, uiSettings.newsTopicOrder]
   );
 
   // Refresh as soon as the board is switched into — i.e. every time the
@@ -247,10 +249,23 @@ function DashboardForProfile({
   useEffect(() => {
     if (mode === "news") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      void fetchNewsBoard(newsDays);
+      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  // Enabling a topic should populate its column right away rather than
+  // waiting for the next mode-switch or manual refresh.
+  const handleToggleTopic = useCallback(
+    (id: NewsTopicId, enabled: boolean) => {
+      const next = enabled
+        ? [...uiSettings.newsTopicOrder, id]
+        : uiSettings.newsTopicOrder.filter((t) => t !== id);
+      setNewsTopicOrder(next);
+      void fetchNewsBoard(newsDays, next);
+    },
+    [uiSettings.newsTopicOrder, setNewsTopicOrder, fetchNewsBoard, newsDays]
+  );
 
   const expandedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -311,12 +326,7 @@ function DashboardForProfile({
   const visibleNewsArticlesByTopic = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return newsArticlesByTopic;
-    const filtered: Record<NewsTopicId, TopicArticle[]> = {
-      world: [],
-      malaysia: [],
-      economy: [],
-      tech: [],
-    };
+    const filtered: Record<NewsTopicId, TopicArticle[]> = { ...EMPTY_NEWS_ARTICLES };
     for (const topic of NEWS_TOPICS) {
       filtered[topic.id] = newsArticlesByTopic[topic.id].filter(
         (a) =>
@@ -411,11 +421,16 @@ function DashboardForProfile({
     () =>
       preferences.linkCategories.map((category) => ({
         key: category,
-        emoji: DEFAULT_LINK_CATEGORY_EMOJI,
+        emoji: "",
+        swatchColor: linkCategoryColor(
+          category,
+          preferences.linkCategories,
+          preferences.linkCategoryColors
+        ),
         label: category,
         count: preferences.links.filter((l) => l.category === category).length,
       })),
-    [preferences.linkCategories, preferences.links]
+    [preferences.linkCategories, preferences.linkCategoryColors, preferences.links]
   );
 
   const uncategorizedTabItem = useMemo(
@@ -657,6 +672,7 @@ function DashboardForProfile({
         setCustomizeOpen(false);
         setSourcesOpen(false);
         setFeedbackOpen(false);
+        setThemesOpen(false);
         return;
       }
 
@@ -737,6 +753,8 @@ function DashboardForProfile({
         onToggleCollapsed={toggleSidebarCollapsed}
         categoryEditMode={categoryEditMode}
         onToggleCategoryEditMode={() => setCategoryEditMode((v) => !v)}
+        themesOpen={themesOpen}
+        onToggleThemesPanel={() => setThemesOpen((v) => !v)}
       />
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
@@ -764,7 +782,7 @@ function DashboardForProfile({
           newsDays={newsDays}
           onSetNewsDays={setNewsDays}
           newsLoading={newsLoading}
-          onRefreshNews={() => void fetchNewsBoard(newsDays)}
+          onRefreshNews={() => void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder)}
         />
 
         {mode === "companies" && (
@@ -813,6 +831,7 @@ function DashboardForProfile({
             onRename={renameLinkCategory}
             onRemove={removeLinkCategory}
             onReorder={reorderLinkCategories}
+            onSetColor={setLinkCategoryColor}
           />
         )}
 
@@ -829,6 +848,8 @@ function DashboardForProfile({
             accent={uiSettings.accent}
             showCategoryPromo={preferences.linkCategories.length === 0}
             onCreateCategory={() => selectMode("saved")}
+            showCompanyPromo={preferences.companies.length === 0}
+            onGoToCompanies={() => selectMode("companies")}
           />
         ) : mode === "saved" ? (
           <SavedView
@@ -930,6 +951,15 @@ function DashboardForProfile({
         <FeedbackModal
           accent={uiSettings.accent}
           onClose={() => setFeedbackOpen(false)}
+        />
+      )}
+
+      {themesOpen && (
+        <EditThemesModal
+          enabledTopics={uiSettings.newsTopicOrder}
+          accent={uiSettings.accent}
+          onToggle={handleToggleTopic}
+          onClose={() => setThemesOpen(false)}
         />
       )}
 

@@ -33,9 +33,9 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "nav-list",
     selector: '[data-tour="nav-list"]',
-    title: "General, Companies & Saved News",
+    title: "General, Companies & Buried Bones",
     description:
-      "General is a board of four columns — World, Malaysia, Economy and Tech — each pulling straight from curated RSS feeds with no company matching involved; drag a column by its ⠿ handle to reorder them. Companies is your industry-tracked watchlist. Saved News is where anything you bookmark (🔖 on an article) lives, sorted into categories you manage yourself.",
+      "General is a board of columns — World, Malaysia and more — each pulling straight from curated RSS feeds with no company matching involved; drag a column by its ⠿ handle to reorder them, or pick which ones show up under Edit Themes. Companies is your industry-tracked watchlist. Buried Bones is where anything you bookmark (🔖 on an article) lives, sorted into categories you manage yourself.",
     placement: "right",
   },
   {
@@ -73,7 +73,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "topbar-fetch",
     selector: '[data-tour="topbar-fetch"]',
-    title: "🐾 Fetch!",
+    title: "🦴 Fetch!",
     description:
       "Tick a few companies with the checkboxes and Fetch! grabs news for just those — leave nothing selected and it fetches the whole industry instead. Collapse closes every expanded card at once.",
     placement: "bottom",

@@ -27,6 +27,9 @@ interface SidebarProps {
   // Saved links
   categoryEditMode: boolean;
   onToggleCategoryEditMode: () => void;
+  // General page
+  themesOpen: boolean;
+  onToggleThemesPanel: () => void;
 }
 
 const NAV_ITEMS: { key: AppMode; label: string; emoji: string }[] = [
@@ -34,7 +37,7 @@ const NAV_ITEMS: { key: AppMode; label: string; emoji: string }[] = [
   { key: "companies", label: "Companies", emoji: "🏢" },
 ];
 
-// The primary nav — General / Companies / Saved News — replaces the old
+// The primary nav — General / Companies / Buried Bones — replaces the old
 // two-way toggle pill. It's rendered identically regardless of which mode
 // is active, so switching pages never rearranges this list. Industry and
 // saved-link category browsing both live in the TabBar under the top bar
@@ -96,7 +99,7 @@ function NavList({
     >
       {NAV_ITEMS.map((item) => renderItem(item.key, item.label, item.emoji))}
       <div className="my-1 border-t border-brand-100 dark:border-brand-800/60" />
-      {renderItem("saved", "Saved News", "🔖")}
+      {renderItem("saved", "Buried Bones", "🔖")}
     </div>
   );
 }
@@ -119,8 +122,10 @@ export function Sidebar({
   onToggleCollapsed,
   categoryEditMode,
   onToggleCategoryEditMode,
+  themesOpen,
+  onToggleThemesPanel,
 }: SidebarProps) {
-  const [sourcesListExpanded, setSourcesListExpanded] = useState(true);
+  const [sourcesListExpanded, setSourcesListExpanded] = useState(false);
   const resizeState = useRef<{ startX: number; startWidth: number } | null>(
     null
   );
@@ -308,6 +313,47 @@ export function Sidebar({
         </div>
       )}
 
+      {mode === "news" && (
+        <div
+          data-tour="sidebar-manage-themes"
+          className={`border-t border-brand-200 dark:border-brand-800/80 ${
+            collapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
+          }`}
+        >
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={onToggleThemesPanel}
+              title="Edit Themes"
+              className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
+                themesOpen
+                  ? accentPreset.softBg
+                  : "hover:bg-brand-100 dark:hover:bg-brand-800"
+              }`}
+            >
+              🎛️
+            </button>
+          ) : (
+            <>
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+                Manage
+              </p>
+              <button
+                type="button"
+                onClick={onToggleThemesPanel}
+                className={`w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
+                  themesOpen
+                    ? `${accentPreset.softBg} ${accentPreset.text}`
+                    : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
+                }`}
+              >
+                🎛️ Edit Themes
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {mode === "saved" && (
         <div
           data-tour="sidebar-manage-categories"
@@ -319,7 +365,7 @@ export function Sidebar({
             <button
               type="button"
               onClick={onToggleCategoryEditMode}
-              title="Manage Categories"
+              title="Edit Categories"
               className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
                 categoryEditMode
                   ? accentPreset.softBg
@@ -342,7 +388,7 @@ export function Sidebar({
                     : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
                 }`}
               >
-                ✏️ Manage Categories
+                ✏️ Edit Categories
               </button>
             </>
           )}

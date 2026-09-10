@@ -349,6 +349,30 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
   },
 };
 
+// Saved-link categories are colored circles rather than emoji — cycles
+// through the same 7 accent colors used for the app's own accent picker,
+// assigned by creation order so a new category always gets a fresh-looking
+// default before the user picks one themselves.
+export const LINK_CATEGORY_COLOR_ORDER: AccentColor[] = [
+  "blue",
+  "teal",
+  "emerald",
+  "violet",
+  "pink",
+  "rose",
+  "amber",
+];
+
+export function linkCategoryColor(
+  category: string,
+  categories: string[],
+  colors: Record<string, AccentColor>
+): AccentColor {
+  if (colors[category]) return colors[category];
+  const idx = Math.max(0, categories.indexOf(category));
+  return LINK_CATEGORY_COLOR_ORDER[idx % LINK_CATEGORY_COLOR_ORDER.length];
+}
+
 export const FONT_FAMILY_PRESETS: Record<
   FontFamily,
   { label: string; stack: string }

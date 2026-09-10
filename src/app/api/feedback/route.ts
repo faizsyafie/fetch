@@ -50,8 +50,17 @@ export async function POST(request: NextRequest) {
   });
 
   if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    // Logged server-side (Vercel function logs) for diagnosing delivery
+    // issues — Resend's error body has no secrets in it, just what went
+    // wrong (bad/unverified sender, restricted recipient, etc).
+    console.error("Resend send failed:", response.status, data);
     return NextResponse.json(
-      { error: "Failed to send feedback." },
+      {
+        error:
+          data?.message ||
+          `Failed to send feedback (Resend responded ${response.status}).`,
+      },
       { status: 502 }
     );
   }

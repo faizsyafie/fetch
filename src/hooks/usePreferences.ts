@@ -12,6 +12,7 @@ import {
   isReservedLinkCategoryName,
 } from "@/lib/defaults";
 import type {
+  AccentColor,
   AppPreferences,
   Company,
   Industry,
@@ -29,6 +30,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   industryEmojis: defaultIndustryEmojis(INDUSTRIES),
   links: [],
   linkCategories: [],
+  linkCategoryColors: {},
   activeLinkCategory: ALL_LINKS_CATEGORY,
 };
 
@@ -64,6 +66,7 @@ function normalizePreferences(
     industryEmojis,
     links: parsed.links ?? [],
     linkCategories: parsed.linkCategories ?? [],
+    linkCategoryColors: parsed.linkCategoryColors ?? {},
     activeLinkCategory: parsed.activeLinkCategory ?? ALL_LINKS_CATEGORY,
   };
 }
@@ -462,11 +465,14 @@ export function usePreferences(profileName: string | null) {
       ) {
         return prev;
       }
+      const { [oldName]: oldColor, ...restColors } = prev.linkCategoryColors;
       return {
         ...prev,
         linkCategories: prev.linkCategories.map((c) =>
           c === oldName ? trimmed : c
         ),
+        linkCategoryColors:
+          oldColor !== undefined ? { ...restColors, [trimmed]: oldColor } : prev.linkCategoryColors,
         links: prev.links.map((l) =>
           l.category === oldName ? { ...l, category: trimmed } : l
         ),
@@ -480,13 +486,26 @@ export function usePreferences(profileName: string | null) {
   // comment on RESERVED_LINK_CATEGORY_NAMES, nothing needs to touch `links`.
   const removeLinkCategory = useCallback((name: string) => {
     if (isReservedLinkCategoryName(name)) return;
+    setPreferences((prev) => {
+      const restColors = Object.fromEntries(
+        Object.entries(prev.linkCategoryColors).filter(([c]) => c !== name)
+      );
+      return {
+        ...prev,
+        linkCategories: prev.linkCategories.filter((c) => c !== name),
+        linkCategoryColors: restColors,
+        activeLinkCategory:
+          prev.activeLinkCategory === name
+            ? ALL_LINKS_CATEGORY
+            : prev.activeLinkCategory,
+      };
+    });
+  }, []);
+
+  const setLinkCategoryColor = useCallback((category: string, color: AccentColor) => {
     setPreferences((prev) => ({
       ...prev,
-      linkCategories: prev.linkCategories.filter((c) => c !== name),
-      activeLinkCategory:
-        prev.activeLinkCategory === name
-          ? ALL_LINKS_CATEGORY
-          : prev.activeLinkCategory,
+      linkCategoryColors: { ...prev.linkCategoryColors, [category]: color },
     }));
   }, []);
 
@@ -535,5 +554,6 @@ export function usePreferences(profileName: string | null) {
     renameLinkCategory,
     removeLinkCategory,
     reorderLinkCategories,
+    setLinkCategoryColor,
   };
 }

@@ -12,7 +12,10 @@ interface SavedViewProps {
   onAddLink: () => void;
   onSelectLink: (id: string) => void;
   selectedId: string | null;
-  onUpdateLink: (id: string, updates: { title?: string; notes?: string }) => void;
+  onUpdateLink: (
+    id: string,
+    updates: { title?: string; notes?: string; category?: string }
+  ) => void;
   onTogglePinned: (id: string) => void;
   onDeleteLink: (id: string) => void;
 }
@@ -162,14 +165,29 @@ export function SavedView({
             >
               {selected.url}
             </a>
-            <div className="mt-1.5 text-[11px] text-brand-400 dark:text-brand-600">
-              {linkCategories.includes(selected.category)
-                ? selected.category
-                : UNCATEGORIZED_CATEGORY}{" "}
-              · saved{" "}
-              {formatDistanceToNow(new Date(selected.savedAt), { addSuffix: true })}
-              {selected.editedAt !== selected.savedAt &&
-                ` · edited ${formatDistanceToNow(new Date(selected.editedAt), { addSuffix: true })}`}
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-brand-400 dark:text-brand-600">
+              <select
+                value={
+                  linkCategories.includes(selected.category)
+                    ? selected.category
+                    : UNCATEGORIZED_CATEGORY
+                }
+                onChange={(e) => onUpdateLink(selected.id, { category: e.target.value })}
+                className="rounded border border-brand-200 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-brand-600 outline-none dark:border-brand-700 dark:text-brand-300"
+              >
+                <option value={UNCATEGORIZED_CATEGORY}>{UNCATEGORIZED_CATEGORY}</option>
+                {linkCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <span>
+                · saved{" "}
+                {formatDistanceToNow(new Date(selected.savedAt), { addSuffix: true })}
+                {selected.editedAt !== selected.savedAt &&
+                  ` · edited ${formatDistanceToNow(new Date(selected.editedAt), { addSuffix: true })}`}
+              </span>
             </div>
 
             <textarea
