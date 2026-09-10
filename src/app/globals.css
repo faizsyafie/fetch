@@ -50,3 +50,29 @@ body {
 .dark * {
   scrollbar-color: #5a5148 transparent;
 }
+
+/* Simple crossfade between routes (/, /about, /access) — see
+   <ViewTransition default="page-fade"> in app/layout.tsx. */
+::view-transition-old(.page-fade) {
+  animation: 150ms ease-out both page-fade-out;
+}
+::view-transition-new(.page-fade) {
+  animation: 200ms ease-in both page-fade-in;
+}
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.page-fade),
+  ::view-transition-new(.page-fade) {
+    animation-duration: 0s !important;
+  }
+}

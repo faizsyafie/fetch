@@ -55,6 +55,8 @@ export type FontScale = "sm" | "md" | "lg";
 
 export type Background = "slate" | "zinc" | "stone";
 
+export type NewsTopicId = "world" | "malaysia" | "economy" | "tech";
+
 export interface UiSettings {
   sidebarWidth: number;
   sidebarCollapsed: boolean;
@@ -64,9 +66,8 @@ export interface UiSettings {
   fontFamily: FontFamily;
   fontScale: FontScale;
   background: Background;
+  newsTopicOrder: NewsTopicId[];
 }
-
-export type NewsTopicId = "world" | "malaysia" | "economy";
 
 export interface TopicArticle {
   id: string;

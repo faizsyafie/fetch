@@ -9,6 +9,12 @@ interface NewsColumnProps {
   articles: TopicArticle[];
   errors: string[];
   loading: boolean;
+  isDragging: boolean;
+  isDragOver: boolean;
+  onDragStart: () => void;
+  onDragOver: () => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
 }
 
 function SkeletonCard() {
@@ -17,14 +23,45 @@ function SkeletonCard() {
   );
 }
 
-export function NewsColumn({ topic, articles, errors, loading }: NewsColumnProps) {
+export function NewsColumn({
+  topic,
+  articles,
+  errors,
+  loading,
+  isDragging,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+}: NewsColumnProps) {
   const showSkeletons = loading && articles.length === 0;
   const showEmpty = !loading && articles.length === 0;
 
   return (
-    <div className="flex h-full min-w-[280px] max-w-sm flex-1 flex-col overflow-hidden rounded-lg border border-brand-200 bg-white/70 dark:border-brand-800 dark:bg-brand-900/70">
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={(e) => {
+        e.preventDefault();
+        onDragOver();
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop();
+      }}
+      onDragEnd={onDragEnd}
+      className={`flex h-full min-w-[280px] max-w-sm flex-1 flex-col overflow-hidden rounded-lg border bg-white/70 transition-all duration-150 dark:bg-brand-900/70 ${
+        isDragOver
+          ? "border-l-2 border-l-blue-500 border-t-brand-200 border-r-brand-200 border-b-brand-200 dark:border-t-brand-800 dark:border-r-brand-800 dark:border-b-brand-800"
+          : "border-brand-200 dark:border-brand-800"
+      } ${isDragging ? "scale-[0.98] opacity-70 shadow-xl" : ""}`}
+    >
       <div className="flex items-center justify-between border-b border-brand-200 px-3 py-2.5 dark:border-brand-800">
         <div className="flex items-center gap-1.5 text-sm font-bold text-brand-900 dark:text-white">
+          <span className="cursor-grab text-[10px] text-brand-300 active:cursor-grabbing dark:text-brand-600">
+            ⠿
+          </span>
           <span aria-hidden="true">{topic.emoji}</span>
           {topic.label}
         </div>

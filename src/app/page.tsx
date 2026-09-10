@@ -110,6 +110,7 @@ function DashboardForProfile({
     setFontFamily,
     setFontScale,
     setBackground,
+    setNewsTopicOrder,
   } = useUiSettings();
   const { hydrated: seenHydrated, markSeen, isSeen } = useSeenArticles();
 
@@ -172,6 +173,7 @@ function DashboardForProfile({
         world: ["Failed to fetch news."],
         malaysia: ["Failed to fetch news."],
         economy: ["Failed to fetch news."],
+        tech: ["Failed to fetch news."],
       });
     } finally {
       setNewsLoading(false);
@@ -258,6 +260,7 @@ function DashboardForProfile({
       world: [],
       malaysia: [],
       economy: [],
+      tech: [],
     };
     for (const topic of NEWS_TOPICS) {
       filtered[topic.id] = newsArticlesByTopic[topic.id].filter(
@@ -464,7 +467,7 @@ function DashboardForProfile({
 
   const newsStatusLabel = newsFetchedAt
     ? `Updated ${formatDistanceToNow(newsFetchedAt, { addSuffix: true })}`
-    : "World, Malaysia and Economy headlines";
+    : "World, Malaysia, Economy and Tech headlines";
 
   // Keyboard shortcuts: "/" focuses search, j/k or arrows move the focused
   // row, Enter expands it, and Ctrl/Cmd+K opens the command palette.
@@ -646,6 +649,8 @@ function DashboardForProfile({
             articlesByTopic={visibleNewsArticlesByTopic}
             errorsByTopic={newsErrorsByTopic}
             loading={newsLoading}
+            topicOrder={uiSettings.newsTopicOrder}
+            onReorderTopics={setNewsTopicOrder}
           />
         ) : (
           <>

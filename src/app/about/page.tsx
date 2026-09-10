@@ -27,7 +27,7 @@ export default function AboutPage() {
       </h1>
       <p className="mt-3 max-w-md text-sm leading-relaxed text-brand-600 dark:text-brand-300">
         fetch tracks company news across industries and a general World /
-        Malaysia / Economy news board, pulling from RSS feeds so your team
+        Malaysia / Economy / Tech news board, pulling from RSS feeds so your team
         can keep an eye on what matters without digging through a dozen
         sites.
       </p>

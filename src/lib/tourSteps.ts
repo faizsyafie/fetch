@@ -35,7 +35,7 @@ export const TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="mode-toggle"]',
     title: "General news, too",
     description:
-      "Flip this switch (or click the logo) to jump to General — a board of three columns, World, Malaysia and Economy, each pulling straight from curated RSS feeds with no company matching involved. It refreshes as soon as you open it; flip back to Companies any time.",
+      "Flip this switch (or click the logo) to jump to General — a board of four columns, World, Malaysia, Economy and Tech, each pulling straight from curated RSS feeds with no company matching involved. Drag a column by its ⠿ handle to reorder them. It refreshes as soon as you open it; flip back to Companies any time.",
     placement: "right",
   },
   {
