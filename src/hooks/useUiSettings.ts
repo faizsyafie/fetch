@@ -7,7 +7,7 @@ import {
   MIN_SIDEBAR_WIDTH,
   UI_STORAGE_KEY,
 } from "@/lib/defaults";
-import { DEFAULT_NEWS_TOPIC_ORDER } from "@/lib/newsTopics";
+import { DEFAULT_NEWS_TOPIC_ORDER, NEWS_TOPICS } from "@/lib/newsTopics";
 import type {
   AccentColor,
   Density,
@@ -34,18 +34,24 @@ function clampWidth(width: number): number {
   return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
 }
 
-// Drops ids no longer in DEFAULT_NEWS_TOPIC_ORDER and appends any new ones
-// (e.g. a newly added topic) that a stored order predates.
+// Validates a stored order against the full topic catalog (not just the
+// defaults — Edit Themes lets a user enable topics beyond, or disable ones
+// within, DEFAULT_NEWS_TOPIC_ORDER, so a disabled default must NOT get
+// silently re-added here). Migrates the pre-rename "economy" id, and only
+// falls back to the defaults wholesale if nothing valid survives at all
+// (corrupted storage, or a first read).
 function sanitizeTopicOrder(order: unknown): NewsTopicId[] {
-  const known = new Set(DEFAULT_NEWS_TOPIC_ORDER);
-  const kept = Array.isArray(order)
-    ? order.filter(
+  const known = new Set(NEWS_TOPICS.map((t) => t.id));
+  const migrated = Array.isArray(order)
+    ? order.map((id) => (id === "economy" ? "generalEconomy" : id))
+    : order;
+  const kept = Array.isArray(migrated)
+    ? migrated.filter(
         (id): id is NewsTopicId =>
           typeof id === "string" && known.has(id as NewsTopicId)
       )
     : [];
-  const missing = DEFAULT_NEWS_TOPIC_ORDER.filter((id) => !kept.includes(id));
-  return [...kept, ...missing];
+  return kept.length > 0 ? kept : DEFAULT_NEWS_TOPIC_ORDER;
 }
 
 // getSnapshot must return a referentially stable value when nothing has

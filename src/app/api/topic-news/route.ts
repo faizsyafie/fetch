@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchTopicNews } from "@/lib/rss";
 import { NEWS_TOPICS } from "@/lib/newsTopics";
-import type { TimeFrameDays } from "@/lib/types";
+import type { NewsTimeFrame, NewsTopicId } from "@/lib/types";
 
-const VALID_DAYS: TimeFrameDays[] = [1, 3, 7, 14, 30];
+const VALID_TIME_FRAMES: NewsTimeFrame[] = ["now", 1, 3, 7, 14];
+const VALID_TOPIC_IDS = new Set(NEWS_TOPICS.map((t) => t.id));
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const days = VALID_DAYS.includes(body?.days) ? (body.days as TimeFrameDays) : 7;
+    const timeFrame = VALID_TIME_FRAMES.includes(body?.days)
+      ? (body.days as NewsTimeFrame)
+      : "now";
+    // Only fetch the caller's enabled columns rather than the whole
+    // catalog — most users won't have all of them turned on. Falls back to
+    // everything if the request doesn't specify (or specifies nothing
+    // valid), so this stays backward compatible.
+    const requestedTopics: NewsTopicId[] = Array.isArray(body?.topics)
+      ? body.topics.filter((id: unknown): id is NewsTopicId =>
+          typeof id === "string" && VALID_TOPIC_IDS.has(id as NewsTopicId)
+        )
+      : [];
+    const topicsToFetch =
+      requestedTopics.length > 0
+        ? NEWS_TOPICS.filter((t) => requestedTopics.includes(t.id))
+        : NEWS_TOPICS;
 
-    const topics = await fetchTopicNews(NEWS_TOPICS, days);
+    const topics = await fetchTopicNews(topicsToFetch, timeFrame);
 
     return NextResponse.json({
       topics,

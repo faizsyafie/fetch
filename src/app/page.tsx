@@ -11,18 +11,22 @@ import {
 } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
+import { CompanyActions } from "@/components/CompanyActions";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
+import { EditThemesModal } from "@/components/EditThemesModal";
+import { FeedbackModal } from "@/components/FeedbackModal";
 import { DogWatermark } from "@/components/DogWatermark";
 import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
-import { Sidebar } from "@/components/Sidebar";
+import { SaveLinkModal } from "@/components/SaveLinkModal";
+import { SavedView } from "@/components/SavedView";
+import { Sidebar, type AppMode } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
-import { SourcesPanel } from "@/components/SourcesPanel";
-import { SuggestedSources } from "@/components/SuggestedSources";
+import { SourcesModal } from "@/components/SourcesModal";
 import { SpotlightTour } from "@/components/SpotlightTour";
+import { TabBar } from "@/components/TabBar";
 import { TopBar } from "@/components/TopBar";
-import { WelcomeLanding } from "@/components/WelcomeLanding";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSeenArticles } from "@/hooks/useSeenArticles";
@@ -30,9 +34,18 @@ import { useTheme } from "@/hooks/useTheme";
 import { readUiSettings, useUiSettings } from "@/hooks/useUiSettings";
 import {
   ALL_INDUSTRY,
+  ALL_LINKS_CATEGORY,
+  ALL_LINKS_EMOJI,
+  DEFAULT_INDUSTRY_EMOJI,
   FONT_FAMILY_PRESETS,
   FONT_SCALE_PRESETS,
+  PINNED_LINKS_CATEGORY,
+  PINNED_LINKS_EMOJI,
+  UNCATEGORIZED_CATEGORY,
+  UNCATEGORIZED_LINKS_EMOJI,
   WATCHLIST_INDUSTRY,
+  getIndustryEmoji,
+  linkCategoryColor,
 } from "@/lib/defaults";
 import {
   EMPTY_NEWS_ARTICLES,
@@ -43,8 +56,8 @@ import { TOUR_STEPS } from "@/lib/tourSteps";
 import type {
   Company,
   FetchNewsResponse,
+  NewsTimeFrame,
   NewsTopicId,
-  TimeFrameDays,
   TopicArticle,
 } from "@/lib/types";
 
@@ -104,6 +117,17 @@ function DashboardForProfile({
     addSource,
     removeSource,
     resetSources,
+    saveLink,
+    findLinkByUrl,
+    updateLink,
+    deleteLink,
+    toggleLinkPinned,
+    setActiveLinkCategory,
+    addLinkCategory,
+    renameLinkCategory,
+    removeLinkCategory,
+    reorderLinkCategories,
+    setLinkCategoryColor,
   } = usePreferences(profileName);
   const { theme, toggleTheme } = useTheme();
   const {
@@ -122,7 +146,9 @@ function DashboardForProfile({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [editMode, setEditMode] = useState(false);
+  const [categoryEditMode, setCategoryEditMode] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [themesOpen, setThemesOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
@@ -135,33 +161,41 @@ function DashboardForProfile({
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [mode, setModeState] = useState<"companies" | "news">("companies");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  // Lands on General (news) right after picking a profile — there's no
+  // separate welcome screen anymore.
+  const [mode, setModeState] = useState<AppMode>("news");
   // Wrapped in startTransition so the ViewTransition around the board content
   // (keyed on `mode`) actually activates — plain setState doesn't trigger it.
   const setMode = useCallback(
-    (next: "companies" | "news" | ((prev: "companies" | "news") => "companies" | "news")) => {
+    (next: AppMode | ((prev: AppMode) => AppMode)) => {
       startTransition(() => {
         setModeState(next);
       });
     },
     []
   );
-  const [newsDays, setNewsDaysState] = useState<TimeFrameDays>(7);
+  const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
+  const [saveLinkModal, setSaveLinkModal] = useState<{
+    url?: string;
+    title?: string;
+  } | null>(null);
+  const [newsDays, setNewsDaysState] = useState<NewsTimeFrame>("now");
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsArticlesByTopic, setNewsArticlesByTopic] =
     useState<Record<NewsTopicId, TopicArticle[]>>(EMPTY_NEWS_ARTICLES);
   const [newsErrorsByTopic, setNewsErrorsByTopic] =
     useState<Record<NewsTopicId, string[]>>(EMPTY_NEWS_ERRORS);
-  const [newsFetchedAt, setNewsFetchedAt] = useState<number | null>(null);
 
-  const toggleMode = useCallback(() => {
-    setMode((prev) => (prev === "companies" ? "news" : "companies"));
-    setSearchQuery("");
-    setSelected(new Set());
-    setFocusedIndex(null);
-  }, [setMode]);
+  const selectMode = useCallback(
+    (next: AppMode) => {
+      setMode(next);
+      setSearchQuery("");
+      setSelected(new Set());
+      setFocusedIndex(null);
+    },
+    [setMode]
+  );
 
   // The tutorial walks through Companies-mode UI first, so always land there
   // before opening it — regardless of which mode (or screen) it was opened
@@ -171,13 +205,13 @@ function DashboardForProfile({
     setTutorialOpen(true);
   }, [setMode]);
 
-  const fetchNewsBoard = useCallback(async (days: TimeFrameDays) => {
+  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[]) => {
     setNewsLoading(true);
     try {
       const response = await fetch("/api/topic-news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ days }),
+        body: JSON.stringify({ days, topics }),
       });
       if (!response.ok) throw new Error("Failed to fetch news.");
       const data = await response.json();
@@ -191,25 +225,23 @@ function DashboardForProfile({
       }
       setNewsArticlesByTopic(nextArticles);
       setNewsErrorsByTopic(nextErrors);
-      setNewsFetchedAt(Date.now());
     } catch {
-      setNewsErrorsByTopic({
-        world: ["Failed to fetch news."],
-        malaysia: ["Failed to fetch news."],
-        economy: ["Failed to fetch news."],
-        tech: ["Failed to fetch news."],
-      });
+      setNewsErrorsByTopic(
+        Object.fromEntries(
+          NEWS_TOPICS.map((topic) => [topic.id, ["Failed to fetch news."]])
+        ) as Record<NewsTopicId, string[]>
+      );
     } finally {
       setNewsLoading(false);
     }
   }, []);
 
   const setNewsDays = useCallback(
-    (days: TimeFrameDays) => {
+    (days: NewsTimeFrame) => {
       setNewsDaysState(days);
-      void fetchNewsBoard(days);
+      void fetchNewsBoard(days, uiSettings.newsTopicOrder);
     },
-    [fetchNewsBoard]
+    [fetchNewsBoard, uiSettings.newsTopicOrder]
   );
 
   // Refresh as soon as the board is switched into — i.e. every time the
@@ -217,10 +249,23 @@ function DashboardForProfile({
   useEffect(() => {
     if (mode === "news") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      void fetchNewsBoard(newsDays);
+      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  // Enabling a topic should populate its column right away rather than
+  // waiting for the next mode-switch or manual refresh.
+  const handleToggleTopic = useCallback(
+    (id: NewsTopicId, enabled: boolean) => {
+      const next = enabled
+        ? [...uiSettings.newsTopicOrder, id]
+        : uiSettings.newsTopicOrder.filter((t) => t !== id);
+      setNewsTopicOrder(next);
+      void fetchNewsBoard(newsDays, next);
+    },
+    [uiSettings.newsTopicOrder, setNewsTopicOrder, fetchNewsBoard, newsDays]
+  );
 
   const expandedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
@@ -281,12 +326,7 @@ function DashboardForProfile({
   const visibleNewsArticlesByTopic = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return newsArticlesByTopic;
-    const filtered: Record<NewsTopicId, TopicArticle[]> = {
-      world: [],
-      malaysia: [],
-      economy: [],
-      tech: [],
-    };
+    const filtered: Record<NewsTopicId, TopicArticle[]> = { ...EMPTY_NEWS_ARTICLES };
     for (const topic of NEWS_TOPICS) {
       filtered[topic.id] = newsArticlesByTopic[topic.id].filter(
         (a) =>
@@ -301,6 +341,140 @@ function DashboardForProfile({
   const enabledSourceNames = useMemo(
     () => preferences.sources.filter((s) => s.enabled).map((s) => s.name),
     [preferences.sources]
+  );
+
+  const visibleLinks = useMemo(() => {
+    const { activeLinkCategory, linkCategories, links } = preferences;
+    let base = links;
+    if (activeLinkCategory === PINNED_LINKS_CATEGORY) {
+      base = base.filter((l) => l.pinned);
+    } else if (activeLinkCategory === UNCATEGORIZED_CATEGORY) {
+      base = base.filter((l) => !linkCategories.includes(l.category));
+    } else if (activeLinkCategory !== ALL_LINKS_CATEGORY) {
+      base = base.filter((l) => l.category === activeLinkCategory);
+    }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      base = base.filter(
+        (l) =>
+          l.title.toLowerCase().includes(q) ||
+          l.url.toLowerCase().includes(q) ||
+          l.notes.toLowerCase().includes(q)
+      );
+    }
+    return base;
+  }, [preferences, searchQuery]);
+
+  const isLinkSaved = useCallback(
+    (url: string) => preferences.links.some((l) => l.url === url),
+    [preferences.links]
+  );
+
+  const industryTabPinnedItems = useMemo(
+    () => [
+      {
+        key: ALL_INDUSTRY,
+        emoji: getIndustryEmoji(ALL_INDUSTRY, preferences.industryEmojis),
+        label: ALL_INDUSTRY,
+        count: preferences.companies.length,
+      },
+      {
+        key: WATCHLIST_INDUSTRY,
+        emoji: getIndustryEmoji(WATCHLIST_INDUSTRY, preferences.industryEmojis),
+        label: WATCHLIST_INDUSTRY,
+        count: preferences.companies.filter((c) => c.starred).length,
+      },
+    ],
+    [preferences.industryEmojis, preferences.companies]
+  );
+
+  const industryTabItems = useMemo(
+    () =>
+      preferences.industries.map((industry) => ({
+        key: industry,
+        emoji: preferences.industryEmojis[industry] ?? DEFAULT_INDUSTRY_EMOJI,
+        label: industry,
+        count: preferences.companies.filter((c) => c.industry === industry).length,
+      })),
+    [preferences.industries, preferences.industryEmojis, preferences.companies]
+  );
+
+  const categoryTabPinnedItems = useMemo(
+    () => [
+      {
+        key: ALL_LINKS_CATEGORY,
+        emoji: ALL_LINKS_EMOJI,
+        label: ALL_LINKS_CATEGORY,
+        count: preferences.links.length,
+      },
+      {
+        key: PINNED_LINKS_CATEGORY,
+        emoji: PINNED_LINKS_EMOJI,
+        label: PINNED_LINKS_CATEGORY,
+        count: preferences.links.filter((l) => l.pinned).length,
+      },
+    ],
+    [preferences.links]
+  );
+
+  const categoryTabItems = useMemo(
+    () =>
+      preferences.linkCategories.map((category) => ({
+        key: category,
+        emoji: "",
+        swatchColor: linkCategoryColor(
+          category,
+          preferences.linkCategories,
+          preferences.linkCategoryColors
+        ),
+        label: category,
+        count: preferences.links.filter((l) => l.category === category).length,
+      })),
+    [preferences.linkCategories, preferences.linkCategoryColors, preferences.links]
+  );
+
+  const uncategorizedTabItem = useMemo(
+    () => ({
+      key: UNCATEGORIZED_CATEGORY,
+      emoji: UNCATEGORIZED_LINKS_EMOJI,
+      label: UNCATEGORIZED_CATEGORY,
+      count: preferences.links.filter(
+        (l) => !preferences.linkCategories.includes(l.category)
+      ).length,
+    }),
+    [preferences.links, preferences.linkCategories]
+  );
+
+  // Bookmark icon on an article card is a toggle: save it (opening the modal
+  // to add a title/notes) or, if already saved, un-save it immediately.
+  const handleArticleBookmarkClick = useCallback(
+    (article: { link: string; title: string }) => {
+      const existing = findLinkByUrl(article.link);
+      if (existing) {
+        deleteLink(existing.id);
+      } else {
+        setSaveLinkModal({ url: article.link, title: article.title });
+      }
+    },
+    [findLinkByUrl, deleteLink]
+  );
+
+  const defaultSaveCategory =
+    mode === "saved" &&
+    preferences.activeLinkCategory !== ALL_LINKS_CATEGORY &&
+    preferences.activeLinkCategory !== PINNED_LINKS_CATEGORY
+      ? preferences.activeLinkCategory
+      : UNCATEGORIZED_CATEGORY;
+
+  // saveLink no-ops (and just returns the existing id) when the URL is
+  // already saved, so a re-save never clobbers an existing note.
+  const handleSaveLinkSubmit = useCallback(
+    (input: { url: string; title: string; notes: string; category: string }) => {
+      const id = saveLink(input);
+      if (id) setSelectedLinkId(id);
+      setSaveLinkModal(null);
+    },
+    [saveLink]
   );
 
   const fetchCompanyNews = useCallback(
@@ -408,14 +582,6 @@ function DashboardForProfile({
     });
   }, []);
 
-  const selectAll = useCallback(() => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      visibleCompanies.forEach((c) => next.add(c.id));
-      return next;
-    });
-  }, [visibleCompanies]);
-
   const clearSelection = useCallback(() => setSelected(new Set()), []);
   const collapseAll = useCallback(() => setExpanded(new Set()), []);
 
@@ -440,14 +606,15 @@ function DashboardForProfile({
     [batchRunning, loadingSet, fetchCompanyNews]
   );
 
-  const fetchSelected = useCallback(() => {
-    const toFetch = preferences.companies.filter((c) => selected.has(c.id));
+  // "Fetch!" is a single smart action: fetch just the checkbox selection
+  // when one exists, otherwise the whole active industry.
+  const fetchSmart = useCallback(() => {
+    const toFetch =
+      selected.size > 0
+        ? preferences.companies.filter((c) => selected.has(c.id))
+        : companiesInIndustry;
     void runBatchFetch(toFetch);
-  }, [selected, preferences.companies, runBatchFetch]);
-
-  const fetchAllInIndustry = useCallback(() => {
-    void runBatchFetch(companiesInIndustry);
-  }, [companiesInIndustry, runBatchFetch]);
+  }, [selected, preferences.companies, companiesInIndustry, runBatchFetch]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
@@ -490,10 +657,6 @@ function DashboardForProfile({
     ? `Updated ${formatDistanceToNow(lastFetchedAt, { addSuffix: true })}`
     : null;
 
-  const newsStatusLabel = newsFetchedAt
-    ? `Updated ${formatDistanceToNow(newsFetchedAt, { addSuffix: true })}`
-    : "World, Malaysia, Economy and Tech headlines";
-
   // Keyboard shortcuts: "/" focuses search, j/k or arrows move the focused
   // row, Enter expands it, and Ctrl/Cmd+K opens the command palette.
   useEffect(() => {
@@ -507,7 +670,9 @@ function DashboardForProfile({
         setCommandPaletteOpen(false);
         setTutorialOpen(false);
         setCustomizeOpen(false);
-        setSuggestionsOpen(false);
+        setSourcesOpen(false);
+        setFeedbackOpen(false);
+        setThemesOpen(false);
         return;
       }
 
@@ -556,29 +721,6 @@ function DashboardForProfile({
     return <SkeletonLoader />;
   }
 
-  if (showWelcome) {
-    return (
-      <WelcomeLanding
-        name={profileName}
-        theme={theme}
-        accent={uiSettings.accent}
-        onOpenTutorial={() => {
-          setShowWelcome(false);
-          openTutorial();
-        }}
-        onReadGeneralNews={() => {
-          setShowWelcome(false);
-          setMode("news");
-        }}
-        onFetchCompanyNews={() => {
-          setShowWelcome(false);
-          setMode("companies");
-          fetchAllInIndustry();
-        }}
-      />
-    );
-  }
-
   const focusedId =
     focusedIndex != null ? visibleCompanies[focusedIndex]?.id ?? null : null;
 
@@ -596,12 +738,7 @@ function DashboardForProfile({
       <Sidebar
         theme={theme}
         mode={mode}
-        onLogoClick={toggleMode}
-        logoTitle={mode === "companies" ? "Switch to News" : "Switch to Companies"}
-        companies={preferences.companies}
-        industries={preferences.industries}
-        industryEmojis={preferences.industryEmojis}
-        activeIndustry={preferences.activeIndustry}
+        onSelectMode={selectMode}
         sources={preferences.sources}
         days={preferences.days}
         editMode={editMode}
@@ -610,19 +747,17 @@ function DashboardForProfile({
         width={uiSettings.sidebarWidth}
         collapsed={uiSettings.sidebarCollapsed}
         accent={uiSettings.accent}
-        onSelectIndustry={handleSelectIndustry}
-        onAddIndustry={addIndustry}
-        onRenameIndustry={renameIndustry}
-        onRemoveIndustry={removeIndustry}
-        onSetIndustryEmoji={setIndustryEmoji}
-        onReorderIndustries={reorderIndustries}
         onToggleEditMode={() => setEditMode((v) => !v)}
         onToggleSourcesPanel={() => setSourcesOpen((v) => !v)}
         onResizeWidth={setSidebarWidth}
         onToggleCollapsed={toggleSidebarCollapsed}
+        categoryEditMode={categoryEditMode}
+        onToggleCategoryEditMode={() => setCategoryEditMode((v) => !v)}
+        themesOpen={themesOpen}
+        onToggleThemesPanel={() => setThemesOpen((v) => !v)}
       />
 
-      <div className="relative flex min-h-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
         <DogWatermark theme={theme} />
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
@@ -630,43 +765,75 @@ function DashboardForProfile({
           mode={mode}
           profileName={profileName}
           onLogOut={onLogOut}
+          onOpenFeedback={() => setFeedbackOpen(true)}
           activeIndustry={preferences.activeIndustry}
           industries={preferences.industries}
-          industryEmojis={preferences.industryEmojis}
           companiesInIndustry={companiesInIndustry}
-          matchedCount={visibleCompanies.length}
           searchQuery={searchQuery}
           days={preferences.days}
-          sources={preferences.sources}
-          selectedCount={selected.size}
-          batchRunning={batchRunning}
-          loadingCount={loadingSet.size}
           editMode={editMode}
-          theme={theme}
-          density={uiSettings.density}
           accent={uiSettings.accent}
-          onToggleTheme={toggleTheme}
-          onToggleDensity={() =>
-            setDensity(uiSettings.density === "compact" ? "comfortable" : "compact")
-          }
           onSearch={handleSearch}
           onSetDays={setDays}
-          onSelectAll={selectAll}
-          onClearSelection={clearSelection}
-          onFetchSelected={fetchSelected}
-          onFetchAll={fetchAllInIndustry}
           onAddCompany={handleAddCompanyTag}
           onRemoveCompany={removeCompany}
-          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
           onOpenTutorial={openTutorial}
-          onOpenCustomize={() => setCustomizeOpen(true)}
-          onCollapseAll={collapseAll}
+          onOpenSettings={() => setCustomizeOpen(true)}
           newsDays={newsDays}
           onSetNewsDays={setNewsDays}
           newsLoading={newsLoading}
-          onRefreshNews={() => void fetchNewsBoard(newsDays)}
-          newsStatusLabel={newsStatusLabel}
+          onRefreshNews={() => void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder)}
         />
+
+        {mode === "companies" && (
+          <TabBar
+            dataTour="industry-tab-bar"
+            pinnedItems={industryTabPinnedItems}
+            items={industryTabItems}
+            activeKey={preferences.activeIndustry}
+            accent={uiSettings.accent}
+            editMode={editMode}
+            addPlaceholder="New industry…"
+            onSelect={handleSelectIndustry}
+            onAdd={addIndustry}
+            onRename={renameIndustry}
+            onRemove={removeIndustry}
+            onReorder={reorderIndustries}
+            onSetEmoji={setIndustryEmoji}
+            actions={
+              <CompanyActions
+                dataTour="topbar-fetch"
+                selectedCount={selected.size}
+                totalCount={companiesInIndustry.length}
+                batchRunning={batchRunning}
+                loadingCount={loadingSet.size}
+                accent={uiSettings.accent}
+                onClear={clearSelection}
+                onCollapse={collapseAll}
+                onFetch={fetchSmart}
+              />
+            }
+          />
+        )}
+
+        {mode === "saved" && (
+          <TabBar
+            dataTour="category-tab-bar"
+            pinnedItems={categoryTabPinnedItems}
+            items={categoryTabItems}
+            trailingItem={uncategorizedTabItem}
+            activeKey={preferences.activeLinkCategory}
+            accent={uiSettings.accent}
+            editMode={categoryEditMode}
+            addPlaceholder="New category…"
+            onSelect={setActiveLinkCategory}
+            onAdd={addLinkCategory}
+            onRename={renameLinkCategory}
+            onRemove={removeLinkCategory}
+            onReorder={reorderLinkCategories}
+            onSetColor={setLinkCategoryColor}
+          />
+        )}
 
         <ViewTransition key={mode} enter="board-fade" exit="board-fade" default="none">
         {mode === "news" ? (
@@ -676,20 +843,31 @@ function DashboardForProfile({
             loading={newsLoading}
             topicOrder={uiSettings.newsTopicOrder}
             onReorderTopics={setNewsTopicOrder}
+            isLinkSaved={isLinkSaved}
+            onSaveArticle={handleArticleBookmarkClick}
+            accent={uiSettings.accent}
+            showCategoryPromo={preferences.linkCategories.length === 0}
+            onCreateCategory={() => selectMode("saved")}
+            showCompanyPromo={preferences.companies.length === 0}
+            onGoToCompanies={() => selectMode("companies")}
+          />
+        ) : mode === "saved" ? (
+          <SavedView
+            links={visibleLinks}
+            linkCategories={preferences.linkCategories}
+            accent={uiSettings.accent}
+            onAddLink={() => setSaveLinkModal({})}
+            onSelectLink={setSelectedLinkId}
+            selectedId={selectedLinkId}
+            onUpdateLink={(id, updates) => updateLink(id, updates)}
+            onTogglePinned={toggleLinkPinned}
+            onDeleteLink={(id) => {
+              deleteLink(id);
+              setSelectedLinkId((prev) => (prev === id ? null : prev));
+            }}
           />
         ) : (
           <>
-            {sourcesOpen && (
-              <SourcesPanel
-                sources={preferences.sources}
-                onAddSource={addSource}
-                onRemoveSource={removeSource}
-                onResetSources={resetSources}
-                onClearCache={clearCache}
-                onOpenSuggestions={() => setSuggestionsOpen(true)}
-              />
-            )}
-
             <CompanyList
               companies={visibleCompanies}
               industries={preferences.industries}
@@ -706,6 +884,7 @@ function DashboardForProfile({
               accent={uiSettings.accent}
               focusedId={focusedId}
               isArticleSeen={isSeen}
+              isLinkSaved={isLinkSaved}
               enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
               emptyMessage={
                 searchQuery.trim()
@@ -721,6 +900,7 @@ function DashboardForProfile({
               onToggleStar={toggleStarCompany}
               onUpdateNotes={updateCompanyNotes}
               onReorder={handleReorderCompanies}
+              onSaveArticle={handleArticleBookmarkClick}
             />
           </>
         )}
@@ -753,10 +933,12 @@ function DashboardForProfile({
 
       {customizeOpen && (
         <CustomizePanel
+          theme={theme}
           accent={uiSettings.accent}
           fontFamily={uiSettings.fontFamily}
           fontScale={uiSettings.fontScale}
           density={uiSettings.density}
+          onToggleTheme={toggleTheme}
           onSetAccent={setAccent}
           onSetFontFamily={setFontFamily}
           onSetFontScale={setFontScale}
@@ -765,11 +947,43 @@ function DashboardForProfile({
         />
       )}
 
-      {suggestionsOpen && (
-        <SuggestedSources
-          existingSources={preferences.sources}
+      {feedbackOpen && (
+        <FeedbackModal
+          accent={uiSettings.accent}
+          onClose={() => setFeedbackOpen(false)}
+        />
+      )}
+
+      {themesOpen && (
+        <EditThemesModal
+          enabledTopics={uiSettings.newsTopicOrder}
+          accent={uiSettings.accent}
+          onToggle={handleToggleTopic}
+          onClose={() => setThemesOpen(false)}
+        />
+      )}
+
+      {saveLinkModal && (
+        <SaveLinkModal
+          initialUrl={saveLinkModal.url}
+          initialTitle={saveLinkModal.title}
+          categories={preferences.linkCategories}
+          defaultCategory={defaultSaveCategory}
+          accent={uiSettings.accent}
+          onSave={handleSaveLinkSubmit}
+          onClose={() => setSaveLinkModal(null)}
+        />
+      )}
+
+      {sourcesOpen && (
+        <SourcesModal
+          sources={preferences.sources}
+          accent={uiSettings.accent}
           onAdd={addSource}
-          onClose={() => setSuggestionsOpen(false)}
+          onRemove={removeSource}
+          onResetDefaults={resetSources}
+          onClearCache={clearCache}
+          onClose={() => setSourcesOpen(false)}
         />
       )}
     </div>

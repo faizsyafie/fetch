@@ -35,6 +35,29 @@
   --color-brand-800: #383130;
   --color-brand-900: #342d2d;
   --color-brand-950: #262121;
+
+  --animate-bone-jump: bone-jump 0.5s ease-in-out;
+}
+
+/* The Fetch! button (itself shaped like a bone) hops and shakes on hover —
+   like a dog spotting its bone. */
+@keyframes bone-jump {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-4px) rotate(-6deg);
+  }
+  40% {
+    transform: translateY(0) rotate(4deg);
+  }
+  60% {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+  80% {
+    transform: translateY(0) rotate(2deg);
+  }
 }
 
 body {
@@ -97,5 +120,8 @@ body {
   ::view-transition-old(.board-fade),
   ::view-transition-new(.board-fade) {
     animation-duration: 0s !important;
+  }
+  .animate-bone-jump {
+    animation: none !important;
   }
 }

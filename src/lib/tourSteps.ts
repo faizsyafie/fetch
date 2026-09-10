@@ -15,12 +15,12 @@ export const TOUR_STEPS: TourStep[] = [
       "A quick tour of everything you can do here — industries, news fetching, customization, and shortcuts. Use Next/Back (or the arrow keys) to move around, and Esc any time to skip.",
   },
   {
-    id: "sidebar-industries",
-    selector: '[data-tour="sidebar-industries"]',
+    id: "industry-tab-bar",
+    selector: '[data-tour="industry-tab-bar"]',
     title: "Industries & watchlist",
     description:
-      "Companies are grouped into industries here. 🌐 All shows everything across every industry, and ⭐ Watchlist shows just the companies you've starred. Click a row to switch, or drag rows to reorder them while in Edit mode.",
-    placement: "right",
+      "Companies are grouped into industries here, right below the top bar. 🌐 All shows everything across every industry, and ⭐ Watchlist shows just the companies you've starred. Click a tab to switch; turn on Edit Lists (in the sidebar) to rename, delete or drag tabs to reorder them, or use the + at the end to add a new one.",
+    placement: "bottom",
   },
   {
     id: "sidebar-header",
@@ -31,11 +31,11 @@ export const TOUR_STEPS: TourStep[] = [
     placement: "right",
   },
   {
-    id: "mode-toggle",
-    selector: '[data-tour="mode-toggle"]',
-    title: "General news, too",
+    id: "nav-list",
+    selector: '[data-tour="nav-list"]',
+    title: "General, Companies & Buried Bones",
     description:
-      "Flip this switch (or click the logo) to jump to General — a board of four columns, World, Malaysia, Economy and Tech, each pulling straight from curated RSS feeds with no company matching involved. Drag a column by its ⠿ handle to reorder them. It refreshes as soon as you open it; flip back to Companies any time.",
+      "General is a board of columns — World, Malaysia and more — each pulling straight from curated RSS feeds with no company matching involved; drag a column by its ⠿ handle to reorder them, or pick which ones show up under Edit Themes. Companies is your industry-tracked watchlist. Buried Bones is where anything you bookmark (🔖 on an article) lives, sorted into categories you manage yourself.",
     placement: "right",
   },
   {
@@ -43,7 +43,7 @@ export const TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="sidebar-manage"]',
     title: "Edit lists & sources",
     description:
-      "Edit Lists lets you add, rename, delete and reorder industries and companies, with a custom emoji per industry. Edit Sources controls which news domains are searched, including a page of suggested RSS feeds to add.",
+      "Edit Lists lets you add, rename, delete and reorder industries and companies, with a custom emoji per industry. Edit Sources opens a picker of recommended and regional outlets to add with one click, plus your own custom domains.",
     placement: "right",
   },
   {
@@ -63,27 +63,19 @@ export const TOUR_STEPS: TourStep[] = [
     placement: "bottom",
   },
   {
-    id: "topbar-command-palette",
-    selector: '[data-tour="topbar-command-palette"]',
-    title: "Command palette",
+    id: "topbar-settings",
+    selector: '[data-tour="topbar-settings"]',
+    title: "Settings",
     description:
-      "Press ⌘K (or Ctrl+K) to open the command palette and jump straight to any company or industry without touching the mouse.",
-    placement: "bottom",
-  },
-  {
-    id: "topbar-appearance",
-    selector: '[data-tour="topbar-appearance"]',
-    title: "Density, theme & customization",
-    description:
-      "Toggle Compact/Comfortable density, switch Light/Dark mode, or open Customize (🎨) to set an accent color (now with 7 to choose from — it colors the mode switch too), row spacing, font family and font size — all saved to your profile.",
+      "Everything appearance-related lives here now: Light/Dark theme, row spacing (Compact/Comfortable), an accent color (7 to choose from — it colors the sidebar nav too), font family and font size — all saved to your profile.",
     placement: "bottom",
   },
   {
     id: "topbar-fetch",
     selector: '[data-tour="topbar-fetch"]',
-    title: "Fetch news",
+    title: "🦴 Fetch!",
     description:
-      "Select companies with the checkboxes then Fetch News, or use Fetch all to pull the whole industry in one go. Collapse all closes every expanded card at once.",
+      "Tick a few companies with the checkboxes and Fetch! grabs news for just those — leave nothing selected and it fetches the whole industry instead. Collapse closes every expanded card at once.",
     placement: "bottom",
   },
   {

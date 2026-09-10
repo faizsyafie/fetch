@@ -5,6 +5,7 @@ import type {
   FontScale,
   Industry,
   NewsSource,
+  NewsTimeFrame,
   SuggestedSource,
   TimeFrameDays,
 } from "./types";
@@ -31,6 +32,31 @@ export function isReservedIndustryName(name: string): boolean {
 
 export const ALL_INDUSTRY_EMOJI = "🌐";
 export const WATCHLIST_INDUSTRY_EMOJI = "⭐";
+
+// Saved-links categories — same "protected virtual view" pattern as
+// industries above, plus "Uncategorized" as a permanent fallback bucket
+// that's never actually stored in linkCategories: a link's category counts
+// as Uncategorized whenever it isn't (or is no longer) in that list, so
+// deleting a category can't strand or delete anyone's notes.
+export const ALL_LINKS_CATEGORY = "All";
+export const PINNED_LINKS_CATEGORY = "Pinned";
+export const UNCATEGORIZED_CATEGORY = "Uncategorized";
+export const RESERVED_LINK_CATEGORY_NAMES = [
+  ALL_LINKS_CATEGORY,
+  PINNED_LINKS_CATEGORY,
+  UNCATEGORIZED_CATEGORY,
+];
+
+export function isReservedLinkCategoryName(name: string): boolean {
+  return RESERVED_LINK_CATEGORY_NAMES.some(
+    (reserved) => reserved.toLowerCase() === name.trim().toLowerCase()
+  );
+}
+
+export const ALL_LINKS_EMOJI = "🔖";
+export const PINNED_LINKS_EMOJI = "⭐";
+export const UNCATEGORIZED_LINKS_EMOJI = "🗂️";
+export const DEFAULT_LINK_CATEGORY_EMOJI = "📌";
 
 export function getIndustryEmoji(
   industry: Industry,
@@ -133,6 +159,16 @@ export const TIME_FRAME_OPTIONS: { label: string; days: TimeFrameDays }[] = [
   { label: "30d", days: 30 },
 ];
 
+// The General/News board's own time filter — see the NewsTimeFrame type for
+// why this reads "at least N days old" rather than "within the last N days."
+export const NEWS_TIME_FRAME_OPTIONS: { label: string; value: NewsTimeFrame }[] = [
+  { label: "Now", value: "now" },
+  { label: "1d", value: 1 },
+  { label: "3d", value: 3 },
+  { label: "7d", value: 7 },
+  { label: "14d", value: 14 },
+];
+
 export const DEFAULT_SOURCES: NewsSource[] = [
   {
     id: "bloomberg",
@@ -155,9 +191,9 @@ export const DEFAULT_SOURCES: NewsSource[] = [
     isDefault: true,
   },
   {
-    id: "the-edge-singapore",
-    name: "The Edge Singapore",
-    domain: "theedgesingapore.com",
+    id: "the-edge-malaysia",
+    name: "The Edge Malaysia",
+    domain: "theedgemalaysia.com",
     feedUrls: [],
     enabled: true,
     isDefault: true,
@@ -313,6 +349,30 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
   },
 };
 
+// Saved-link categories are colored circles rather than emoji — cycles
+// through the same 7 accent colors used for the app's own accent picker,
+// assigned by creation order so a new category always gets a fresh-looking
+// default before the user picks one themselves.
+export const LINK_CATEGORY_COLOR_ORDER: AccentColor[] = [
+  "blue",
+  "teal",
+  "emerald",
+  "violet",
+  "pink",
+  "rose",
+  "amber",
+];
+
+export function linkCategoryColor(
+  category: string,
+  categories: string[],
+  colors: Record<string, AccentColor>
+): AccentColor {
+  if (colors[category]) return colors[category];
+  const idx = Math.max(0, categories.indexOf(category));
+  return LINK_CATEGORY_COLOR_ORDER[idx % LINK_CATEGORY_COLOR_ORDER.length];
+}
+
 export const FONT_FAMILY_PRESETS: Record<
   FontFamily,
   { label: string; stack: string }
@@ -346,19 +406,32 @@ export const FONT_SCALE_PRESETS: Record<
 // app matches news regardless of feedUrl). Feed URLs can change over time —
 // worth spot-checking after adding one.
 export const SUGGESTED_SOURCES: SuggestedSource[] = [
+  // Mirrors DEFAULT_SOURCES exactly (same domains, so "already added" checks
+  // by domain line up) — shown as its own highlighted section, hidden once
+  // all three are already in the user's list.
   {
-    name: "Reuters Business",
+    name: "Bloomberg",
+    domain: "bloomberg.com",
+    // addSource only takes a single feed URL from a suggestion; the other
+    // two Bloomberg feeds DEFAULT_SOURCES carries are lost on remove+re-add
+    // via this card. Not worth widening SuggestedSource's shape over.
+    feedUrl: "https://feeds.bloomberg.com/markets/news.rss",
+    description: "Real-time markets and finance news from a leading wire.",
+    region: "Recommended",
+  },
+  {
+    name: "Reuters",
     domain: "reuters.com",
     feedUrl: null,
     description: "Top global wire service for company and markets news.",
-    region: "US",
+    region: "Recommended",
   },
   {
-    name: "Bloomberg Markets",
-    domain: "bloomberg.com",
-    feedUrl: "https://feeds.bloomberg.com/markets/news.rss",
-    description: "Real-time markets and finance news from a leading wire.",
-    region: "US",
+    name: "The Edge Malaysia",
+    domain: "theedgemalaysia.com",
+    feedUrl: null,
+    description: "Malaysia's leading business and investment news outlet.",
+    region: "Recommended",
   },
   {
     name: "CNBC Finance",
@@ -457,5 +530,33 @@ export const SUGGESTED_SOURCES: SuggestedSource[] = [
     feedUrl: null,
     description: "Australia's leading financial and business daily.",
     region: "Asia-Pacific",
+  },
+  {
+    name: "The Star Business",
+    domain: "thestar.com.my",
+    feedUrl: "https://www.thestar.com.my/rss/Business",
+    description: "Malaysia's widest-read English daily, business desk.",
+    region: "Malaysia",
+  },
+  {
+    name: "New Straits Times Business",
+    domain: "nst.com.my",
+    feedUrl: null,
+    description: "Malaysian business, banking and corporate news.",
+    region: "Malaysia",
+  },
+  {
+    name: "Free Malaysia Today Business",
+    domain: "freemalaysiatoday.com",
+    feedUrl: null,
+    description: "Independent Malaysian outlet, business coverage.",
+    region: "Malaysia",
+  },
+  {
+    name: "Bernama",
+    domain: "bernama.com",
+    feedUrl: null,
+    description: "Malaysia's national news agency.",
+    region: "Malaysia",
   },
 ];

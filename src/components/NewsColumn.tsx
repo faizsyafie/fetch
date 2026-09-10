@@ -15,6 +15,8 @@ interface NewsColumnProps {
   onDragOver: () => void;
   onDrop: () => void;
   onDragEnd: () => void;
+  isLinkSaved: (url: string) => boolean;
+  onSaveArticle: (article: TopicArticle) => void;
 }
 
 function SkeletonCard() {
@@ -34,6 +36,8 @@ export function NewsColumn({
   onDragOver,
   onDrop,
   onDragEnd,
+  isLinkSaved,
+  onSaveArticle,
 }: NewsColumnProps) {
   const showSkeletons = loading && articles.length === 0;
   const showEmpty = !loading && articles.length === 0;
@@ -86,7 +90,12 @@ export function NewsColumn({
         )}
 
         {articles.map((article) => (
-          <ArticleCard key={article.id} article={article} />
+          <ArticleCard
+            key={article.id}
+            article={article}
+            isSaved={isLinkSaved(article.link)}
+            onSave={() => onSaveArticle(article)}
+          />
         ))}
       </div>
     </div>

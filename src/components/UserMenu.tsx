@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from "react";
 interface UserMenuProps {
   name: string;
   onLogOut: () => void;
+  onOpenFeedback: () => void;
 }
 
-export function UserMenu({ name, onLogOut }: UserMenuProps) {
+export function UserMenu({ name, onLogOut, onOpenFeedback }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,16 @@ export function UserMenu({ name, onLogOut }: UserMenuProps) {
           >
             ℹ️ About
           </a>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onOpenFeedback();
+            }}
+            className="block w-full px-3 py-2 text-left text-xs font-medium text-brand-600 transition-colors hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-800"
+          >
+            🐾 Feedback
+          </button>
           <button
             type="button"
             onClick={() => {

@@ -5,6 +5,7 @@ import type {
   Company,
   NewsArticle,
   NewsSource,
+  NewsTimeFrame,
   TimeFrameDays,
   TopicArticle,
 } from "./types";
@@ -221,7 +222,7 @@ function topicArticleId(topicId: string, link: string): string {
 async function fetchTopicSourceArticles(
   topic: NewsTopic,
   source: NewsTopic["sources"][number],
-  cutoff: Date
+  isInRange: (pubDate: Date) => boolean
 ): Promise<{ articles: TopicArticle[]; error: string | null }> {
   const feed = await fetchFeed(source.feedUrl);
   if (!feed?.items?.length) {
@@ -231,7 +232,7 @@ async function fetchTopicSourceArticles(
   const articles: TopicArticle[] = [];
   for (const item of feed.items) {
     const pubDate = parseArticleDate(item.isoDate || item.pubDate);
-    if (!pubDate || !isAfter(pubDate, cutoff)) continue;
+    if (!pubDate || !isInRange(pubDate)) continue;
 
     const title = item.title?.trim();
     const link = item.link?.trim();
@@ -257,18 +258,27 @@ async function fetchTopicSourceArticles(
  * no keyword filter — every recent item from a topic's sources belongs in
  * that column, deduped by normalized headline (outlets sometimes syndicate
  * the same story to more than one of their own feeds).
+ *
+ * `timeFrame` pages backward through the archive rather than narrowing a
+ * recency window: each column is a flat top-30-most-recent slice, so "last
+ * N days" would almost always return the same handful of items regardless
+ * of N. "now" takes the newest 30 with no age floor; a numeric value keeps
+ * only items at least that many days old, so 1/3/7/14 each surface a
+ * distinctly older slice instead of repeating the freshest one.
  */
 export async function fetchTopicNews(
   topics: NewsTopic[],
-  days: TimeFrameDays
+  timeFrame: NewsTimeFrame
 ): Promise<Record<string, { articles: TopicArticle[]; errors: string[] }>> {
-  const cutoff = subDays(new Date(), days);
+  const boundary = timeFrame === "now" ? null : subDays(new Date(), timeFrame);
+  const isInRange = (pubDate: Date) =>
+    boundary === null || !isAfter(pubDate, boundary);
 
   const entries = await Promise.all(
     topics.map(async (topic) => {
       const results = await Promise.all(
         topic.sources.map((source) =>
-          fetchTopicSourceArticles(topic, source, cutoff)
+          fetchTopicSourceArticles(topic, source, isInRange)
         )
       );
 
