@@ -47,13 +47,18 @@ export interface FetchNewsResponse {
 
 export type Density = "comfortable" | "compact";
 
-export type AccentColor = "blue" | "emerald" | "violet" | "rose" | "amber";
+export type AccentColor =
+  | "blue"
+  | "teal"
+  | "emerald"
+  | "violet"
+  | "pink"
+  | "rose"
+  | "amber";
 
 export type FontFamily = "system" | "serif" | "mono";
 
 export type FontScale = "sm" | "md" | "lg";
-
-export type Background = "slate" | "zinc" | "stone";
 
 export type NewsTopicId = "world" | "malaysia" | "economy" | "tech";
 
@@ -65,7 +70,6 @@ export interface UiSettings {
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;
-  background: Background;
   newsTopicOrder: NewsTopicId[];
 }
 

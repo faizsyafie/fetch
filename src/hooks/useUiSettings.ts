@@ -10,7 +10,6 @@ import {
 import { DEFAULT_NEWS_TOPIC_ORDER } from "@/lib/newsTopics";
 import type {
   AccentColor,
-  Background,
   Density,
   FontFamily,
   FontScale,
@@ -26,7 +25,6 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   accent: "blue",
   fontFamily: "system",
   fontScale: "md",
-  background: "slate",
   newsTopicOrder: DEFAULT_NEWS_TOPIC_ORDER,
 };
 
@@ -167,13 +165,6 @@ export function useUiSettings() {
     [update]
   );
 
-  const setBackground = useCallback(
-    (background: Background) => {
-      update((prev) => ({ ...prev, background }));
-    },
-    [update]
-  );
-
   const setNewsTopicOrder = useCallback(
     (newsTopicOrder: NewsTopicId[]) => {
       update((prev) => ({ ...prev, newsTopicOrder }));
@@ -191,7 +182,6 @@ export function useUiSettings() {
     setAccent,
     setFontFamily,
     setFontScale,
-    setBackground,
     setNewsTopicOrder,
   };
 }

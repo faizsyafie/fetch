@@ -30,7 +30,6 @@ import { useTheme } from "@/hooks/useTheme";
 import { readUiSettings, useUiSettings } from "@/hooks/useUiSettings";
 import {
   ALL_INDUSTRY,
-  BACKGROUND_PRESETS,
   FONT_FAMILY_PRESETS,
   FONT_SCALE_PRESETS,
   WATCHLIST_INDUSTRY,
@@ -117,7 +116,6 @@ function DashboardForProfile({
     setAccent,
     setFontFamily,
     setFontScale,
-    setBackground,
     setNewsTopicOrder,
   } = useUiSettings();
   const { hydrated: seenHydrated, markSeen, isSeen } = useSeenArticles();
@@ -163,6 +161,14 @@ function DashboardForProfile({
     setSearchQuery("");
     setSelected(new Set());
     setFocusedIndex(null);
+  }, [setMode]);
+
+  // The tutorial walks through Companies-mode UI first, so always land there
+  // before opening it — regardless of which mode (or screen) it was opened
+  // from.
+  const openTutorial = useCallback(() => {
+    setMode("companies");
+    setTutorialOpen(true);
   }, [setMode]);
 
   const fetchNewsBoard = useCallback(async (days: TimeFrameDays) => {
@@ -232,7 +238,8 @@ function DashboardForProfile({
     // run before useSyncExternalStore's post-hydration snapshot correction,
     // so the reactive value may still be the transient SSR default here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!readUiSettings().tutorialSeen) setTutorialOpen(true);
+    if (!readUiSettings().tutorialSeen) openTutorial();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isVirtualIndustry =
@@ -556,7 +563,7 @@ function DashboardForProfile({
         theme={theme}
         onOpenTutorial={() => {
           setShowWelcome(false);
-          setTutorialOpen(true);
+          openTutorial();
         }}
         onReadGeneralNews={() => {
           setShowWelcome(false);
@@ -614,9 +621,7 @@ function DashboardForProfile({
         onToggleCollapsed={toggleSidebarCollapsed}
       />
 
-      <div
-        className={`relative flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
-      >
+      <div className="relative flex min-h-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
         <DogWatermark theme={theme} />
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
@@ -652,7 +657,7 @@ function DashboardForProfile({
           onAddCompany={handleAddCompanyTag}
           onRemoveCompany={removeCompany}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-          onOpenTutorial={() => setTutorialOpen(true)}
+          onOpenTutorial={openTutorial}
           onOpenCustomize={() => setCustomizeOpen(true)}
           onCollapseAll={collapseAll}
           newsDays={newsDays}
@@ -697,7 +702,6 @@ function DashboardForProfile({
               days={preferences.days}
               sourceNames={enabledSourceNames}
               density={uiSettings.density}
-              background={uiSettings.background}
               focusedId={focusedId}
               isArticleSeen={isSeen}
               enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
@@ -748,11 +752,11 @@ function DashboardForProfile({
           accent={uiSettings.accent}
           fontFamily={uiSettings.fontFamily}
           fontScale={uiSettings.fontScale}
-          background={uiSettings.background}
+          density={uiSettings.density}
           onSetAccent={setAccent}
           onSetFontFamily={setFontFamily}
           onSetFontScale={setFontScale}
-          onSetBackground={setBackground}
+          onSetDensity={setDensity}
           onClose={() => setCustomizeOpen(false)}
         />
       )}

@@ -2,21 +2,20 @@
 
 import {
   ACCENT_PRESETS,
-  BACKGROUND_PRESETS,
   FONT_FAMILY_PRESETS,
   FONT_SCALE_PRESETS,
 } from "@/lib/defaults";
-import type { AccentColor, Background, FontFamily, FontScale } from "@/lib/types";
+import type { AccentColor, Density, FontFamily, FontScale } from "@/lib/types";
 
 interface CustomizePanelProps {
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;
-  background: Background;
+  density: Density;
   onSetAccent: (accent: AccentColor) => void;
   onSetFontFamily: (fontFamily: FontFamily) => void;
   onSetFontScale: (fontScale: FontScale) => void;
-  onSetBackground: (background: Background) => void;
+  onSetDensity: (density: Density) => void;
   onClose: () => void;
 }
 
@@ -24,11 +23,11 @@ export function CustomizePanel({
   accent,
   fontFamily,
   fontScale,
-  background,
+  density,
   onSetAccent,
   onSetFontFamily,
   onSetFontScale,
-  onSetBackground,
+  onSetDensity,
   onClose,
 }: CustomizePanelProps) {
   return (
@@ -85,32 +84,41 @@ export function CustomizePanel({
 
           <section>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
-              Background tone
+              Row spacing
             </p>
             <div className="flex flex-wrap gap-2">
-              {(Object.keys(BACKGROUND_PRESETS) as Background[]).map(
-                (key) => {
-                  const preset = BACKGROUND_PRESETS[key];
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => onSetBackground(key)}
-                      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                        background === key
-                          ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
-                          : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
-                      }`}
-                    >
+              {(
+                [
+                  { key: "comfortable" as Density, label: "Comfortable", rows: 2, bar: "h-3" },
+                  { key: "compact" as Density, label: "Compact", rows: 4, bar: "h-1.5" },
+                ] as const
+              ).map(({ key, label, rows, bar }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onSetDensity(key)}
+                  className={`flex w-[124px] flex-col gap-1.5 rounded-lg border px-3 py-2.5 text-xs font-medium transition-colors ${
+                    density === key
+                      ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
+                      : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
+                  }`}
+                >
+                  <div className="flex flex-col gap-1">
+                    {Array.from({ length: rows }).map((_, i) => (
                       <span
-                        className={`mr-1.5 inline-block h-2 w-2 rounded-full ${preset.swatch}`}
+                        key={i}
+                        className={`${bar} w-full rounded-sm bg-current opacity-30`}
                       />
-                      {preset.label}
-                    </button>
-                  );
-                }
-              )}
+                    ))}
+                  </div>
+                  {label}
+                </button>
+              ))}
             </div>
+            <p className="mt-2 text-[10px] text-brand-400 dark:text-brand-600">
+              Compact packs more companies on screen with smaller rows;
+              Comfortable gives each one more room to breathe.
+            </p>
           </section>
 
           <section>

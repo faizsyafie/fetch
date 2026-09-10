@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { BACKGROUND_PRESETS, industryPalette } from "@/lib/defaults";
-import type { Background, Company, Density, Industry, NewsArticle } from "@/lib/types";
+import { industryPalette } from "@/lib/defaults";
+import type { Company, Density, Industry, NewsArticle } from "@/lib/types";
+
+// Fixed row surface — no longer configurable (see CustomizePanel).
+const CARD_CLASS = "bg-white dark:bg-brand-900/70 dark:hover:bg-brand-800/40";
 
 export type NewsCacheEntry = NewsArticle[] | "error";
 
@@ -19,7 +22,6 @@ interface CompanyListProps {
   sourceNames: string[];
   emptyMessage: string;
   density: Density;
-  background: Background;
   focusedId: string | null;
   isArticleSeen: (articleId: string) => boolean;
   enableDrag: boolean;
@@ -44,7 +46,6 @@ export function CompanyList({
   sourceNames,
   emptyMessage,
   density,
-  background,
   focusedId,
   isArticleSeen,
   enableDrag,
@@ -59,7 +60,6 @@ export function CompanyList({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const compact = density === "compact";
-  const cardClass = BACKGROUND_PRESETS[background].cardClass;
 
   if (companies.length === 0) {
     return (
@@ -94,7 +94,7 @@ export function CompanyList({
   return (
     <div
       data-tour="company-list"
-      className={`flex-1 overflow-y-auto px-4 py-3 ${compact ? "space-y-0.5" : "space-y-1"}`}
+      className={`flex-1 overflow-y-auto px-4 py-3 ${compact ? "space-y-0.5" : "space-y-2.5"}`}
     >
       {companies.map((company) => {
         const palette = industryPalette(company.industry, industries);
@@ -127,7 +127,7 @@ export function CompanyList({
               setDragId(null);
               setDragOverId(null);
             }}
-            className={`overflow-hidden rounded-md border transition-all duration-150 ${cardClass} ${
+            className={`overflow-hidden rounded-md border transition-all duration-150 ${CARD_CLASS} ${
               isSelected
                 ? "border-blue-500/70 ring-1 ring-blue-500/40"
                 : isOpen
@@ -146,7 +146,7 @@ export function CompanyList({
             }`}
           >
             <div
-              className={`flex items-center pl-3 pr-2.5 ${compact ? "py-0.5" : "py-1.5"}`}
+              className={`flex items-center ${compact ? "py-0.5 pl-3 pr-2.5" : "py-3 pl-4 pr-3.5"}`}
             >
               {enableDrag && (
                 <span className="mr-1 shrink-0 cursor-grab text-[10px] text-brand-300 active:cursor-grabbing dark:text-brand-600">
@@ -167,8 +167,8 @@ export function CompanyList({
               </button>
 
               <div
-                className={`mr-2.5 flex shrink-0 items-center justify-center rounded text-[11px] font-bold ${palette.badgeBg} ${palette.badgeText} ${
-                  compact ? "h-5 w-5" : "h-6 w-6"
+                className={`mr-2.5 flex shrink-0 items-center justify-center rounded font-bold ${palette.badgeBg} ${palette.badgeText} ${
+                  compact ? "h-5 w-5 text-[11px]" : "h-8 w-8 text-sm"
                 }`}
               >
                 {company.name.charAt(0)}
@@ -182,7 +182,7 @@ export function CompanyList({
                 <div className="flex items-center gap-1.5">
                   <span
                     className={`truncate font-semibold leading-tight text-brand-900 dark:text-white ${
-                      compact ? "text-xs" : "text-[13px]"
+                      compact ? "text-xs" : "text-[15px]"
                     }`}
                   >
                     {company.name}
@@ -203,7 +203,9 @@ export function CompanyList({
                 </div>
               </button>
 
-              <div className="ml-2 flex shrink-0 items-center gap-1.5">
+              <div
+                className={`ml-2 flex shrink-0 items-center ${compact ? "gap-1.5" : "gap-2.5"}`}
+              >
                 <button
                   type="button"
                   onClick={(e) => {
@@ -218,7 +220,9 @@ export function CompanyList({
                   title={
                     company.starred ? "Remove from Watchlist" : "Add to Watchlist"
                   }
-                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
+                  className={`rounded transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
+                    compact ? "px-1 py-0.5 text-xs" : "px-1.5 py-1 text-sm"
+                  } ${
                     company.starred
                       ? "opacity-100"
                       : "opacity-25 hover:opacity-60"
@@ -234,7 +238,9 @@ export function CompanyList({
                   }}
                   aria-label={company.pinned ? "Unpin company" : "Pin company"}
                   title={company.pinned ? "Unpin" : "Pin to top"}
-                  className={`rounded px-1 py-0.5 text-xs transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
+                  className={`rounded transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
+                    compact ? "px-1 py-0.5 text-xs" : "px-1.5 py-1 text-sm"
+                  } ${
                     company.pinned
                       ? "opacity-100"
                       : "opacity-25 hover:opacity-60"
@@ -273,7 +279,9 @@ export function CompanyList({
                   <button
                     type="button"
                     onClick={() => onToggleExpand(company)}
-                    className="flex h-5 w-5 items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-800 dark:hover:text-brand-300"
+                    className={`flex items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-800 dark:hover:text-brand-300 ${
+                      compact ? "h-5 w-5" : "h-6 w-6"
+                    }`}
                     aria-label={isOpen ? "Collapse" : "Expand"}
                   >
                     <span

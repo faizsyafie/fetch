@@ -75,7 +75,7 @@ export const TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="topbar-appearance"]',
     title: "Density, theme & customization",
     description:
-      "Toggle Compact/Comfortable density, switch Light/Dark mode, or open Customize (🎨) to set an accent color, background tone, font family and font size — all saved to your profile.",
+      "Toggle Compact/Comfortable density, switch Light/Dark mode, or open Customize (🎨) to set an accent color (now with 7 to choose from — it colors the mode switch too), row spacing, font family and font size — all saved to your profile.",
     placement: "bottom",
   },
   {
