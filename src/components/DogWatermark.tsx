@@ -2,7 +2,7 @@
 
 import type { Theme } from "@/hooks/useTheme";
 
-interface PigeonWatermarkProps {
+interface DogWatermarkProps {
   theme: Theme;
 }
 
@@ -16,8 +16,8 @@ interface PigeonWatermarkProps {
 // same-level DOM order, which doesn't reliably win against descendants that
 // pick up their own stacking context (e.g. rows with a `transition` on
 // transform/opacity).
-export function PigeonWatermark({ theme }: PigeonWatermarkProps) {
-  const src = theme === "dark" ? "/bg-pigeon-dark2.png" : "/bg-pigeon-light2.png";
+export function DogWatermark({ theme }: DogWatermarkProps) {
+  const src = theme === "dark" ? "/bg-dog-dark.png" : "/bg-dog-light.png";
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img

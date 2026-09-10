@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description:
     "Monitor Bloomberg, Reuters, The Edge Singapore and custom RSS feeds for companies across Consumer, Energy, IT and Communications.",
   icons: {
-    icon: "/icon.png",
+    icon: "/banner-icon-dog.png",
   },
 };
 

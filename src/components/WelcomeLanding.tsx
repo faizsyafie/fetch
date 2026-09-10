@@ -12,21 +12,21 @@ const ROTATING_LINES = [
 interface WelcomeLandingProps {
   name: string;
   theme: "light" | "dark";
-  onDismiss: () => void;
   onOpenTutorial: () => void;
-  onFetchNews: () => void;
+  onReadGeneralNews: () => void;
+  onFetchCompanyNews: () => void;
 }
 
 export function WelcomeLanding({
   name,
   theme,
-  onDismiss,
   onOpenTutorial,
-  onFetchNews,
+  onReadGeneralNews,
+  onFetchCompanyNews,
 }: WelcomeLandingProps) {
   const [lineIndex, setLineIndex] = useState(0);
   const fullLogoSrc =
-    theme === "dark" ? "/full-logo-dark-new.png" : "/full-logo-light-new.png";
+    theme === "dark" ? "/full-logo-dog-dark.png" : "/full-logo-dog-light.png";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -63,17 +63,17 @@ export function WelcomeLanding({
         </button>
         <button
           type="button"
-          onClick={onFetchNews}
+          onClick={onReadGeneralNews}
           className="rounded-lg border border-brand-200 bg-white px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-200 dark:hover:bg-brand-700"
         >
-          🔍 Fetch some news
+          📰 Read general news
         </button>
         <button
           type="button"
-          onClick={onDismiss}
+          onClick={onFetchCompanyNews}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
         >
-          Go to dashboard →
+          🔍 Fetch company news →
         </button>
       </div>
     </div>

@@ -7,14 +7,14 @@ interface LogoProps {
   compact?: boolean;
 }
 
-// icon-light/dark.png: square headshot crop of the bird, background baked
-// in to match the theme. text-light/dark.png: wordmark only ("fetch"),
+// icon-dog-light/dark.png: square headshot crop of the dog, background baked
+// in to match the theme. text-dog-light/dark.png: wordmark only ("fetch"),
 // also with the theme background baked in — object-contain so the whole
 // word shows without cropping, letterboxing blends into the sidebar's own
 // matching background.
 export function Logo({ theme, compact = false }: LogoProps) {
-  const iconSrc = theme === "dark" ? "/icon-dark.png" : "/icon-light.png";
-  const textSrc = theme === "dark" ? "/text-dark.png" : "/text-light.png";
+  const iconSrc = theme === "dark" ? "/icon-dog-dark.png" : "/icon-dog-light.png";
+  const textSrc = theme === "dark" ? "/text-dog-dark.png" : "/text-dog-light.png";
 
   if (compact) {
     return (

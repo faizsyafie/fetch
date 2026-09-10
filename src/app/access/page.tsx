@@ -34,13 +34,13 @@ export default function AccessPage() {
       <div className="w-full max-w-sm rounded-lg border border-brand-200 bg-white p-6 shadow-sm dark:border-brand-700 dark:bg-brand-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/icon-light.png"
+          src="/icon-dog-light.png"
           alt="fetch"
           className="mx-auto block h-12 w-12 rounded-lg object-cover dark:hidden"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/icon-dark.png"
+          src="/icon-dog-dark.png"
           alt="fetch"
           className="mx-auto hidden h-12 w-12 rounded-lg object-cover dark:block"
         />

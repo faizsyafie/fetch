@@ -12,7 +12,7 @@ interface NewsBoardProps {
 
 // Purely presentational — fetching, the time-range control and the refresh
 // button all live in the shared TopBar/page state now, the same way
-// CompanyList doesn't fetch its own news either. The pigeon watermark is
+// CompanyList doesn't fetch its own news either. The dog watermark is
 // rendered once by the parent page for both modes, not duplicated here.
 export function NewsBoard({
   articlesByTopic,
