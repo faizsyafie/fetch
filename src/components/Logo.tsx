@@ -37,7 +37,7 @@ export function Logo({ theme, compact = false }: LogoProps) {
       <img
         src={textSrc}
         alt="fetch — Daily RSS"
-        className="h-full w-full object-contain"
+        className="h-full w-full object-contain object-left"
       />
     </div>
   );

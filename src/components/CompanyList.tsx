@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { industryPalette } from "@/lib/defaults";
-import type { Company, Density, Industry, NewsArticle } from "@/lib/types";
+import { ACCENT_PRESETS, industryPalette } from "@/lib/defaults";
+import type { AccentColor, Company, Density, Industry, NewsArticle } from "@/lib/types";
 
 // Fixed row surface — no longer configurable (see CustomizePanel).
 const CARD_CLASS = "bg-white dark:bg-brand-900/70 dark:hover:bg-brand-800/40";
@@ -22,6 +22,7 @@ interface CompanyListProps {
   sourceNames: string[];
   emptyMessage: string;
   density: Density;
+  accent: AccentColor;
   focusedId: string | null;
   isArticleSeen: (articleId: string) => boolean;
   enableDrag: boolean;
@@ -46,6 +47,7 @@ export function CompanyList({
   sourceNames,
   emptyMessage,
   density,
+  accent,
   focusedId,
   isArticleSeen,
   enableDrag,
@@ -60,6 +62,7 @@ export function CompanyList({
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const compact = density === "compact";
+  const accentPreset = ACCENT_PRESETS[accent];
 
   if (companies.length === 0) {
     return (
@@ -129,7 +132,7 @@ export function CompanyList({
             }}
             className={`overflow-hidden rounded-md border transition-all duration-150 ${CARD_CLASS} ${
               isSelected
-                ? "border-blue-500/70 ring-1 ring-blue-500/40"
+                ? `${accentPreset.border} ring-1 ${accentPreset.ring}`
                 : isOpen
                   ? "border-brand-300 dark:border-brand-700"
                   : "border-brand-200 hover:border-brand-300 dark:border-brand-800 dark:hover:border-brand-700"
@@ -194,7 +197,7 @@ export function CompanyList({
                   </span>
                   {unseenCount > 0 && (
                     <span
-                      className="inline-flex h-4 shrink-0 items-center rounded-full bg-blue-500 px-1.5 text-[9px] font-bold text-white"
+                      className={`inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-[9px] font-bold text-white ${accentPreset.swatch}`}
                       title={`${unseenCount} new article${unseenCount !== 1 ? "s" : ""}`}
                     >
                       {unseenCount}

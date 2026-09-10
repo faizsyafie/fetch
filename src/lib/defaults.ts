@@ -229,6 +229,8 @@ interface AccentPreset {
   border: string;
   ring: string;
   softBg: string;
+  /** "r,g,b" of the 500 shade, for inline rgba() styles (e.g. glow shadows). */
+  rgb: string;
 }
 
 export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
@@ -241,6 +243,7 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
     border: "border-blue-500",
     ring: "ring-blue-500/40",
     softBg: "bg-blue-500/15 dark:bg-blue-500/20",
+    rgb: "59,130,246",
   },
   teal: {
     label: "Teal",
@@ -251,6 +254,7 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
     border: "border-teal-500",
     ring: "ring-teal-500/40",
     softBg: "bg-teal-500/15 dark:bg-teal-500/20",
+    rgb: "20,184,166",
   },
   emerald: {
     label: "Emerald",
@@ -261,6 +265,7 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
     border: "border-emerald-500",
     ring: "ring-emerald-500/40",
     softBg: "bg-emerald-500/15 dark:bg-emerald-500/20",
+    rgb: "16,185,129",
   },
   violet: {
     label: "Violet",
@@ -271,6 +276,7 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
     border: "border-violet-500",
     ring: "ring-violet-500/40",
     softBg: "bg-violet-500/15 dark:bg-violet-500/20",
+    rgb: "139,92,246",
   },
   pink: {
     label: "Pink",
@@ -281,6 +287,7 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
     border: "border-pink-500",
     ring: "ring-pink-500/40",
     softBg: "bg-pink-500/15 dark:bg-pink-500/20",
+    rgb: "236,72,153",
   },
   rose: {
     label: "Rose",
@@ -291,6 +298,7 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
     border: "border-rose-500",
     ring: "ring-rose-500/40",
     softBg: "bg-rose-500/15 dark:bg-rose-500/20",
+    rgb: "244,63,94",
   },
   amber: {
     label: "Amber",
@@ -301,6 +309,7 @@ export const ACCENT_PRESETS: Record<AccentColor, AccentPreset> = {
     border: "border-amber-500",
     ring: "ring-amber-500/40",
     softBg: "bg-amber-500/15 dark:bg-amber-500/20",
+    rgb: "245,158,11",
   },
 };
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ACCENT_PRESETS } from "@/lib/defaults";
+import type { AccentColor } from "@/lib/types";
 
 const ROTATING_LINES = [
   "Let's see what moved the markets today.",
@@ -12,6 +14,7 @@ const ROTATING_LINES = [
 interface WelcomeLandingProps {
   name: string;
   theme: "light" | "dark";
+  accent: AccentColor;
   onOpenTutorial: () => void;
   onReadGeneralNews: () => void;
   onFetchCompanyNews: () => void;
@@ -20,10 +23,12 @@ interface WelcomeLandingProps {
 export function WelcomeLanding({
   name,
   theme,
+  accent,
   onOpenTutorial,
   onReadGeneralNews,
   onFetchCompanyNews,
 }: WelcomeLandingProps) {
+  const accentPreset = ACCENT_PRESETS[accent];
   const [lineIndex, setLineIndex] = useState(0);
   const fullLogoSrc =
     theme === "dark" ? "/full-logo-dog-dark.png" : "/full-logo-dog-light.png";
@@ -71,7 +76,7 @@ export function WelcomeLanding({
         <button
           type="button"
           onClick={onFetchCompanyNews}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
+          className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${accentPreset.solid} ${accentPreset.solidHover}`}
         >
           🔍 Fetch company news →
         </button>

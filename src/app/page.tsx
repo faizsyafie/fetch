@@ -561,6 +561,7 @@ function DashboardForProfile({
       <WelcomeLanding
         name={profileName}
         theme={theme}
+        accent={uiSettings.accent}
         onOpenTutorial={() => {
           setShowWelcome(false);
           openTutorial();
@@ -702,6 +703,7 @@ function DashboardForProfile({
               days={preferences.days}
               sourceNames={enabledSourceNames}
               density={uiSettings.density}
+              accent={uiSettings.accent}
               focusedId={focusedId}
               isArticleSeen={isSeen}
               enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
@@ -731,6 +733,7 @@ function DashboardForProfile({
           companies={preferences.companies}
           industries={preferences.industries}
           industryEmojis={preferences.industryEmojis}
+          accent={uiSettings.accent}
           onSelectCompany={openCompany}
           onSelectIndustry={handleSelectIndustry}
           onClose={() => setCommandPaletteOpen(false)}
@@ -740,6 +743,7 @@ function DashboardForProfile({
       {tutorialOpen && (
         <SpotlightTour
           steps={TOUR_STEPS}
+          accent={uiSettings.accent}
           onClose={() => {
             setTutorialOpen(false);
             markTutorialSeen();

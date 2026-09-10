@@ -8,6 +8,8 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { ACCENT_PRESETS } from "@/lib/defaults";
+import type { AccentColor } from "@/lib/types";
 
 /**
  * One step of the guided tour.
@@ -27,6 +29,7 @@ export interface TourStep {
 
 interface SpotlightTourProps {
   steps: TourStep[];
+  accent: AccentColor;
   /** Called on Skip tour, Finish, the ✕ button, or Esc — treat all as "done". */
   onClose: () => void;
 }
@@ -58,7 +61,8 @@ function measure(el: Element): Rect {
   return { top: r.top, left: r.left, width: r.width, height: r.height };
 }
 
-export function SpotlightTour({ steps, onClose }: SpotlightTourProps) {
+export function SpotlightTour({ steps, accent, onClose }: SpotlightTourProps) {
+  const accentPreset = ACCENT_PRESETS[accent];
   const [stepIndex, setStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [tooltipPos, setTooltipPos] = useState<TooltipPosition | null>(null);
@@ -313,8 +317,7 @@ export function SpotlightTour({ steps, onClose }: SpotlightTourProps) {
               left: spotlight.left,
               width: spotlight.width,
               height: spotlight.height,
-              boxShadow:
-                "0 0 0 2px rgba(59,130,246,0.9), 0 0 0 6px rgba(59,130,246,0.25), 0 0 32px rgba(59,130,246,0.35)",
+              boxShadow: `0 0 0 2px rgba(${accentPreset.rgb},0.9), 0 0 0 6px rgba(${accentPreset.rgb},0.25), 0 0 32px rgba(${accentPreset.rgb},0.35)`,
             }}
           />
         </>
@@ -372,7 +375,7 @@ export function SpotlightTour({ steps, onClose }: SpotlightTourProps) {
             <span
               key={s.id}
               className={`h-1.5 rounded-full transition-all duration-200 ${
-                i === stepIndex ? "w-4 bg-blue-500" : "w-1.5 bg-brand-200 dark:bg-brand-700"
+                i === stepIndex ? `w-4 ${accentPreset.swatch}` : "w-1.5 bg-brand-200 dark:bg-brand-700"
               }`}
             />
           ))}
@@ -399,7 +402,7 @@ export function SpotlightTour({ steps, onClose }: SpotlightTourProps) {
             <button
               type="button"
               onClick={isLast ? finish : goNext}
-              className="rounded-md bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-500"
+              className={`rounded-md px-3.5 py-1.5 text-xs font-semibold text-white ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               {isLast ? "Finish" : "Next"}
             </button>

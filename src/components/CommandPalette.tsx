@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_INDUSTRY_EMOJI } from "@/lib/defaults";
-import type { Company, Industry } from "@/lib/types";
+import { ACCENT_PRESETS, DEFAULT_INDUSTRY_EMOJI } from "@/lib/defaults";
+import type { AccentColor, Company, Industry } from "@/lib/types";
 
 interface CommandPaletteProps {
   companies: Company[];
   industries: Industry[];
   industryEmojis: Record<Industry, string>;
+  accent: AccentColor;
   onSelectCompany: (company: Company) => void;
   onSelectIndustry: (industry: Industry) => void;
   onClose: () => void;
@@ -25,10 +26,12 @@ export function CommandPalette({
   companies,
   industries,
   industryEmojis,
+  accent,
   onSelectCompany,
   onSelectIndustry,
   onClose,
 }: CommandPaletteProps) {
+  const accentPreset = ACCENT_PRESETS[accent];
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [queryAtLastReset, setQueryAtLastReset] = useState("");
@@ -131,7 +134,7 @@ export function CommandPalette({
               onMouseEnter={() => setActiveIndex(i)}
               className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors ${
                 i === activeIndex
-                  ? "bg-blue-50 dark:bg-blue-500/10"
+                  ? accentPreset.softBg
                   : "hover:bg-brand-50 dark:hover:bg-brand-800/50"
               }`}
             >
