@@ -92,6 +92,19 @@ export interface SuggestedSource {
   region: "US" | "UK/EU" | "Asia-Pacific";
 }
 
+export interface SavedLink {
+  id: string;
+  url: string;
+  title: string;
+  notes: string;
+  /** One of AppPreferences.linkCategories, or any other value which is
+   *  treated as "Uncategorized" (e.g. after its category was deleted). */
+  category: string;
+  pinned: boolean;
+  savedAt: string;
+  editedAt: string;
+}
+
 export interface AppPreferences {
   companies: Company[];
   sources: NewsSource[];
@@ -99,4 +112,7 @@ export interface AppPreferences {
   industries: Industry[];
   activeIndustry: Industry;
   industryEmojis: Record<Industry, string>;
+  links: SavedLink[];
+  linkCategories: string[];
+  activeLinkCategory: string;
 }

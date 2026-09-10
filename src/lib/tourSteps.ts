@@ -31,11 +31,11 @@ export const TOUR_STEPS: TourStep[] = [
     placement: "right",
   },
   {
-    id: "mode-toggle",
-    selector: '[data-tour="mode-toggle"]',
-    title: "General news, too",
+    id: "nav-list",
+    selector: '[data-tour="nav-list"]',
+    title: "General, Companies & Saved News",
     description:
-      "Flip this switch (or click the logo) to jump to General — a board of four columns, World, Malaysia, Economy and Tech, each pulling straight from curated RSS feeds with no company matching involved. Drag a column by its ⠿ handle to reorder them. It refreshes as soon as you open it; flip back to Companies any time.",
+      "General is a board of four columns — World, Malaysia, Economy and Tech — each pulling straight from curated RSS feeds with no company matching involved; drag a column by its ⠿ handle to reorder them. Companies is your industry-tracked watchlist. Saved News is where anything you bookmark (🔖 on an article) lives, sorted into categories you manage yourself.",
     placement: "right",
   },
   {
@@ -71,11 +71,11 @@ export const TOUR_STEPS: TourStep[] = [
     placement: "bottom",
   },
   {
-    id: "topbar-appearance",
-    selector: '[data-tour="topbar-appearance"]',
-    title: "Density, theme & customization",
+    id: "topbar-settings",
+    selector: '[data-tour="topbar-settings"]',
+    title: "Settings",
     description:
-      "Toggle Compact/Comfortable density, switch Light/Dark mode, or open Customize (🎨) to set an accent color (now with 7 to choose from — it colors the mode switch too), row spacing, font family and font size — all saved to your profile.",
+      "Everything appearance-related lives here now: Light/Dark theme, row spacing (Compact/Comfortable), an accent color (7 to choose from — it colors the sidebar nav too), font family and font size — all saved to your profile.",
     placement: "bottom",
   },
   {

@@ -25,6 +25,7 @@ interface CompanyListProps {
   accent: AccentColor;
   focusedId: string | null;
   isArticleSeen: (articleId: string) => boolean;
+  isLinkSaved: (url: string) => boolean;
   enableDrag: boolean;
   onToggleSelect: (id: string) => void;
   onToggleExpand: (company: Company) => void;
@@ -33,6 +34,7 @@ interface CompanyListProps {
   onToggleStar: (id: string) => void;
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (orderedIds: string[]) => void;
+  onSaveArticle: (article: NewsArticle) => void;
 }
 
 export function CompanyList({
@@ -50,6 +52,7 @@ export function CompanyList({
   accent,
   focusedId,
   isArticleSeen,
+  isLinkSaved,
   enableDrag,
   onToggleSelect,
   onToggleExpand,
@@ -58,6 +61,7 @@ export function CompanyList({
   onToggleStar,
   onUpdateNotes,
   onReorder,
+  onSaveArticle,
 }: CompanyListProps) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -331,38 +335,62 @@ export function CompanyList({
                   )}
                   {!isLoading &&
                     Array.isArray(news) &&
-                    news.map((article, i) => (
-                      <a
-                        key={article.id}
-                        href={article.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`block px-4 py-2.5 transition-colors hover:bg-brand-100 dark:hover:bg-brand-800/60 ${
-                          isArticleSeen(article.id) ? "opacity-70" : ""
-                        } ${
-                          i !== news.length - 1
-                            ? "border-b border-brand-200 dark:border-brand-800"
-                            : ""
-                        }`}
-                      >
-                        <div className="flex items-start gap-1.5">
-                          <span className="mt-0.5 shrink-0 rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-bold text-brand-600 dark:bg-brand-800 dark:text-brand-300">
-                            {article.source}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="text-xs font-medium leading-snug text-brand-800 dark:text-brand-200">
-                              {article.title}
+                    news.map((article, i) => {
+                      const saved = isLinkSaved(article.link);
+                      return (
+                        <div
+                          key={article.id}
+                          className={`group relative ${
+                            i !== news.length - 1
+                              ? "border-b border-brand-200 dark:border-brand-800"
+                              : ""
+                          }`}
+                        >
+                          <a
+                            href={article.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`block px-4 py-2.5 pr-9 transition-colors hover:bg-brand-100 dark:hover:bg-brand-800/60 ${
+                              isArticleSeen(article.id) ? "opacity-70" : ""
+                            }`}
+                          >
+                            <div className="flex items-start gap-1.5">
+                              <span className="mt-0.5 shrink-0 rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-bold text-brand-600 dark:bg-brand-800 dark:text-brand-300">
+                                {article.source}
+                              </span>
+                              <div className="min-w-0">
+                                <div className="text-xs font-medium leading-snug text-brand-800 dark:text-brand-200">
+                                  {article.title}
+                                </div>
+                                <div className="mt-0.5 text-[10px] text-brand-400 dark:text-brand-500">
+                                  {formatDistanceToNow(new Date(article.pubDate), {
+                                    addSuffix: true,
+                                  })}{" "}
+                                  ↗
+                                </div>
+                              </div>
                             </div>
-                            <div className="mt-0.5 text-[10px] text-brand-400 dark:text-brand-500">
-                              {formatDistanceToNow(new Date(article.pubDate), {
-                                addSuffix: true,
-                              })}{" "}
-                              ↗
-                            </div>
-                          </div>
+                          </a>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onSaveArticle(article);
+                            }}
+                            aria-label={saved ? "Saved" : "Save link"}
+                            title={saved ? "Saved" : "Save link"}
+                            className={`absolute right-2 top-2 rounded p-1 text-xs transition-opacity ${
+                              saved
+                                ? "opacity-100"
+                                : "opacity-0 hover:bg-brand-200 group-hover:opacity-60 hover:!opacity-100 dark:hover:bg-brand-700"
+                            }`}
+                          >
+                            {saved ? "🔖" : "📑"}
+                          </button>
                         </div>
-                      </a>
-                    ))}
+                      );
+                    })}
                 </div>
               </div>
             </div>

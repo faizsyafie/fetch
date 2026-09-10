@@ -32,6 +32,31 @@ export function isReservedIndustryName(name: string): boolean {
 export const ALL_INDUSTRY_EMOJI = "🌐";
 export const WATCHLIST_INDUSTRY_EMOJI = "⭐";
 
+// Saved-links categories — same "protected virtual view" pattern as
+// industries above, plus "Uncategorized" as a permanent fallback bucket
+// that's never actually stored in linkCategories: a link's category counts
+// as Uncategorized whenever it isn't (or is no longer) in that list, so
+// deleting a category can't strand or delete anyone's notes.
+export const ALL_LINKS_CATEGORY = "All";
+export const PINNED_LINKS_CATEGORY = "Pinned";
+export const UNCATEGORIZED_CATEGORY = "Uncategorized";
+export const RESERVED_LINK_CATEGORY_NAMES = [
+  ALL_LINKS_CATEGORY,
+  PINNED_LINKS_CATEGORY,
+  UNCATEGORIZED_CATEGORY,
+];
+
+export function isReservedLinkCategoryName(name: string): boolean {
+  return RESERVED_LINK_CATEGORY_NAMES.some(
+    (reserved) => reserved.toLowerCase() === name.trim().toLowerCase()
+  );
+}
+
+export const ALL_LINKS_EMOJI = "🔖";
+export const PINNED_LINKS_EMOJI = "⭐";
+export const UNCATEGORIZED_LINKS_EMOJI = "🗂️";
+export const DEFAULT_LINK_CATEGORY_EMOJI = "📌";
+
 export function getIndustryEmoji(
   industry: Industry,
   industryEmojis: Record<Industry, string>

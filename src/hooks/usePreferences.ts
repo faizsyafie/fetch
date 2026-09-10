@@ -2,18 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ALL_LINKS_CATEGORY,
   DEFAULT_INDUSTRY_EMOJI,
   DEFAULT_SOURCES,
   INDUSTRIES,
   SAMPLE_COMPANIES,
   defaultIndustryEmojis,
   isReservedIndustryName,
+  isReservedLinkCategoryName,
 } from "@/lib/defaults";
 import type {
   AppPreferences,
   Company,
   Industry,
   NewsSource,
+  SavedLink,
   TimeFrameDays,
 } from "@/lib/types";
 
@@ -24,6 +27,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   industries: INDUSTRIES,
   activeIndustry: INDUSTRIES[0],
   industryEmojis: defaultIndustryEmojis(INDUSTRIES),
+  links: [],
+  linkCategories: [],
+  activeLinkCategory: ALL_LINKS_CATEGORY,
 };
 
 function normalizePreferences(
@@ -42,6 +48,9 @@ function normalizePreferences(
     industries,
     activeIndustry: parsed.activeIndustry ?? industries[0],
     industryEmojis,
+    links: parsed.links ?? [],
+    linkCategories: parsed.linkCategories ?? [],
+    activeLinkCategory: parsed.activeLinkCategory ?? ALL_LINKS_CATEGORY,
   };
 }
 
@@ -345,6 +354,140 @@ export function usePreferences(profileName: string | null) {
     setPreferences((prev) => ({ ...prev, companies: SAMPLE_COMPANIES }));
   }, []);
 
+  const saveLink = useCallback(
+    (input: { url: string; title: string; notes: string; category: string }) => {
+      const url = input.url.trim();
+      if (!url) return null;
+      const now = new Date().toISOString();
+      let resultId: string | null = null;
+      setPreferences((prev) => {
+        const existing = prev.links.find((l) => l.url === url);
+        if (existing) {
+          resultId = existing.id;
+          return prev;
+        }
+        const link: SavedLink = {
+          id: `link-${Date.now()}`,
+          url,
+          title: input.title.trim() || url,
+          notes: input.notes,
+          category: input.category,
+          pinned: false,
+          savedAt: now,
+          editedAt: now,
+        };
+        resultId = link.id;
+        return { ...prev, links: [link, ...prev.links] };
+      });
+      return resultId;
+    },
+    []
+  );
+
+  const findLinkByUrl = useCallback(
+    (url: string) => preferences.links.find((l) => l.url === url.trim()) ?? null,
+    [preferences.links]
+  );
+
+  const updateLink = useCallback(
+    (id: string, updates: Partial<Pick<SavedLink, "title" | "notes" | "category">>) => {
+      setPreferences((prev) => ({
+        ...prev,
+        links: prev.links.map((l) =>
+          l.id === id
+            ? { ...l, ...updates, editedAt: new Date().toISOString() }
+            : l
+        ),
+      }));
+    },
+    []
+  );
+
+  const deleteLink = useCallback((id: string) => {
+    setPreferences((prev) => ({
+      ...prev,
+      links: prev.links.filter((l) => l.id !== id),
+    }));
+  }, []);
+
+  const toggleLinkPinned = useCallback((id: string) => {
+    setPreferences((prev) => ({
+      ...prev,
+      links: prev.links.map((l) =>
+        l.id === id ? { ...l, pinned: !l.pinned } : l
+      ),
+    }));
+  }, []);
+
+  const setActiveLinkCategory = useCallback((category: string) => {
+    setPreferences((prev) => ({ ...prev, activeLinkCategory: category }));
+  }, []);
+
+  const addLinkCategory = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || isReservedLinkCategoryName(trimmed)) return;
+    setPreferences((prev) => {
+      if (prev.linkCategories.includes(trimmed)) return prev;
+      return {
+        ...prev,
+        linkCategories: [...prev.linkCategories, trimmed],
+        activeLinkCategory: trimmed,
+      };
+    });
+  }, []);
+
+  const renameLinkCategory = useCallback((oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (isReservedLinkCategoryName(oldName)) return;
+    setPreferences((prev) => {
+      if (
+        !trimmed ||
+        trimmed === oldName ||
+        isReservedLinkCategoryName(trimmed) ||
+        prev.linkCategories.includes(trimmed)
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        linkCategories: prev.linkCategories.map((c) =>
+          c === oldName ? trimmed : c
+        ),
+        links: prev.links.map((l) =>
+          l.category === oldName ? { ...l, category: trimmed } : l
+        ),
+        activeLinkCategory:
+          prev.activeLinkCategory === oldName ? trimmed : prev.activeLinkCategory,
+      };
+    });
+  }, []);
+
+  // Links in a removed category simply fall back to Uncategorized — see the
+  // comment on RESERVED_LINK_CATEGORY_NAMES, nothing needs to touch `links`.
+  const removeLinkCategory = useCallback((name: string) => {
+    if (isReservedLinkCategoryName(name)) return;
+    setPreferences((prev) => ({
+      ...prev,
+      linkCategories: prev.linkCategories.filter((c) => c !== name),
+      activeLinkCategory:
+        prev.activeLinkCategory === name
+          ? ALL_LINKS_CATEGORY
+          : prev.activeLinkCategory,
+    }));
+  }, []);
+
+  const reorderLinkCategories = useCallback((ordered: string[]) => {
+    setPreferences((prev) => {
+      if (
+        ordered.length !== prev.linkCategories.length ||
+        !ordered.every((c) => prev.linkCategories.includes(c))
+      ) {
+        return prev;
+      }
+      return { ...prev, linkCategories: ordered };
+    });
+  }, []);
+
   return {
     preferences,
     hydrated,
@@ -368,5 +511,15 @@ export function usePreferences(profileName: string | null) {
     updateSource,
     resetSources,
     loadSampleCompanies,
+    saveLink,
+    findLinkByUrl,
+    updateLink,
+    deleteLink,
+    toggleLinkPinned,
+    setActiveLinkCategory,
+    addLinkCategory,
+    renameLinkCategory,
+    removeLinkCategory,
+    reorderLinkCategories,
   };
 }

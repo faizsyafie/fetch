@@ -6,12 +6,15 @@ import {
   FONT_SCALE_PRESETS,
 } from "@/lib/defaults";
 import type { AccentColor, Density, FontFamily, FontScale } from "@/lib/types";
+import type { Theme } from "@/hooks/useTheme";
 
 interface CustomizePanelProps {
+  theme: Theme;
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;
   density: Density;
+  onToggleTheme: () => void;
   onSetAccent: (accent: AccentColor) => void;
   onSetFontFamily: (fontFamily: FontFamily) => void;
   onSetFontScale: (fontScale: FontScale) => void;
@@ -20,10 +23,12 @@ interface CustomizePanelProps {
 }
 
 export function CustomizePanel({
+  theme,
   accent,
   fontFamily,
   fontScale,
   density,
+  onToggleTheme,
   onSetAccent,
   onSetFontFamily,
   onSetFontScale,
@@ -41,12 +46,12 @@ export function CustomizePanel({
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">
-            Customize
+            Settings
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close customize panel"
+            aria-label="Close settings panel"
             className="rounded px-1.5 py-0.5 text-sm text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
             ✕
@@ -54,6 +59,35 @@ export function CustomizePanel({
         </div>
 
         <div className="space-y-5 px-4 py-4">
+          <section>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              Theme
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { key: "light" as Theme, label: "☀️ Light" },
+                  { key: "dark" as Theme, label: "🌙 Dark" },
+                ] as const
+              ).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    if (key !== theme) onToggleTheme();
+                  }}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    theme === key
+                      ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
+                      : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </section>
+
           <section>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Accent color
