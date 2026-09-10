@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
+import { ViewTransition } from "react";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -42,7 +43,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-brand-50 font-sans text-brand-900 dark:bg-brand-900 dark:text-brand-100">
-        {children}
+        {/* A simple crossfade between routes (/, /about, /access) — see the
+            `.page-fade` rules in globals.css. */}
+        <ViewTransition default="page-fade">{children}</ViewTransition>
       </body>
     </html>
   );

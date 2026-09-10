@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  ViewTransition,
+} from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
@@ -22,7 +30,6 @@ import { useTheme } from "@/hooks/useTheme";
 import { readUiSettings, useUiSettings } from "@/hooks/useUiSettings";
 import {
   ALL_INDUSTRY,
-  BACKGROUND_PRESETS,
   FONT_FAMILY_PRESETS,
   FONT_SCALE_PRESETS,
   WATCHLIST_INDUSTRY,
@@ -109,7 +116,7 @@ function DashboardForProfile({
     setAccent,
     setFontFamily,
     setFontScale,
-    setBackground,
+    setNewsTopicOrder,
   } = useUiSettings();
   const { hydrated: seenHydrated, markSeen, isSeen } = useSeenArticles();
 
@@ -130,7 +137,17 @@ function DashboardForProfile({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [mode, setMode] = useState<"companies" | "news">("companies");
+  const [mode, setModeState] = useState<"companies" | "news">("companies");
+  // Wrapped in startTransition so the ViewTransition around the board content
+  // (keyed on `mode`) actually activates — plain setState doesn't trigger it.
+  const setMode = useCallback(
+    (next: "companies" | "news" | ((prev: "companies" | "news") => "companies" | "news")) => {
+      startTransition(() => {
+        setModeState(next);
+      });
+    },
+    []
+  );
   const [newsDays, setNewsDaysState] = useState<TimeFrameDays>(7);
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsArticlesByTopic, setNewsArticlesByTopic] =
@@ -144,7 +161,15 @@ function DashboardForProfile({
     setSearchQuery("");
     setSelected(new Set());
     setFocusedIndex(null);
-  }, []);
+  }, [setMode]);
+
+  // The tutorial walks through Companies-mode UI first, so always land there
+  // before opening it — regardless of which mode (or screen) it was opened
+  // from.
+  const openTutorial = useCallback(() => {
+    setMode("companies");
+    setTutorialOpen(true);
+  }, [setMode]);
 
   const fetchNewsBoard = useCallback(async (days: TimeFrameDays) => {
     setNewsLoading(true);
@@ -172,6 +197,7 @@ function DashboardForProfile({
         world: ["Failed to fetch news."],
         malaysia: ["Failed to fetch news."],
         economy: ["Failed to fetch news."],
+        tech: ["Failed to fetch news."],
       });
     } finally {
       setNewsLoading(false);
@@ -212,7 +238,8 @@ function DashboardForProfile({
     // run before useSyncExternalStore's post-hydration snapshot correction,
     // so the reactive value may still be the transient SSR default here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!readUiSettings().tutorialSeen) setTutorialOpen(true);
+    if (!readUiSettings().tutorialSeen) openTutorial();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isVirtualIndustry =
@@ -258,6 +285,7 @@ function DashboardForProfile({
       world: [],
       malaysia: [],
       economy: [],
+      tech: [],
     };
     for (const topic of NEWS_TOPICS) {
       filtered[topic.id] = newsArticlesByTopic[topic.id].filter(
@@ -353,7 +381,7 @@ function DashboardForProfile({
           ?.scrollIntoView({ block: "center" });
       });
     },
-    [setActiveIndustry, newsCache, loadingSet, fetchCompanyNews, markSeen]
+    [setMode, setActiveIndustry, newsCache, loadingSet, fetchCompanyNews, markSeen]
   );
 
   const refreshCompany = useCallback(
@@ -435,7 +463,7 @@ function DashboardForProfile({
       setSelected(new Set());
       setFocusedIndex(null);
     },
-    [setActiveIndustry]
+    [setMode, setActiveIndustry]
   );
 
   const handleAddCompanyTag = useCallback(
@@ -464,7 +492,7 @@ function DashboardForProfile({
 
   const newsStatusLabel = newsFetchedAt
     ? `Updated ${formatDistanceToNow(newsFetchedAt, { addSuffix: true })}`
-    : "World, Malaysia and Economy headlines";
+    : "World, Malaysia, Economy and Tech headlines";
 
   // Keyboard shortcuts: "/" focuses search, j/k or arrows move the focused
   // row, Enter expands it, and Ctrl/Cmd+K opens the command palette.
@@ -533,9 +561,10 @@ function DashboardForProfile({
       <WelcomeLanding
         name={profileName}
         theme={theme}
+        accent={uiSettings.accent}
         onOpenTutorial={() => {
           setShowWelcome(false);
-          setTutorialOpen(true);
+          openTutorial();
         }}
         onReadGeneralNews={() => {
           setShowWelcome(false);
@@ -593,9 +622,7 @@ function DashboardForProfile({
         onToggleCollapsed={toggleSidebarCollapsed}
       />
 
-      <div
-        className={`relative flex min-h-0 flex-1 flex-col ${BACKGROUND_PRESETS[uiSettings.background].pageClass}`}
-      >
+      <div className="relative flex min-h-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
         <DogWatermark theme={theme} />
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
@@ -631,7 +658,7 @@ function DashboardForProfile({
           onAddCompany={handleAddCompanyTag}
           onRemoveCompany={removeCompany}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-          onOpenTutorial={() => setTutorialOpen(true)}
+          onOpenTutorial={openTutorial}
           onOpenCustomize={() => setCustomizeOpen(true)}
           onCollapseAll={collapseAll}
           newsDays={newsDays}
@@ -641,11 +668,14 @@ function DashboardForProfile({
           newsStatusLabel={newsStatusLabel}
         />
 
+        <ViewTransition key={mode} enter="board-fade" exit="board-fade" default="none">
         {mode === "news" ? (
           <NewsBoard
             articlesByTopic={visibleNewsArticlesByTopic}
             errorsByTopic={newsErrorsByTopic}
             loading={newsLoading}
+            topicOrder={uiSettings.newsTopicOrder}
+            onReorderTopics={setNewsTopicOrder}
           />
         ) : (
           <>
@@ -673,7 +703,7 @@ function DashboardForProfile({
               days={preferences.days}
               sourceNames={enabledSourceNames}
               density={uiSettings.density}
-              background={uiSettings.background}
+              accent={uiSettings.accent}
               focusedId={focusedId}
               isArticleSeen={isSeen}
               enableDrag={searchQuery.trim().length === 0 && !isVirtualIndustry}
@@ -694,6 +724,7 @@ function DashboardForProfile({
             />
           </>
         )}
+        </ViewTransition>
         </div>
       </div>
 
@@ -702,6 +733,7 @@ function DashboardForProfile({
           companies={preferences.companies}
           industries={preferences.industries}
           industryEmojis={preferences.industryEmojis}
+          accent={uiSettings.accent}
           onSelectCompany={openCompany}
           onSelectIndustry={handleSelectIndustry}
           onClose={() => setCommandPaletteOpen(false)}
@@ -711,6 +743,7 @@ function DashboardForProfile({
       {tutorialOpen && (
         <SpotlightTour
           steps={TOUR_STEPS}
+          accent={uiSettings.accent}
           onClose={() => {
             setTutorialOpen(false);
             markTutorialSeen();
@@ -723,11 +756,11 @@ function DashboardForProfile({
           accent={uiSettings.accent}
           fontFamily={uiSettings.fontFamily}
           fontScale={uiSettings.fontScale}
-          background={uiSettings.background}
+          density={uiSettings.density}
           onSetAccent={setAccent}
           onSetFontFamily={setFontFamily}
           onSetFontScale={setFontScale}
-          onSetBackground={setBackground}
+          onSetDensity={setDensity}
           onClose={() => setCustomizeOpen(false)}
         />
       )}

@@ -7,12 +7,13 @@ import {
   MIN_SIDEBAR_WIDTH,
   UI_STORAGE_KEY,
 } from "@/lib/defaults";
+import { DEFAULT_NEWS_TOPIC_ORDER } from "@/lib/newsTopics";
 import type {
   AccentColor,
-  Background,
   Density,
   FontFamily,
   FontScale,
+  NewsTopicId,
   UiSettings,
 } from "@/lib/types";
 
@@ -24,13 +25,27 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   accent: "blue",
   fontFamily: "system",
   fontScale: "md",
-  background: "slate",
+  newsTopicOrder: DEFAULT_NEWS_TOPIC_ORDER,
 };
 
 const UI_SETTINGS_EVENT = "credit-news-analyst-ui-change";
 
 function clampWidth(width: number): number {
   return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
+}
+
+// Drops ids no longer in DEFAULT_NEWS_TOPIC_ORDER and appends any new ones
+// (e.g. a newly added topic) that a stored order predates.
+function sanitizeTopicOrder(order: unknown): NewsTopicId[] {
+  const known = new Set(DEFAULT_NEWS_TOPIC_ORDER);
+  const kept = Array.isArray(order)
+    ? order.filter(
+        (id): id is NewsTopicId =>
+          typeof id === "string" && known.has(id as NewsTopicId)
+      )
+    : [];
+  const missing = DEFAULT_NEWS_TOPIC_ORDER.filter((id) => !kept.includes(id));
+  return [...kept, ...missing];
 }
 
 // getSnapshot must return a referentially stable value when nothing has
@@ -60,6 +75,7 @@ function readUiSettings(): UiSettings {
       sidebarWidth: clampWidth(
         parsed.sidebarWidth ?? DEFAULT_UI_SETTINGS.sidebarWidth
       ),
+      newsTopicOrder: sanitizeTopicOrder(parsed.newsTopicOrder),
     };
   } catch {
     cachedSettings = DEFAULT_UI_SETTINGS;
@@ -149,9 +165,9 @@ export function useUiSettings() {
     [update]
   );
 
-  const setBackground = useCallback(
-    (background: Background) => {
-      update((prev) => ({ ...prev, background }));
+  const setNewsTopicOrder = useCallback(
+    (newsTopicOrder: NewsTopicId[]) => {
+      update((prev) => ({ ...prev, newsTopicOrder }));
     },
     [update]
   );
@@ -166,6 +182,6 @@ export function useUiSettings() {
     setAccent,
     setFontFamily,
     setFontScale,
-    setBackground,
+    setNewsTopicOrder,
   };
 }

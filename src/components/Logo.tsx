@@ -7,14 +7,16 @@ interface LogoProps {
   compact?: boolean;
 }
 
-// icon-dog-light/dark.png: square headshot crop of the dog, background baked
-// in to match the theme. text-dog-light/dark.png: wordmark only ("fetch"),
-// also with the theme background baked in — object-contain so the whole
-// word shows without cropping, letterboxing blends into the sidebar's own
-// matching background.
+// icon-dog-*-new.png: square headshot crop of the dog, background baked in
+// to match the theme. text-dog-*-new.png: wordmark only ("fetch"), also with
+// the theme background baked in — object-contain so the whole word shows
+// without cropping, letterboxing blends into the sidebar's own matching
+// background.
 export function Logo({ theme, compact = false }: LogoProps) {
-  const iconSrc = theme === "dark" ? "/icon-dog-dark.png" : "/icon-dog-light.png";
-  const textSrc = theme === "dark" ? "/text-dog-dark.png" : "/text-dog-light.png";
+  const iconSrc =
+    theme === "dark" ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
+  const textSrc =
+    theme === "dark" ? "/text-dog-dark-new.png" : "/text-dog-light-new.png";
 
   if (compact) {
     return (
@@ -35,7 +37,7 @@ export function Logo({ theme, compact = false }: LogoProps) {
       <img
         src={textSrc}
         alt="fetch — Daily RSS"
-        className="h-full w-full object-contain"
+        className="h-full w-full object-contain object-left"
       />
     </div>
   );

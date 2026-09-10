@@ -54,9 +54,11 @@ interface SidebarProps {
 // already does (same toggle handler either way).
 function ModeSwitch({
   mode,
+  accent,
   onToggle,
 }: {
   mode: "companies" | "news";
+  accent: AccentColor;
   onToggle: () => void;
 }) {
   const isNews = mode === "news";
@@ -75,7 +77,7 @@ function ModeSwitch({
     >
       <span
         aria-hidden="true"
-        className={`absolute inset-y-0.5 w-[calc(50%-2px)] rounded-full bg-blue-600 shadow-sm transition-all duration-300 ease-in-out ${
+        className={`absolute inset-y-0.5 w-[calc(50%-2px)] rounded-full ${ACCENT_PRESETS[accent].solid} shadow-sm transition-all duration-300 ease-in-out ${
           isNews ? "left-[calc(50%+2px)]" : "left-0.5"
         }`}
       />
@@ -297,7 +299,7 @@ export function Sidebar({
 
       {!collapsed && (
         <div className="border-b border-brand-200 px-4 py-2.5 dark:border-brand-800/80">
-          <ModeSwitch mode={mode} onToggle={onLogoClick} />
+          <ModeSwitch mode={mode} accent={accent} onToggle={onLogoClick} />
         </div>
       )}
 

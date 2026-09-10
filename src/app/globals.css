@@ -50,3 +50,52 @@ body {
 .dark * {
   scrollbar-color: #5a5148 transparent;
 }
+
+/* Simple crossfade between routes (/, /about, /access) — see
+   <ViewTransition default="page-fade"> in app/layout.tsx. */
+::view-transition-old(.page-fade) {
+  animation: 150ms ease-out both page-fade-out;
+}
+::view-transition-new(.page-fade) {
+  animation: 200ms ease-in both page-fade-in;
+}
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Slight crossfade when switching Companies <-> General within the
+   dashboard — see <ViewTransition key={mode}> in app/page.tsx. Shorter and
+   subtler than the route-level page-fade since this swaps content, not the
+   whole page. */
+::view-transition-old(.board-fade) {
+  animation: 90ms ease-out both board-fade-out;
+}
+::view-transition-new(.board-fade) {
+  animation: 120ms ease-in both board-fade-in;
+}
+@keyframes board-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes board-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.page-fade),
+  ::view-transition-new(.page-fade),
+  ::view-transition-old(.board-fade),
+  ::view-transition-new(.board-fade) {
+    animation-duration: 0s !important;
+  }
+}
