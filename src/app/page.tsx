@@ -21,8 +21,7 @@ import { SaveLinkModal } from "@/components/SaveLinkModal";
 import { SavedView } from "@/components/SavedView";
 import { Sidebar, type AppMode } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
-import { SourcesPanel } from "@/components/SourcesPanel";
-import { SuggestedSources } from "@/components/SuggestedSources";
+import { SourcesModal } from "@/components/SourcesModal";
 import { SpotlightTour } from "@/components/SpotlightTour";
 import { TabBar } from "@/components/TabBar";
 import { TopBar } from "@/components/TopBar";
@@ -158,7 +157,6 @@ function DashboardForProfile({
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   // Lands on General (news) right after picking a profile — there's no
   // separate welcome screen anymore.
   const [mode, setModeState] = useState<AppMode>("news");
@@ -655,7 +653,7 @@ function DashboardForProfile({
         setCommandPaletteOpen(false);
         setTutorialOpen(false);
         setCustomizeOpen(false);
-        setSuggestionsOpen(false);
+        setSourcesOpen(false);
         return;
       }
 
@@ -845,17 +843,6 @@ function DashboardForProfile({
           />
         ) : (
           <>
-            {sourcesOpen && (
-              <SourcesPanel
-                sources={preferences.sources}
-                onAddSource={addSource}
-                onRemoveSource={removeSource}
-                onResetSources={resetSources}
-                onClearCache={clearCache}
-                onOpenSuggestions={() => setSuggestionsOpen(true)}
-              />
-            )}
-
             <CompanyList
               companies={visibleCompanies}
               industries={preferences.industries}
@@ -947,11 +934,15 @@ function DashboardForProfile({
         />
       )}
 
-      {suggestionsOpen && (
-        <SuggestedSources
-          existingSources={preferences.sources}
+      {sourcesOpen && (
+        <SourcesModal
+          sources={preferences.sources}
+          accent={uiSettings.accent}
           onAdd={addSource}
-          onClose={() => setSuggestionsOpen(false)}
+          onRemove={removeSource}
+          onResetDefaults={resetSources}
+          onClearCache={clearCache}
+          onClose={() => setSourcesOpen(false)}
         />
       )}
     </div>

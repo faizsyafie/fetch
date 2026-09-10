@@ -95,12 +95,19 @@ export interface TopicArticle {
   imageUrl: string | null;
 }
 
+export type SourceRegion =
+  | "Recommended"
+  | "US"
+  | "UK/EU"
+  | "Asia-Pacific"
+  | "Malaysia";
+
 export interface SuggestedSource {
   name: string;
   domain: string;
   feedUrl: string | null;
   description: string;
-  region: "US" | "UK/EU" | "Asia-Pacific";
+  region: SourceRegion;
 }
 
 export interface SavedLink {

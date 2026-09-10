@@ -43,7 +43,7 @@ export const TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="sidebar-manage"]',
     title: "Edit lists & sources",
     description:
-      "Edit Lists lets you add, rename, delete and reorder industries and companies, with a custom emoji per industry. Edit Sources controls which news domains are searched, including a page of suggested RSS feeds to add.",
+      "Edit Lists lets you add, rename, delete and reorder industries and companies, with a custom emoji per industry. Edit Sources opens a picker of recommended and regional outlets to add with one click, plus your own custom domains.",
     placement: "right",
   },
   {

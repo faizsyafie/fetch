@@ -32,6 +32,18 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   activeLinkCategory: ALL_LINKS_CATEGORY,
 };
 
+// One-time migration for accounts saved before the default source list
+// swapped The Edge Singapore for The Edge Malaysia — replaces it in place
+// (same position, same enabled state) rather than resetting the whole list,
+// so anything the user added or removed themselves is left untouched.
+function migrateSources(sources: NewsSource[]): NewsSource[] {
+  const newDefault = DEFAULT_SOURCES.find((s) => s.id === "the-edge-malaysia");
+  if (!newDefault) return sources;
+  return sources.map((s) =>
+    s.id === "the-edge-singapore" ? { ...newDefault, enabled: s.enabled } : s
+  );
+}
+
 function normalizePreferences(
   parsed: Partial<AppPreferences> | null
 ): AppPreferences {
@@ -44,7 +56,9 @@ function normalizePreferences(
   return {
     ...DEFAULT_PREFERENCES,
     ...parsed,
-    sources: parsed.sources?.length ? parsed.sources : DEFAULT_SOURCES,
+    sources: migrateSources(
+      parsed.sources?.length ? parsed.sources : DEFAULT_SOURCES
+    ),
     industries,
     activeIndustry: parsed.activeIndustry ?? industries[0],
     industryEmojis,

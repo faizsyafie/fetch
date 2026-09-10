@@ -191,9 +191,9 @@ export const DEFAULT_SOURCES: NewsSource[] = [
     isDefault: true,
   },
   {
-    id: "the-edge-singapore",
-    name: "The Edge Singapore",
-    domain: "theedgesingapore.com",
+    id: "the-edge-malaysia",
+    name: "The Edge Malaysia",
+    domain: "theedgemarkets.com",
     feedUrls: [],
     enabled: true,
     isDefault: true,
@@ -382,19 +382,32 @@ export const FONT_SCALE_PRESETS: Record<
 // app matches news regardless of feedUrl). Feed URLs can change over time —
 // worth spot-checking after adding one.
 export const SUGGESTED_SOURCES: SuggestedSource[] = [
+  // Mirrors DEFAULT_SOURCES exactly (same domains, so "already added" checks
+  // by domain line up) — shown as its own highlighted section, hidden once
+  // all three are already in the user's list.
   {
-    name: "Reuters Business",
+    name: "Bloomberg",
+    domain: "bloomberg.com",
+    // addSource only takes a single feed URL from a suggestion; the other
+    // two Bloomberg feeds DEFAULT_SOURCES carries are lost on remove+re-add
+    // via this card. Not worth widening SuggestedSource's shape over.
+    feedUrl: "https://feeds.bloomberg.com/markets/news.rss",
+    description: "Real-time markets and finance news from a leading wire.",
+    region: "Recommended",
+  },
+  {
+    name: "Reuters",
     domain: "reuters.com",
     feedUrl: null,
     description: "Top global wire service for company and markets news.",
-    region: "US",
+    region: "Recommended",
   },
   {
-    name: "Bloomberg Markets",
-    domain: "bloomberg.com",
-    feedUrl: "https://feeds.bloomberg.com/markets/news.rss",
-    description: "Real-time markets and finance news from a leading wire.",
-    region: "US",
+    name: "The Edge Malaysia",
+    domain: "theedgemarkets.com",
+    feedUrl: null,
+    description: "Malaysia's leading business and investment news outlet.",
+    region: "Recommended",
   },
   {
     name: "CNBC Finance",
@@ -493,5 +506,33 @@ export const SUGGESTED_SOURCES: SuggestedSource[] = [
     feedUrl: null,
     description: "Australia's leading financial and business daily.",
     region: "Asia-Pacific",
+  },
+  {
+    name: "The Star Business",
+    domain: "thestar.com.my",
+    feedUrl: "https://www.thestar.com.my/rss/Business",
+    description: "Malaysia's widest-read English daily, business desk.",
+    region: "Malaysia",
+  },
+  {
+    name: "New Straits Times Business",
+    domain: "nst.com.my",
+    feedUrl: null,
+    description: "Malaysian business, banking and corporate news.",
+    region: "Malaysia",
+  },
+  {
+    name: "Free Malaysia Today Business",
+    domain: "freemalaysiatoday.com",
+    feedUrl: null,
+    description: "Independent Malaysian outlet, business coverage.",
+    region: "Malaysia",
+  },
+  {
+    name: "Bernama",
+    domain: "bernama.com",
+    feedUrl: null,
+    description: "Malaysia's national news agency.",
+    region: "Malaysia",
   },
 ];
