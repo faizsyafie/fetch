@@ -261,7 +261,7 @@ export function TabBar({
   return (
     <div
       data-tour={dataTour}
-      className="flex items-center justify-between gap-3 border-b border-brand-200 bg-white px-5 py-2.5 dark:border-brand-800/80 dark:bg-brand-900"
+      className="flex min-w-0 items-center justify-between gap-3 border-b border-brand-200 bg-white px-5 py-2.5 dark:border-brand-800/80 dark:bg-brand-900"
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
         {pinnedItems.map((item) => renderPill(item, false))}
