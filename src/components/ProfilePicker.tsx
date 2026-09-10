@@ -35,9 +35,9 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
   }
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center bg-brand-100 px-4 dark:bg-brand-950">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-10 bg-brand-50 px-4 py-10 dark:bg-brand-900 md:flex-row md:gap-16">
       <Logo theme={theme} large />
-      <div className="mt-6 w-full max-w-sm rounded-lg border border-brand-200 bg-white p-6 shadow-sm dark:border-brand-800 dark:bg-brand-900">
+      <div className="w-full max-w-sm shrink-0 rounded-lg border border-brand-200 bg-white p-6 shadow-sm dark:border-brand-800 dark:bg-brand-800">
         <h1 className="text-lg font-bold text-brand-900 dark:text-white">
           Who let the dog out? 🐾
         </h1>

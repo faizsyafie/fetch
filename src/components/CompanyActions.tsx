@@ -2,6 +2,7 @@
 
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
+import { BoneButton } from "@/components/BoneButton";
 
 interface CompanyActionsProps {
   dataTour?: string;
@@ -55,34 +56,13 @@ export function CompanyActions({
       >
         Collapse
       </button>
-      <button
-        type="button"
-        onClick={onFetch}
-        disabled={fetchDisabled}
-        className={`relative isolate rounded-full px-4 py-1.5 text-[11px] font-semibold text-white transition-transform ${
-          fetchDisabled ? "cursor-not-allowed bg-brand-400" : `${accentPreset.solid} hover:animate-bone-jump`
-        }`}
-      >
-        {/* Four corner knobs turn the pill into a bone silhouette — bg
-            matches the bar exactly, so the shape reads as one solid bone
-            regardless of how wide the label text makes the bar. */}
-        {(["-top-1 -left-1", "-top-1 -right-1", "-bottom-1 -left-1", "-bottom-1 -right-1"] as const).map(
-          (pos) => (
-            <span
-              key={pos}
-              aria-hidden="true"
-              className={`absolute -z-10 h-3 w-3 rounded-full ${pos} ${
-                fetchDisabled ? "bg-brand-400" : accentPreset.solid
-              }`}
-            />
-          )
-        )}
+      <BoneButton onClick={onFetch} disabled={fetchDisabled} accent={accent}>
         {batchRunning
           ? `Fetching… (${loadingCount})`
           : selectedCount > 0
             ? `Fetch! (${selectedCount})`
             : "Fetch!"}
-      </button>
+      </BoneButton>
     </div>
   );
 }
