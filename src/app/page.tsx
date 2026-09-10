@@ -23,6 +23,7 @@ import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesPanel } from "@/components/SourcesPanel";
 import { SuggestedSources } from "@/components/SuggestedSources";
 import { SpotlightTour } from "@/components/SpotlightTour";
+import { TabBar } from "@/components/TabBar";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -32,11 +33,17 @@ import { readUiSettings, useUiSettings } from "@/hooks/useUiSettings";
 import {
   ALL_INDUSTRY,
   ALL_LINKS_CATEGORY,
+  ALL_LINKS_EMOJI,
+  DEFAULT_INDUSTRY_EMOJI,
+  DEFAULT_LINK_CATEGORY_EMOJI,
   FONT_FAMILY_PRESETS,
   FONT_SCALE_PRESETS,
   PINNED_LINKS_CATEGORY,
+  PINNED_LINKS_EMOJI,
   UNCATEGORIZED_CATEGORY,
+  UNCATEGORIZED_LINKS_EMOJI,
   WATCHLIST_INDUSTRY,
+  getIndustryEmoji,
 } from "@/lib/defaults";
 import {
   EMPTY_NEWS_ARTICLES,
@@ -136,6 +143,7 @@ function DashboardForProfile({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [editMode, setEditMode] = useState(false);
+  const [categoryEditMode, setCategoryEditMode] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -174,7 +182,6 @@ function DashboardForProfile({
     useState<Record<NewsTopicId, TopicArticle[]>>(EMPTY_NEWS_ARTICLES);
   const [newsErrorsByTopic, setNewsErrorsByTopic] =
     useState<Record<NewsTopicId, string[]>>(EMPTY_NEWS_ERRORS);
-  const [newsFetchedAt, setNewsFetchedAt] = useState<number | null>(null);
 
   const selectMode = useCallback(
     (next: AppMode) => {
@@ -214,7 +221,6 @@ function DashboardForProfile({
       }
       setNewsArticlesByTopic(nextArticles);
       setNewsErrorsByTopic(nextErrors);
-      setNewsFetchedAt(Date.now());
     } catch {
       setNewsErrorsByTopic({
         world: ["Failed to fetch news."],
@@ -351,6 +357,76 @@ function DashboardForProfile({
   const isLinkSaved = useCallback(
     (url: string) => preferences.links.some((l) => l.url === url),
     [preferences.links]
+  );
+
+  const industryTabPinnedItems = useMemo(
+    () => [
+      {
+        key: ALL_INDUSTRY,
+        emoji: getIndustryEmoji(ALL_INDUSTRY, preferences.industryEmojis),
+        label: ALL_INDUSTRY,
+        count: preferences.companies.length,
+      },
+      {
+        key: WATCHLIST_INDUSTRY,
+        emoji: getIndustryEmoji(WATCHLIST_INDUSTRY, preferences.industryEmojis),
+        label: WATCHLIST_INDUSTRY,
+        count: preferences.companies.filter((c) => c.starred).length,
+      },
+    ],
+    [preferences.industryEmojis, preferences.companies]
+  );
+
+  const industryTabItems = useMemo(
+    () =>
+      preferences.industries.map((industry) => ({
+        key: industry,
+        emoji: preferences.industryEmojis[industry] ?? DEFAULT_INDUSTRY_EMOJI,
+        label: industry,
+        count: preferences.companies.filter((c) => c.industry === industry).length,
+      })),
+    [preferences.industries, preferences.industryEmojis, preferences.companies]
+  );
+
+  const categoryTabPinnedItems = useMemo(
+    () => [
+      {
+        key: ALL_LINKS_CATEGORY,
+        emoji: ALL_LINKS_EMOJI,
+        label: ALL_LINKS_CATEGORY,
+        count: preferences.links.length,
+      },
+      {
+        key: PINNED_LINKS_CATEGORY,
+        emoji: PINNED_LINKS_EMOJI,
+        label: PINNED_LINKS_CATEGORY,
+        count: preferences.links.filter((l) => l.pinned).length,
+      },
+    ],
+    [preferences.links]
+  );
+
+  const categoryTabItems = useMemo(
+    () =>
+      preferences.linkCategories.map((category) => ({
+        key: category,
+        emoji: DEFAULT_LINK_CATEGORY_EMOJI,
+        label: category,
+        count: preferences.links.filter((l) => l.category === category).length,
+      })),
+    [preferences.linkCategories, preferences.links]
+  );
+
+  const uncategorizedTabItem = useMemo(
+    () => ({
+      key: UNCATEGORIZED_CATEGORY,
+      emoji: UNCATEGORIZED_LINKS_EMOJI,
+      label: UNCATEGORIZED_CATEGORY,
+      count: preferences.links.filter(
+        (l) => !preferences.linkCategories.includes(l.category)
+      ).length,
+    }),
+    [preferences.links, preferences.linkCategories]
   );
 
   // Bookmark icon on an article card is a toggle: save it (opening the modal
@@ -572,10 +648,6 @@ function DashboardForProfile({
     ? `Updated ${formatDistanceToNow(lastFetchedAt, { addSuffix: true })}`
     : null;
 
-  const newsStatusLabel = newsFetchedAt
-    ? `Updated ${formatDistanceToNow(newsFetchedAt, { addSuffix: true })}`
-    : "World, Malaysia, Economy and Tech headlines";
-
   // Keyboard shortcuts: "/" focuses search, j/k or arrows move the focused
   // row, Enter expands it, and Ctrl/Cmd+K opens the command palette.
   useEffect(() => {
@@ -656,10 +728,6 @@ function DashboardForProfile({
         theme={theme}
         mode={mode}
         onSelectMode={selectMode}
-        companies={preferences.companies}
-        industries={preferences.industries}
-        industryEmojis={preferences.industryEmojis}
-        activeIndustry={preferences.activeIndustry}
         sources={preferences.sources}
         days={preferences.days}
         editMode={editMode}
@@ -668,24 +736,12 @@ function DashboardForProfile({
         width={uiSettings.sidebarWidth}
         collapsed={uiSettings.sidebarCollapsed}
         accent={uiSettings.accent}
-        onSelectIndustry={handleSelectIndustry}
-        onAddIndustry={addIndustry}
-        onRenameIndustry={renameIndustry}
-        onRemoveIndustry={removeIndustry}
-        onSetIndustryEmoji={setIndustryEmoji}
-        onReorderIndustries={reorderIndustries}
         onToggleEditMode={() => setEditMode((v) => !v)}
         onToggleSourcesPanel={() => setSourcesOpen((v) => !v)}
         onResizeWidth={setSidebarWidth}
         onToggleCollapsed={toggleSidebarCollapsed}
-        links={preferences.links}
-        linkCategories={preferences.linkCategories}
-        activeLinkCategory={preferences.activeLinkCategory}
-        onSelectLinkCategory={setActiveLinkCategory}
-        onAddLinkCategory={addLinkCategory}
-        onRenameLinkCategory={renameLinkCategory}
-        onRemoveLinkCategory={removeLinkCategory}
-        onReorderLinkCategories={reorderLinkCategories}
+        categoryEditMode={categoryEditMode}
+        onToggleCategoryEditMode={() => setCategoryEditMode((v) => !v)}
       />
 
       <div className="relative flex min-h-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
@@ -698,12 +754,9 @@ function DashboardForProfile({
           onLogOut={onLogOut}
           activeIndustry={preferences.activeIndustry}
           industries={preferences.industries}
-          industryEmojis={preferences.industryEmojis}
           companiesInIndustry={companiesInIndustry}
-          matchedCount={visibleCompanies.length}
           searchQuery={searchQuery}
           days={preferences.days}
-          sources={preferences.sources}
           selectedCount={selected.size}
           batchRunning={batchRunning}
           loadingCount={loadingSet.size}
@@ -717,7 +770,6 @@ function DashboardForProfile({
           onFetchAll={fetchAllInIndustry}
           onAddCompany={handleAddCompanyTag}
           onRemoveCompany={removeCompany}
-          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
           onOpenTutorial={openTutorial}
           onOpenSettings={() => setCustomizeOpen(true)}
           onCollapseAll={collapseAll}
@@ -725,10 +777,43 @@ function DashboardForProfile({
           onSetNewsDays={setNewsDays}
           newsLoading={newsLoading}
           onRefreshNews={() => void fetchNewsBoard(newsDays)}
-          newsStatusLabel={newsStatusLabel}
-          activeLinkCategory={preferences.activeLinkCategory}
-          visibleLinksCount={visibleLinks.length}
         />
+
+        {mode === "companies" && (
+          <TabBar
+            dataTour="industry-tab-bar"
+            pinnedItems={industryTabPinnedItems}
+            items={industryTabItems}
+            activeKey={preferences.activeIndustry}
+            accent={uiSettings.accent}
+            editMode={editMode}
+            addPlaceholder="New industry…"
+            onSelect={handleSelectIndustry}
+            onAdd={addIndustry}
+            onRename={renameIndustry}
+            onRemove={removeIndustry}
+            onReorder={reorderIndustries}
+            onSetEmoji={setIndustryEmoji}
+          />
+        )}
+
+        {mode === "saved" && (
+          <TabBar
+            dataTour="category-tab-bar"
+            pinnedItems={categoryTabPinnedItems}
+            items={categoryTabItems}
+            trailingItem={uncategorizedTabItem}
+            activeKey={preferences.activeLinkCategory}
+            accent={uiSettings.accent}
+            editMode={categoryEditMode}
+            addPlaceholder="New category…"
+            onSelect={setActiveLinkCategory}
+            onAdd={addLinkCategory}
+            onRename={renameLinkCategory}
+            onRemove={removeLinkCategory}
+            onReorder={reorderLinkCategories}
+          />
+        )}
 
         <ViewTransition key={mode} enter="board-fade" exit="board-fade" default="none">
         {mode === "news" ? (

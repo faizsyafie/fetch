@@ -4,19 +4,11 @@ import { useState } from "react";
 import {
   ACCENT_PRESETS,
   ALL_INDUSTRY,
-  ALL_LINKS_CATEGORY,
   WATCHLIST_INDUSTRY,
-  getIndustryEmoji,
   industryPalette,
   TIME_FRAME_OPTIONS,
 } from "@/lib/defaults";
-import type {
-  AccentColor,
-  Company,
-  Industry,
-  NewsSource,
-  TimeFrameDays,
-} from "@/lib/types";
+import type { AccentColor, Company, Industry, TimeFrameDays } from "@/lib/types";
 import type { AppMode } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 
@@ -26,12 +18,9 @@ interface TopBarProps {
   onLogOut: () => void;
   activeIndustry: Industry;
   industries: Industry[];
-  industryEmojis: Record<Industry, string>;
   companiesInIndustry: Company[];
-  matchedCount: number;
   searchQuery: string;
   days: TimeFrameDays;
-  sources: NewsSource[];
   selectedCount: number;
   batchRunning: boolean;
   loadingCount: number;
@@ -45,7 +34,6 @@ interface TopBarProps {
   onFetchAll: () => void;
   onAddCompany: (name: string) => void;
   onRemoveCompany: (id: string) => void;
-  onOpenCommandPalette: () => void;
   onOpenTutorial: () => void;
   onOpenSettings: () => void;
   onCollapseAll: () => void;
@@ -56,10 +44,6 @@ interface TopBarProps {
   onSetNewsDays: (days: TimeFrameDays) => void;
   newsLoading: boolean;
   onRefreshNews: () => void;
-  newsStatusLabel: string;
-  // Saved links
-  activeLinkCategory: string;
-  visibleLinksCount: number;
 }
 
 export function TopBar({
@@ -68,12 +52,9 @@ export function TopBar({
   onLogOut,
   activeIndustry,
   industries,
-  industryEmojis,
   companiesInIndustry,
-  matchedCount,
   searchQuery,
   days,
-  sources,
   selectedCount,
   batchRunning,
   loadingCount,
@@ -87,7 +68,6 @@ export function TopBar({
   onFetchAll,
   onAddCompany,
   onRemoveCompany,
-  onOpenCommandPalette,
   onOpenTutorial,
   onOpenSettings,
   onCollapseAll,
@@ -95,9 +75,6 @@ export function TopBar({
   onSetNewsDays,
   newsLoading,
   onRefreshNews,
-  newsStatusLabel,
-  activeLinkCategory,
-  visibleLinksCount,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
   const isNews = mode === "news";
@@ -107,8 +84,6 @@ export function TopBar({
   const isVirtualIndustry =
     activeIndustry === ALL_INDUSTRY || activeIndustry === WATCHLIST_INDUSTRY;
   const palette = industryPalette(activeIndustry, industries);
-  const enabledSources = sources.filter((s) => s.enabled);
-  const emoji = getIndustryEmoji(activeIndustry, industryEmojis);
   const accentPreset = ACCENT_PRESETS[accent];
   const activeDays = isNews ? newsDays : days;
   const handleSetDays = isNews ? onSetNewsDays : onSetDays;
@@ -145,59 +120,6 @@ export function TopBar({
               ))}
             </div>
           )}
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-[15px] font-bold uppercase tracking-wide text-brand-900 dark:text-white">
-              {isNews ? (
-                <>
-                  <span className="text-base" aria-hidden="true">
-                    📰
-                  </span>
-                  {isSearching ? "Search Results" : "News"}
-                </>
-              ) : isSaved ? (
-                <>
-                  <span className="text-base" aria-hidden="true">
-                    🔖
-                  </span>
-                  {activeLinkCategory === ALL_LINKS_CATEGORY
-                    ? "Saved News"
-                    : activeLinkCategory}
-                </>
-              ) : isSearching ? (
-                "Search Results"
-              ) : (
-                <>
-                  <span className="text-base">{emoji}</span>
-                  {activeIndustry}
-                </>
-              )}
-            </div>
-            <div
-              className="mt-0.5 truncate text-[11px] text-brand-500 dark:text-brand-500"
-              title={
-                isNews || isSaved || isSearching
-                  ? undefined
-                  : `Sources: ${enabledSources.map((s) => s.name).join(", ")}`
-              }
-            >
-              {isNews
-                ? isSearching
-                  ? `Filtering articles for "${searchQuery.trim()}"`
-                  : newsStatusLabel
-                : isSaved
-                  ? isSearching
-                    ? `${visibleLinksCount} matched`
-                    : `${visibleLinksCount} link${visibleLinksCount !== 1 ? "s" : ""}`
-                  : isSearching
-                    ? `${matchedCount} matched`
-                    : `${companiesInIndustry.length} compan${
-                        companiesInIndustry.length !== 1 ? "ies" : "y"
-                      } · ${enabledSources.length} source${
-                        enabledSources.length !== 1 ? "s" : ""
-                      } · last ${days}d`}
-            </div>
-          </div>
         </div>
 
         <div data-tour="topbar-search" className="relative">
@@ -220,16 +142,6 @@ export function TopBar({
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            data-tour="topbar-command-palette"
-            onClick={onOpenCommandPalette}
-            title="Command palette (Ctrl/Cmd+K)"
-            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
-          >
-            <kbd className="text-[10px]">⌘K</kbd>
-          </button>
-
           <button
             type="button"
             onClick={onOpenTutorial}

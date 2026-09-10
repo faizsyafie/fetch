@@ -15,12 +15,12 @@ export const TOUR_STEPS: TourStep[] = [
       "A quick tour of everything you can do here — industries, news fetching, customization, and shortcuts. Use Next/Back (or the arrow keys) to move around, and Esc any time to skip.",
   },
   {
-    id: "sidebar-industries",
-    selector: '[data-tour="sidebar-industries"]',
+    id: "industry-tab-bar",
+    selector: '[data-tour="industry-tab-bar"]',
     title: "Industries & watchlist",
     description:
-      "Companies are grouped into industries here. 🌐 All shows everything across every industry, and ⭐ Watchlist shows just the companies you've starred. Click a row to switch, or drag rows to reorder them while in Edit mode.",
-    placement: "right",
+      "Companies are grouped into industries here, right below the top bar. 🌐 All shows everything across every industry, and ⭐ Watchlist shows just the companies you've starred. Click a tab to switch; turn on Edit Lists (in the sidebar) to rename, delete or drag tabs to reorder them, or use the + at the end to add a new one.",
+    placement: "bottom",
   },
   {
     id: "sidebar-header",
@@ -60,14 +60,6 @@ export const TOUR_STEPS: TourStep[] = [
     title: "Choose a time range",
     description:
       "Pick how far back to pull news for the active industry — anywhere from the last day up to the last 30 days.",
-    placement: "bottom",
-  },
-  {
-    id: "topbar-command-palette",
-    selector: '[data-tour="topbar-command-palette"]',
-    title: "Command palette",
-    description:
-      "Press ⌘K (or Ctrl+K) to open the command palette and jump straight to any company or industry without touching the mouse.",
     placement: "bottom",
   },
   {
