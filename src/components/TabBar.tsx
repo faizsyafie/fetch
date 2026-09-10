@@ -14,6 +14,9 @@ export interface TabBarItem {
 interface TabBarProps {
   /** For the guided tour to anchor a spotlight step to this instance. */
   dataTour?: string;
+  /** Rendered right-aligned, outside the scrollable pill row (e.g. the
+   *  Companies page's Clear/Collapse/Fetch! actions). */
+  actions?: React.ReactNode;
   /** Protected virtual views (e.g. All, Watchlist) — always first, never
    *  editable/reorderable/deletable. */
   pinnedItems: TabBarItem[];
@@ -77,6 +80,7 @@ function EmojiPicker({
 // continuity between the two pages.
 export function TabBar({
   dataTour,
+  actions,
   pinnedItems,
   items,
   trailingItem,
@@ -257,54 +261,58 @@ export function TabBar({
   return (
     <div
       data-tour={dataTour}
-      className="flex items-center gap-2 overflow-x-auto border-b border-brand-200 bg-white px-5 py-2.5 dark:border-brand-800/80 dark:bg-brand-900"
+      className="flex items-center justify-between gap-3 border-b border-brand-200 bg-white px-5 py-2.5 dark:border-brand-800/80 dark:bg-brand-900"
     >
-      {pinnedItems.map((item) => renderPill(item, false))}
-      {pinnedItems.length > 0 && (items.length > 0 || trailingItem) && (
-        <div className="h-5 shrink-0 border-l border-brand-200 dark:border-brand-700" />
-      )}
-      {items.map((item) => renderPill(item, true))}
-      {trailingItem && renderPill(trailingItem, false)}
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+        {pinnedItems.map((item) => renderPill(item, false))}
+        {pinnedItems.length > 0 && (items.length > 0 || trailingItem) && (
+          <div className="h-5 shrink-0 border-l border-brand-200 dark:border-brand-700" />
+        )}
+        {items.map((item) => renderPill(item, true))}
+        {trailingItem && renderPill(trailingItem, false)}
 
-      {adding ? (
-        <div className="flex shrink-0 items-center gap-1 rounded-full border border-brand-300 bg-white px-2 py-1 dark:border-brand-700 dark:bg-brand-900">
-          <input
-            autoFocus
-            value={addValue}
-            onChange={(e) => setAddValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") confirmAdd();
-              if (e.key === "Escape") {
-                setAdding(false);
-                setAddValue("");
-              }
-            }}
-            onBlur={() => {
-              if (!addValue.trim()) setAdding(false);
-            }}
-            placeholder={addPlaceholder}
-            className="w-28 bg-transparent text-xs text-brand-900 outline-none placeholder:text-brand-400 dark:text-white"
-          />
+        {adding ? (
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-brand-300 bg-white px-2 py-1 dark:border-brand-700 dark:bg-brand-900">
+            <input
+              autoFocus
+              value={addValue}
+              onChange={(e) => setAddValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") confirmAdd();
+                if (e.key === "Escape") {
+                  setAdding(false);
+                  setAddValue("");
+                }
+              }}
+              onBlur={() => {
+                if (!addValue.trim()) setAdding(false);
+              }}
+              placeholder={addPlaceholder}
+              className="w-28 bg-transparent text-xs text-brand-900 outline-none placeholder:text-brand-400 dark:text-white"
+            />
+            <button
+              type="button"
+              onClick={confirmAdd}
+              className="shrink-0 text-xs text-emerald-600 dark:text-emerald-400"
+              aria-label="Confirm add"
+            >
+              ✓
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={confirmAdd}
-            className="shrink-0 text-xs text-emerald-600 dark:text-emerald-400"
-            aria-label="Confirm add"
+            onClick={() => setAdding(true)}
+            aria-label="Add"
+            title="Add"
+            className="flex shrink-0 items-center justify-center rounded-full border border-dashed border-brand-300 px-3 py-1.5 text-[13px] font-medium text-brand-500 transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-800"
           >
-            ✓
+            +
           </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setAdding(true)}
-          aria-label="Add"
-          title="Add"
-          className="flex shrink-0 items-center justify-center rounded-full border border-dashed border-brand-300 px-3 py-1.5 text-[13px] font-medium text-brand-500 transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-800"
-        >
-          +
-        </button>
-      )}
+        )}
+      </div>
+
+      {actions}
     </div>
   );
 }

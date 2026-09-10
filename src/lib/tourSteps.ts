@@ -73,9 +73,9 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "topbar-fetch",
     selector: '[data-tour="topbar-fetch"]',
-    title: "Fetch news",
+    title: "🦴 Fetch!",
     description:
-      "Select companies with the checkboxes then Fetch News, or use Fetch all to pull the whole industry in one go. Collapse all closes every expanded card at once.",
+      "Tick a few companies with the checkboxes and Fetch! grabs news for just those — leave nothing selected and it fetches the whole industry instead. Collapse closes every expanded card at once.",
     placement: "bottom",
   },
   {

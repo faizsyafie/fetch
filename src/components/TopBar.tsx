@@ -21,22 +21,14 @@ interface TopBarProps {
   companiesInIndustry: Company[];
   searchQuery: string;
   days: TimeFrameDays;
-  selectedCount: number;
-  batchRunning: boolean;
-  loadingCount: number;
   editMode: boolean;
   accent: AccentColor;
   onSearch: (value: string) => void;
   onSetDays: (days: TimeFrameDays) => void;
-  onSelectAll: () => void;
-  onClearSelection: () => void;
-  onFetchSelected: () => void;
-  onFetchAll: () => void;
   onAddCompany: (name: string) => void;
   onRemoveCompany: (id: string) => void;
   onOpenTutorial: () => void;
   onOpenSettings: () => void;
-  onCollapseAll: () => void;
   // News mode: the same time-range/refresh concept, bound to its own state
   // rather than the Companies preferences, since the two fetches are
   // independent.
@@ -55,22 +47,14 @@ export function TopBar({
   companiesInIndustry,
   searchQuery,
   days,
-  selectedCount,
-  batchRunning,
-  loadingCount,
   editMode,
   accent,
   onSearch,
   onSetDays,
-  onSelectAll,
-  onClearSelection,
-  onFetchSelected,
-  onFetchAll,
   onAddCompany,
   onRemoveCompany,
   onOpenTutorial,
   onOpenSettings,
-  onCollapseAll,
   newsDays,
   onSetNewsDays,
   newsLoading,
@@ -179,56 +163,6 @@ export function TopBar({
           >
             {newsLoading ? "Refreshing…" : "↻ Refresh"}
           </button>
-        </div>
-      )}
-
-      {isCompanies && (
-        <div data-tour="topbar-fetch" className="mt-2 flex flex-wrap items-center gap-1">
-          <div className="flex items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50">
-            <button
-              type="button"
-              onClick={onSelectAll}
-              className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-            >
-              Select all
-            </button>
-            <button
-              type="button"
-              onClick={onClearSelection}
-              className="rounded-md px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-            >
-              Clear
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={onCollapseAll}
-            className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
-          >
-            Collapse all
-          </button>
-          {!isSearching && (
-            <button
-              type="button"
-              onClick={onFetchAll}
-              disabled={batchRunning || companiesInIndustry.length === 0}
-              className="rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-400 dark:hover:bg-brand-800"
-            >
-              Fetch all
-            </button>
-          )}
-          {selectedCount > 0 && (
-            <button
-              type="button"
-              onClick={onFetchSelected}
-              disabled={batchRunning}
-              className={`rounded-md ${accentPreset.solid} px-3 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solidHover} disabled:cursor-not-allowed disabled:bg-brand-400`}
-            >
-              {batchRunning
-                ? `Fetching… (${loadingCount} active)`
-                : `🔍 Fetch News (${selectedCount})`}
-            </button>
-          )}
         </div>
       )}
 

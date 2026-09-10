@@ -11,6 +11,7 @@ import {
 } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
+import { CompanyActions } from "@/components/CompanyActions";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
 import { DogWatermark } from "@/components/DogWatermark";
@@ -566,14 +567,6 @@ function DashboardForProfile({
     });
   }, []);
 
-  const selectAll = useCallback(() => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      visibleCompanies.forEach((c) => next.add(c.id));
-      return next;
-    });
-  }, [visibleCompanies]);
-
   const clearSelection = useCallback(() => setSelected(new Set()), []);
   const collapseAll = useCallback(() => setExpanded(new Set()), []);
 
@@ -598,14 +591,15 @@ function DashboardForProfile({
     [batchRunning, loadingSet, fetchCompanyNews]
   );
 
-  const fetchSelected = useCallback(() => {
-    const toFetch = preferences.companies.filter((c) => selected.has(c.id));
+  // "Fetch!" is a single smart action: fetch just the checkbox selection
+  // when one exists, otherwise the whole active industry.
+  const fetchSmart = useCallback(() => {
+    const toFetch =
+      selected.size > 0
+        ? preferences.companies.filter((c) => selected.has(c.id))
+        : companiesInIndustry;
     void runBatchFetch(toFetch);
-  }, [selected, preferences.companies, runBatchFetch]);
-
-  const fetchAllInIndustry = useCallback(() => {
-    void runBatchFetch(companiesInIndustry);
-  }, [companiesInIndustry, runBatchFetch]);
+  }, [selected, preferences.companies, companiesInIndustry, runBatchFetch]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
@@ -757,22 +751,14 @@ function DashboardForProfile({
           companiesInIndustry={companiesInIndustry}
           searchQuery={searchQuery}
           days={preferences.days}
-          selectedCount={selected.size}
-          batchRunning={batchRunning}
-          loadingCount={loadingSet.size}
           editMode={editMode}
           accent={uiSettings.accent}
           onSearch={handleSearch}
           onSetDays={setDays}
-          onSelectAll={selectAll}
-          onClearSelection={clearSelection}
-          onFetchSelected={fetchSelected}
-          onFetchAll={fetchAllInIndustry}
           onAddCompany={handleAddCompanyTag}
           onRemoveCompany={removeCompany}
           onOpenTutorial={openTutorial}
           onOpenSettings={() => setCustomizeOpen(true)}
-          onCollapseAll={collapseAll}
           newsDays={newsDays}
           onSetNewsDays={setNewsDays}
           newsLoading={newsLoading}
@@ -794,6 +780,19 @@ function DashboardForProfile({
             onRemove={removeIndustry}
             onReorder={reorderIndustries}
             onSetEmoji={setIndustryEmoji}
+            actions={
+              <CompanyActions
+                dataTour="topbar-fetch"
+                selectedCount={selected.size}
+                totalCount={companiesInIndustry.length}
+                batchRunning={batchRunning}
+                loadingCount={loadingSet.size}
+                accent={uiSettings.accent}
+                onClear={clearSelection}
+                onCollapse={collapseAll}
+                onFetch={fetchSmart}
+              />
+            }
           />
         )}
 
