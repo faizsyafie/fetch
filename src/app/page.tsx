@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  ViewTransition,
+} from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
@@ -131,7 +139,17 @@ function DashboardForProfile({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [mode, setMode] = useState<"companies" | "news">("companies");
+  const [mode, setModeState] = useState<"companies" | "news">("companies");
+  // Wrapped in startTransition so the ViewTransition around the board content
+  // (keyed on `mode`) actually activates — plain setState doesn't trigger it.
+  const setMode = useCallback(
+    (next: "companies" | "news" | ((prev: "companies" | "news") => "companies" | "news")) => {
+      startTransition(() => {
+        setModeState(next);
+      });
+    },
+    []
+  );
   const [newsDays, setNewsDaysState] = useState<TimeFrameDays>(7);
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsArticlesByTopic, setNewsArticlesByTopic] =
@@ -145,7 +163,7 @@ function DashboardForProfile({
     setSearchQuery("");
     setSelected(new Set());
     setFocusedIndex(null);
-  }, []);
+  }, [setMode]);
 
   const fetchNewsBoard = useCallback(async (days: TimeFrameDays) => {
     setNewsLoading(true);
@@ -356,7 +374,7 @@ function DashboardForProfile({
           ?.scrollIntoView({ block: "center" });
       });
     },
-    [setActiveIndustry, newsCache, loadingSet, fetchCompanyNews, markSeen]
+    [setMode, setActiveIndustry, newsCache, loadingSet, fetchCompanyNews, markSeen]
   );
 
   const refreshCompany = useCallback(
@@ -438,7 +456,7 @@ function DashboardForProfile({
       setSelected(new Set());
       setFocusedIndex(null);
     },
-    [setActiveIndustry]
+    [setMode, setActiveIndustry]
   );
 
   const handleAddCompanyTag = useCallback(
@@ -644,6 +662,7 @@ function DashboardForProfile({
           newsStatusLabel={newsStatusLabel}
         />
 
+        <ViewTransition key={mode} enter="board-fade" exit="board-fade" default="none">
         {mode === "news" ? (
           <NewsBoard
             articlesByTopic={visibleNewsArticlesByTopic}
@@ -699,6 +718,7 @@ function DashboardForProfile({
             />
           </>
         )}
+        </ViewTransition>
         </div>
       </div>
 
