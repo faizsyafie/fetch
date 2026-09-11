@@ -26,6 +26,7 @@ interface TopBarProps {
   profileName: string;
   onLogOut: () => void;
   onOpenFeedback: () => void;
+  onOpenAbout: () => void;
   activeIndustry: Industry;
   industries: Industry[];
   companiesInIndustry: Company[];
@@ -63,6 +64,7 @@ export function TopBar({
   profileName,
   onLogOut,
   onOpenFeedback,
+  onOpenAbout,
   activeIndustry,
   industries,
   companiesInIndustry,
@@ -242,6 +244,7 @@ export function TopBar({
               name={profileName}
               onLogOut={onLogOut}
               onOpenFeedback={onOpenFeedback}
+              onOpenAbout={onOpenAbout}
             />
           </div>
         </div>

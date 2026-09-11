@@ -6,9 +6,10 @@ interface UserMenuProps {
   name: string;
   onLogOut: () => void;
   onOpenFeedback: () => void;
+  onOpenAbout: () => void;
 }
 
-export function UserMenu({ name, onLogOut, onOpenFeedback }: UserMenuProps) {
+export function UserMenu({ name, onLogOut, onOpenFeedback, onOpenAbout }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -48,12 +49,16 @@ export function UserMenu({ name, onLogOut, onOpenFeedback }: UserMenuProps) {
               Shared profile
             </p>
           </div>
-          <a
-            href="/about"
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onOpenAbout();
+            }}
             className="block w-full px-3 py-2 text-left text-xs font-medium text-brand-600 transition-colors hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-800"
           >
             ℹ️ About
-          </a>
+          </button>
           <button
             type="button"
             onClick={() => {

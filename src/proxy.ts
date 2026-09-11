@@ -5,7 +5,7 @@ import { ACCESS_COOKIE_NAME, hashAccessCode } from "@/lib/auth";
 // passphrase (APP_ACCESS_CODE). This is not per-user auth — it's a single
 // site-wide lock to keep the public internet out, since every profile's
 // company watchlist is otherwise readable/writable by anyone who knows or
-// guesses the profile name. /about and /access itself stay public.
+// guesses the profile name. /access itself stays public.
 export async function proxy(request: NextRequest) {
   const code = process.env.APP_ACCESS_CODE;
 
@@ -42,6 +42,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico|about|access|api/access|.*\\.(?:png|jpg|jpeg|svg|ico|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|access|api/access|.*\\.(?:png|jpg|jpeg|svg|ico|webp)$).*)",
   ],
 };

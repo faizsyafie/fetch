@@ -7,6 +7,7 @@ import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
 import { EditThemesModal } from "@/components/EditThemesModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
+import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
 import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
@@ -153,6 +154,7 @@ function DashboardForProfile({
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   // Lands on General (news) right after picking a profile — there's no
   // separate welcome screen anymore.
   const [mode, setMode] = useState<AppMode>("news");
@@ -686,6 +688,7 @@ function DashboardForProfile({
         setCustomizeOpen(false);
         setSourcesOpen(false);
         setFeedbackOpen(false);
+        setAboutOpen(false);
         setThemesOpen(false);
         return;
       }
@@ -798,6 +801,7 @@ function DashboardForProfile({
           profileName={profileName}
           onLogOut={onLogOut}
           onOpenFeedback={() => setFeedbackOpen(true)}
+          onOpenAbout={() => setAboutOpen(true)}
           activeIndustry={preferences.activeIndustry}
           industries={preferences.industries}
           companiesInIndustry={companiesInIndustry}
@@ -939,6 +943,13 @@ function DashboardForProfile({
         <FeedbackModal
           accent={uiSettings.accent}
           onClose={() => setFeedbackOpen(false)}
+        />
+      )}
+
+      {aboutOpen && (
+        <AboutModal
+          accent={uiSettings.accent}
+          onClose={() => setAboutOpen(false)}
         />
       )}
 
