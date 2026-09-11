@@ -25,9 +25,6 @@ interface SidebarProps {
   onToggleSourcesPanel: () => void;
   onResizeWidth: (width: number) => void;
   onToggleCollapsed: () => void;
-  // Saved links
-  categoryEditMode: boolean;
-  onToggleCategoryEditMode: () => void;
   // General page
   themesOpen: boolean;
   onToggleThemesPanel: () => void;
@@ -77,8 +74,6 @@ export function Sidebar({
   onToggleSourcesPanel,
   onResizeWidth,
   onToggleCollapsed,
-  categoryEditMode,
-  onToggleCategoryEditMode,
   themesOpen,
   onToggleThemesPanel,
   companiesListExpanded,
@@ -130,16 +125,6 @@ export function Sidebar({
   const enabledSources = sources.filter((s) => s.enabled);
   const renderedWidth = collapsed ? COLLAPSED_SIDEBAR_WIDTH : width;
   const accentPreset = ACCENT_PRESETS[accent];
-
-  function goToSaved() {
-    onSelectMode("saved");
-    if (!savedListExpanded) onToggleSavedListExpanded();
-  }
-
-  function goToCompanies() {
-    onSelectMode("companies");
-    if (!companiesListExpanded) onToggleCompaniesListExpanded();
-  }
 
   function renderNavRow({
     isActive,
@@ -279,27 +264,33 @@ export function Sidebar({
           isActive: mode === "saved",
           label: "Buried Bones",
           emoji: "🔖",
-          onClick: goToSaved,
+          onClick: () => onSelectMode("saved"),
           expanded: savedListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleSavedListExpanded,
         })}
-        {!collapsed && savedListExpanded && (
-          <SidebarSubList
-            dataTour="category-sub-list"
-            pinnedItems={categoryPinnedItems}
-            items={categoryItems}
-            trailingItem={uncategorizedItem}
-            activeKey={activeLinkCategory}
-            accent={accent}
-            editMode={categoryEditMode}
-            addPlaceholder="New category…"
-            onSelect={onSelectLinkCategory}
-            onAdd={onAddLinkCategory}
-            onRename={onRenameLinkCategory}
-            onRemove={onRemoveLinkCategory}
-            onReorder={onReorderLinkCategories}
-            onSetColor={onSetLinkCategoryColor}
-          />
+        {!collapsed && (
+          <div
+            className="grid transition-[grid-template-rows] duration-200 ease-out"
+            style={{ gridTemplateRows: savedListExpanded ? "1fr" : "0fr" }}
+          >
+            <div className="overflow-hidden">
+              <SidebarSubList
+                dataTour="category-sub-list"
+                pinnedItems={categoryPinnedItems}
+                items={categoryItems}
+                trailingItem={uncategorizedItem}
+                activeKey={activeLinkCategory}
+                accent={accent}
+                addPlaceholder="New category…"
+                onSelect={onSelectLinkCategory}
+                onAdd={onAddLinkCategory}
+                onRename={onRenameLinkCategory}
+                onRemove={onRemoveLinkCategory}
+                onReorder={onReorderLinkCategories}
+                onSetColor={onSetLinkCategoryColor}
+              />
+            </div>
+          </div>
         )}
 
         <div className="my-1 border-t border-brand-100 dark:border-brand-800/60" />
@@ -315,26 +306,32 @@ export function Sidebar({
           isActive: mode === "companies",
           label: "Companies",
           emoji: "🏢",
-          onClick: goToCompanies,
+          onClick: () => onSelectMode("companies"),
           expanded: companiesListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleCompaniesListExpanded,
         })}
-        {!collapsed && companiesListExpanded && (
-          <SidebarSubList
-            dataTour="industry-sub-list"
-            pinnedItems={industryPinnedItems}
-            items={industryItems}
-            activeKey={activeIndustry}
-            accent={accent}
-            editMode={editMode}
-            addPlaceholder="New industry…"
-            onSelect={onSelectIndustry}
-            onAdd={onAddIndustry}
-            onRename={onRenameIndustry}
-            onRemove={onRemoveIndustry}
-            onReorder={onReorderIndustries}
-            onSetEmoji={onSetIndustryEmoji}
-          />
+        {!collapsed && (
+          <div
+            className="grid transition-[grid-template-rows] duration-200 ease-out"
+            style={{ gridTemplateRows: companiesListExpanded ? "1fr" : "0fr" }}
+          >
+            <div className="overflow-hidden">
+              <SidebarSubList
+                dataTour="industry-sub-list"
+                pinnedItems={industryPinnedItems}
+                items={industryItems}
+                activeKey={activeIndustry}
+                accent={accent}
+                addPlaceholder="New industry…"
+                onSelect={onSelectIndustry}
+                onAdd={onAddIndustry}
+                onRename={onRenameIndustry}
+                onRemove={onRemoveIndustry}
+                onReorder={onReorderIndustries}
+                onSetEmoji={onSetIndustryEmoji}
+              />
+            </div>
+          </div>
         )}
       </div>
 
@@ -475,47 +472,6 @@ export function Sidebar({
                 }`}
               >
                 ✏️ Edit Themes
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {mode === "saved" && (
-        <div
-          data-tour="sidebar-manage-categories"
-          className={`border-t border-brand-200 dark:border-brand-800/80 ${
-            collapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
-          }`}
-        >
-          {collapsed ? (
-            <button
-              type="button"
-              onClick={onToggleCategoryEditMode}
-              title="Edit Categories"
-              className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
-                categoryEditMode
-                  ? accentPreset.softBg
-                  : "hover:bg-brand-100 dark:hover:bg-brand-800"
-              }`}
-            >
-              ✏️
-            </button>
-          ) : (
-            <>
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
-                Manage
-              </p>
-              <button
-                type="button"
-                onClick={onToggleCategoryEditMode}
-                className={`w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
-                  categoryEditMode
-                    ? `${accentPreset.softBg} ${accentPreset.text}`
-                    : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
-                }`}
-              >
-                ✏️ Edit Categories
               </button>
             </>
           )}

@@ -10,14 +10,14 @@ interface SidebarSubListProps {
   /** Protected virtual views (e.g. All, Watchlist) — always first, never
    *  editable/reorderable/deletable. */
   pinnedItems: SidebarListItem[];
-  /** The user-managed list — reorderable, renamable, deletable in edit mode. */
+  /** The user-managed list — always reorderable/renamable/deletable, no
+   *  separate edit mode required (see renderRow's hover popover). */
   items: SidebarListItem[];
   /** A protected fallback view rendered last (e.g. Uncategorized) — selectable
    *  only, never editable. */
   trailingItem?: SidebarListItem;
   activeKey: string;
   accent: AccentColor;
-  editMode: boolean;
   addPlaceholder: string;
   onSelect: (key: string) => void;
   onAdd: (name: string) => void;
@@ -25,16 +25,17 @@ interface SidebarSubListProps {
   onRemove: (key: string) => void;
   onReorder: (ordered: string[]) => void;
   onSetEmoji?: (key: string, emoji: string) => void;
-  /** Mutually exclusive with onSetEmoji — swaps the edit-mode popover from
-   *  an emoji grid to a color-swatch grid (see SidebarListItem.swatchColor). */
+  /** Mutually exclusive with onSetEmoji — swaps the icon popover from an
+   *  emoji grid to a color-swatch grid (see SidebarListItem.swatchColor). */
   onSetColor?: (key: string, color: AccentColor) => void;
 }
 
 // The vertical, indented counterpart to the old horizontal TabBar pill row —
-// same pinned/reorderable/trailing/add structure and edit-mode affordances,
-// just rendered as a "subfolder" list under a sidebar nav item instead of a
-// row under the top bar. Shared by Companies (industries) and Buried Bones
-// (categories).
+// rendered as a "subfolder" list under a sidebar nav item instead of a row
+// under the top bar. Shared by Companies (industries) and Buried Bones
+// (categories). No separate edit-mode toggle: hovering a row always reveals
+// a small rename/delete popover, dragging always works, and clicking a
+// row's own emoji/swatch icon opens its picker — one less mode to track.
 export function SidebarSubList({
   dataTour,
   pinnedItems,
@@ -42,7 +43,6 @@ export function SidebarSubList({
   trailingItem,
   activeKey,
   accent,
-  editMode,
   addPlaceholder,
   onSelect,
   onAdd,
@@ -139,10 +139,10 @@ export function SidebarSubList({
     return (
       <div
         key={item.key}
-        draggable={editable && editMode}
+        draggable={editable}
         onDragStart={() => setDragKey(item.key)}
         onDragOver={(e) => {
-          if (!editable || !editMode) return;
+          if (!editable) return;
           e.preventDefault();
           setDragOverKey(item.key);
         }}
@@ -154,9 +154,7 @@ export function SidebarSubList({
           setDragKey(null);
           setDragOverKey(null);
         }}
-        className={`group relative flex items-center gap-1 ${
-          editable && editMode ? "cursor-grab active:cursor-grabbing" : ""
-        } ${
+        className={`group relative flex items-center ${editable ? "cursor-grab active:cursor-grabbing" : ""} ${
           editable && dragOverKey === item.key && dragKey !== item.key
             ? "rounded-md ring-2 ring-offset-1 ring-blue-500 dark:ring-offset-brand-900"
             : ""
@@ -164,18 +162,32 @@ export function SidebarSubList({
       >
         <button
           type="button"
-          onClick={(e) => {
-            if (editable && editMode && (onSetEmoji || onSetColor)) {
-              const rect = e.currentTarget.getBoundingClientRect();
-              setEmojiAnchor({ top: rect.top, left: rect.right + 6 });
-              setEmojiPickerFor((prev) => (prev === item.key ? null : item.key));
-            } else {
-              onSelect(item.key);
-            }
-          }}
+          onClick={() => onSelect(item.key)}
           className={baseClass}
         >
-          {item.swatchColor ? (
+          {onSetEmoji || onSetColor ? (
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label={`Change ${item.label}'s ${item.swatchColor ? "color" : "emoji"}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                const rect = e.currentTarget.getBoundingClientRect();
+                setEmojiAnchor({ top: rect.bottom + 4, left: rect.left });
+                setEmojiPickerFor((prev) => (prev === item.key ? null : item.key));
+              }}
+              className="shrink-0 rounded hover:ring-2 hover:ring-white/60"
+            >
+              {item.swatchColor ? (
+                <span
+                  aria-hidden="true"
+                  className={`inline-block h-2.5 w-2.5 rounded-full ${ACCENT_PRESETS[item.swatchColor].swatch}`}
+                />
+              ) : (
+                item.emoji
+              )}
+            </span>
+          ) : item.swatchColor ? (
             <span
               aria-hidden="true"
               className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${ACCENT_PRESETS[item.swatchColor].swatch}`}
@@ -187,28 +199,36 @@ export function SidebarSubList({
           )}
           <span className="min-w-0 flex-1 truncate">{item.label}</span>
           <span
-            className={`shrink-0 tabular-nums ${isActive ? "text-white/80" : "text-brand-400 dark:text-brand-500"}`}
+            className={`shrink-0 tabular-nums transition-opacity ${
+              editable ? "group-hover:opacity-0" : ""
+            } ${isActive ? "text-white/80" : "text-brand-400 dark:text-brand-500"}`}
           >
             {item.count}
           </span>
         </button>
-        {editable && editMode && (
-          <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        {editable && (
+          <div className="pointer-events-none absolute right-1.5 flex shrink-0 items-center gap-1 opacity-0 transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
             <button
               type="button"
-              onClick={() => startRename(item)}
+              onClick={(e) => {
+                e.stopPropagation();
+                startRename(item);
+              }}
               aria-label={`Rename ${item.label}`}
               title="Rename"
-              className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] text-white shadow hover:bg-brand-600"
+              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✏
             </button>
             <button
               type="button"
-              onClick={() => onRemove(item.key)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(item.key);
+              }}
               aria-label={`Delete ${item.label}`}
               title="Delete"
-              className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] text-white shadow hover:bg-red-600"
+              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✕
             </button>

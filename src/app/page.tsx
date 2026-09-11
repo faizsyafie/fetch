@@ -144,7 +144,6 @@ function DashboardForProfile({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [editMode, setEditMode] = useState(false);
-  const [categoryEditMode, setCategoryEditMode] = useState(false);
   const [companiesListExpanded, setCompaniesListExpanded] = useState(false);
   const [savedListExpanded, setSavedListExpanded] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
@@ -197,24 +196,28 @@ function DashboardForProfile({
     [setMode]
   );
 
-  // Edit Lists / Edit Categories are page-scoped toggles — leaving a page
-  // (by any path: sidebar nav, selecting an industry/category, the
-  // tutorial, the command palette) should never leave its edit affordances
-  // switched on somewhere the user can't see them. Adjusted during render
-  // (React's documented pattern for resetting state when a value changes)
-  // rather than in an effect, so it takes effect in the same render as the
-  // mode change instead of introducing an extra one.
-  const [editModeResetForMode, setEditModeResetForMode] = useState(mode);
-  if (mode !== editModeResetForMode) {
-    setEditModeResetForMode(mode);
-    if (mode !== "companies") setEditMode(false);
-    if (mode !== "saved") setCategoryEditMode(false);
+  // Whenever the page changes (by any path: sidebar nav, selecting an
+  // industry/category, the tutorial, the command palette): Edit Lists is a
+  // Companies-only toggle, so it resets rather than staying silently on
+  // somewhere the user can't see it; and each page's own sidebar sub-list
+  // auto-expands on arrival and auto-collapses on departure, so only the
+  // current page's list is ever left open. Adjusted during render (React's
+  // documented pattern for resetting state when a value changes) rather
+  // than in an effect, so it takes effect in the same render as the mode
+  // change instead of introducing an extra one.
+  const [modeTrackedFor, setModeTrackedFor] = useState(mode);
+  if (mode !== modeTrackedFor) {
+    setModeTrackedFor(mode);
+    setEditMode(false);
+    setCompaniesListExpanded(mode === "companies");
+    setSavedListExpanded(mode === "saved");
   }
 
   // The tutorial walks through Companies-mode UI first, so always land there
   // before opening it — regardless of which mode (or screen) it was opened
-  // from — and expand its sidebar sub-list so the industries step has
-  // something to point at.
+  // from — and force its sidebar sub-list open (the mode-change effect above
+  // only fires when mode actually changes, so this also covers reopening
+  // the tutorial from within Companies itself after manually collapsing it).
   const openTutorial = useCallback(() => {
     setMode("companies");
     setCompaniesListExpanded(true);
@@ -780,8 +783,6 @@ function DashboardForProfile({
         onToggleSourcesPanel={() => setSourcesOpen((v) => !v)}
         onResizeWidth={setSidebarWidth}
         onToggleCollapsed={toggleSidebarCollapsed}
-        categoryEditMode={categoryEditMode}
-        onToggleCategoryEditMode={() => setCategoryEditMode((v) => !v)}
         themesOpen={themesOpen}
         onToggleThemesPanel={() => setThemesOpen((v) => !v)}
         companiesListExpanded={companiesListExpanded}
