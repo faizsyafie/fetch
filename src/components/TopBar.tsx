@@ -89,6 +89,16 @@ export function TopBar({
   onFetchCompanies,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
+  // Committed only on Enter (see the input below) — a local draft that only
+  // resets to match `searchQuery` when something ELSE clears it externally
+  // (switching pages, etc.), adjusted during render rather than in an
+  // effect per React's docs on syncing state to a changing prop.
+  const [draftQuery, setDraftQuery] = useState(searchQuery);
+  const [draftSyncedFor, setDraftSyncedFor] = useState(searchQuery);
+  if (searchQuery !== draftSyncedFor) {
+    setDraftSyncedFor(searchQuery);
+    setDraftQuery(searchQuery);
+  }
   const isNews = mode === "news";
   const isCompanies = mode === "companies";
   const isSaved = mode === "saved";
@@ -180,14 +190,17 @@ export function TopBar({
             </span>
             <input
               id="company-search-input"
-              value={searchQuery}
-              onChange={(e) => onSearch(e.target.value)}
+              value={draftQuery}
+              onChange={(e) => setDraftQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSearch(draftQuery);
+              }}
               placeholder={
                 isNews
-                  ? "Search articles…"
+                  ? "Search articles… (Enter)"
                   : isSaved
-                    ? "Search saved links…"
-                    : "Search companies…"
+                    ? "Search saved links… (Enter)"
+                    : "Search companies… (Enter)"
               }
               className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
             />
