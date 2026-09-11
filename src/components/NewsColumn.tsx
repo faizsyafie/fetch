@@ -2,7 +2,7 @@
 
 import { ArticleCard } from "@/components/ArticleCard";
 import type { NewsTopic } from "@/lib/newsTopics";
-import type { TopicArticle } from "@/lib/types";
+import type { AccentColor, TopicArticle } from "@/lib/types";
 
 interface NewsColumnProps {
   topic: NewsTopic;
@@ -17,6 +17,8 @@ interface NewsColumnProps {
   onDragEnd: () => void;
   isLinkSaved: (url: string) => boolean;
   onSaveArticle: (article: TopicArticle) => void;
+  searchQuery: string;
+  accent: AccentColor;
 }
 
 function SkeletonCard() {
@@ -38,9 +40,12 @@ export function NewsColumn({
   onDragEnd,
   isLinkSaved,
   onSaveArticle,
+  searchQuery,
+  accent,
 }: NewsColumnProps) {
   const showSkeletons = loading && articles.length === 0;
   const showEmpty = !loading && articles.length === 0;
+  const isSearching = searchQuery.trim().length > 0;
 
   return (
     <div
@@ -85,7 +90,7 @@ export function NewsColumn({
         )}
         {showEmpty && errors.length === 0 && (
           <p className="mt-6 text-center text-xs text-brand-400 dark:text-brand-500">
-            No recent articles.
+            {isSearching ? "No articles match your search." : "No recent articles."}
           </p>
         )}
 
@@ -95,6 +100,8 @@ export function NewsColumn({
             article={article}
             isSaved={isLinkSaved(article.link)}
             onSave={() => onSaveArticle(article)}
+            searchQuery={searchQuery}
+            accent={accent}
           />
         ))}
       </div>

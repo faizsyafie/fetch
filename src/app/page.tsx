@@ -856,6 +856,7 @@ function DashboardForProfile({
             isLinkSaved={isLinkSaved}
             onSaveArticle={handleArticleBookmarkClick}
             accent={uiSettings.accent}
+            searchQuery={searchQuery}
             showCategoryPromo={preferences.linkCategories.length === 0}
             onCreateCategory={() => selectMode("saved")}
             showCompanyPromo={preferences.companies.length === 0}

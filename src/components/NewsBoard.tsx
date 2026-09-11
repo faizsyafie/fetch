@@ -15,6 +15,7 @@ interface NewsBoardProps {
   isLinkSaved: (url: string) => boolean;
   onSaveArticle: (article: TopicArticle) => void;
   accent: AccentColor;
+  searchQuery: string;
   showCategoryPromo: boolean;
   onCreateCategory: () => void;
   showCompanyPromo: boolean;
@@ -34,6 +35,7 @@ export function NewsBoard({
   isLinkSaved,
   onSaveArticle,
   accent,
+  searchQuery,
   showCategoryPromo,
   onCreateCategory,
   showCompanyPromo,
@@ -128,6 +130,8 @@ export function NewsBoard({
             }}
             isLinkSaved={isLinkSaved}
             onSaveArticle={onSaveArticle}
+            searchQuery={searchQuery}
+            accent={accent}
           />
         ))}
       </div>
