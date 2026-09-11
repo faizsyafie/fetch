@@ -191,16 +191,24 @@ export function TopBar({
             <input
               id="company-search-input"
               value={draftQuery}
-              onChange={(e) => setDraftQuery(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDraftQuery(next);
+                // Companies search just filters an in-memory list (no
+                // highlight spans, no per-keystroke RSS work), so it's safe
+                // — and nicer — to search live here. News stays Enter-gated;
+                // see the commit that introduced draftQuery for why.
+                if (isCompanies) onSearch(next);
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") onSearch(draftQuery);
+                if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
               }}
               placeholder={
                 isNews
                   ? "Search articles… (Enter)"
                   : isSaved
                     ? "Search saved links… (Enter)"
-                    : "Search companies… (Enter)"
+                    : "Search companies…"
               }
               className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
             />
