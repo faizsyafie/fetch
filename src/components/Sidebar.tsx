@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import { ACCENT_PRESETS, COLLAPSED_SIDEBAR_WIDTH } from "@/lib/defaults";
-import type { AccentColor, NewsSource, TimeFrameDays } from "@/lib/types";
+import type { AccentColor, NewsSource, SidebarListItem, TimeFrameDays } from "@/lib/types";
 import { Logo } from "@/components/Logo";
+import { SidebarSubList } from "@/components/SidebarSubList";
 import type { Theme } from "@/hooks/useTheme";
 
 export type AppMode = "companies" | "news" | "saved";
@@ -30,78 +31,34 @@ interface SidebarProps {
   // General page
   themesOpen: boolean;
   onToggleThemesPanel: () => void;
-}
 
-const NAV_ITEMS: { key: AppMode; label: string; emoji: string }[] = [
-  { key: "news", label: "General", emoji: "📰" },
-  { key: "companies", label: "Companies", emoji: "🏢" },
-];
+  // Companies sub-list ("subfolder" under the Companies nav item) — same
+  // pinned/reorderable/add shape the old horizontal TabBar used.
+  companiesListExpanded: boolean;
+  onToggleCompaniesListExpanded: () => void;
+  activeIndustry: string;
+  industryPinnedItems: SidebarListItem[];
+  industryItems: SidebarListItem[];
+  onSelectIndustry: (key: string) => void;
+  onAddIndustry: (name: string) => void;
+  onRenameIndustry: (oldKey: string, newKey: string) => void;
+  onRemoveIndustry: (key: string) => void;
+  onReorderIndustries: (ordered: string[]) => void;
+  onSetIndustryEmoji: (key: string, emoji: string) => void;
 
-// The primary nav — General / Companies / Buried Bones — replaces the old
-// two-way toggle pill. It's rendered identically regardless of which mode
-// is active, so switching pages never rearranges this list. Industry and
-// saved-link category browsing both live in the TabBar under the top bar
-// now, not here — this sidebar is strictly navigation + management.
-function NavList({
-  mode,
-  accent,
-  collapsed,
-  onSelectMode,
-}: {
-  mode: AppMode;
-  accent: AccentColor;
-  collapsed: boolean;
-  onSelectMode: (mode: AppMode) => void;
-}) {
-  const accentPreset = ACCENT_PRESETS[accent];
-
-  function renderItem(key: AppMode, label: string, emoji: string) {
-    const isActive = mode === key;
-    if (collapsed) {
-      return (
-        <button
-          key={key}
-          type="button"
-          onClick={() => onSelectMode(key)}
-          title={label}
-          className={`mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
-            isActive
-              ? `${accentPreset.border} bg-brand-100 dark:bg-brand-800/70`
-              : "border-transparent hover:bg-brand-50 dark:hover:bg-brand-800/40"
-          }`}
-        >
-          {emoji}
-        </button>
-      );
-    }
-    return (
-      <button
-        key={key}
-        type="button"
-        data-tour={key === "news" ? "mode-toggle" : undefined}
-        onClick={() => onSelectMode(key)}
-        className={`flex w-full items-center gap-2 whitespace-nowrap border-l-2 py-2 pl-3 pr-3 text-left text-[13px] font-semibold transition-colors ${
-          isActive
-            ? `${accentPreset.border} bg-brand-100 text-brand-900 dark:bg-brand-800/70 dark:text-white`
-            : "border-transparent text-brand-500 hover:bg-brand-50 hover:text-brand-700 dark:text-brand-400 dark:hover:bg-brand-800/40 dark:hover:text-brand-200"
-        }`}
-      >
-        <span className="shrink-0">{emoji}</span>
-        <span className="flex-1 truncate">{label}</span>
-      </button>
-    );
-  }
-
-  return (
-    <div
-      data-tour="nav-list"
-      className="border-b border-brand-200 py-1 dark:border-brand-800/80"
-    >
-      {NAV_ITEMS.map((item) => renderItem(item.key, item.label, item.emoji))}
-      <div className="my-1 border-t border-brand-100 dark:border-brand-800/60" />
-      {renderItem("saved", "Buried Bones", "🔖")}
-    </div>
-  );
+  // Buried Bones sub-list, same idea, categories instead of industries.
+  savedListExpanded: boolean;
+  onToggleSavedListExpanded: () => void;
+  activeLinkCategory: string;
+  categoryPinnedItems: SidebarListItem[];
+  categoryItems: SidebarListItem[];
+  uncategorizedItem: SidebarListItem;
+  onSelectLinkCategory: (key: string) => void;
+  onAddLinkCategory: (name: string) => void;
+  onRenameLinkCategory: (oldKey: string, newKey: string) => void;
+  onRemoveLinkCategory: (key: string) => void;
+  onReorderLinkCategories: (ordered: string[]) => void;
+  onSetLinkCategoryColor: (key: string, color: AccentColor) => void;
 }
 
 export function Sidebar({
@@ -124,6 +81,29 @@ export function Sidebar({
   onToggleCategoryEditMode,
   themesOpen,
   onToggleThemesPanel,
+  companiesListExpanded,
+  onToggleCompaniesListExpanded,
+  activeIndustry,
+  industryPinnedItems,
+  industryItems,
+  onSelectIndustry,
+  onAddIndustry,
+  onRenameIndustry,
+  onRemoveIndustry,
+  onReorderIndustries,
+  onSetIndustryEmoji,
+  savedListExpanded,
+  onToggleSavedListExpanded,
+  activeLinkCategory,
+  categoryPinnedItems,
+  categoryItems,
+  uncategorizedItem,
+  onSelectLinkCategory,
+  onAddLinkCategory,
+  onRenameLinkCategory,
+  onRemoveLinkCategory,
+  onReorderLinkCategories,
+  onSetLinkCategoryColor,
 }: SidebarProps) {
   const [sourcesListExpanded, setSourcesListExpanded] = useState(false);
   const resizeState = useRef<{ startX: number; startWidth: number } | null>(
@@ -150,6 +130,93 @@ export function Sidebar({
   const enabledSources = sources.filter((s) => s.enabled);
   const renderedWidth = collapsed ? COLLAPSED_SIDEBAR_WIDTH : width;
   const accentPreset = ACCENT_PRESETS[accent];
+
+  function goToSaved() {
+    onSelectMode("saved");
+    if (!savedListExpanded) onToggleSavedListExpanded();
+  }
+
+  function goToCompanies() {
+    onSelectMode("companies");
+    if (!companiesListExpanded) onToggleCompaniesListExpanded();
+  }
+
+  function renderNavRow({
+    isActive,
+    label,
+    emoji,
+    dataTour,
+    onClick,
+    expanded,
+    onToggleExpanded,
+  }: {
+    isActive: boolean;
+    label: string;
+    emoji: string;
+    dataTour?: string;
+    onClick: () => void;
+    expanded?: boolean;
+    onToggleExpanded?: () => void;
+  }) {
+    if (collapsed) {
+      return (
+        <button
+          type="button"
+          onClick={onClick}
+          title={label}
+          className={`mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
+            isActive
+              ? `${accentPreset.border} bg-brand-100 dark:bg-brand-800/70`
+              : "border-transparent hover:bg-brand-50 dark:hover:bg-brand-800/40"
+          }`}
+        >
+          {emoji}
+        </button>
+      );
+    }
+    return (
+      <div
+        className={`flex w-full items-center border-l-2 pr-1 transition-colors ${
+          isActive
+            ? `${accentPreset.border} bg-brand-100 dark:bg-brand-800/70`
+            : "border-transparent hover:bg-brand-50 dark:hover:bg-brand-800/40"
+        }`}
+      >
+        <button
+          type="button"
+          data-tour={dataTour}
+          onClick={onClick}
+          className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap py-2 pl-3 pr-1 text-left text-[13px] font-semibold transition-colors ${
+            isActive
+              ? "text-brand-900 dark:text-white"
+              : "text-brand-500 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-200"
+          }`}
+        >
+          <span className="shrink-0">{emoji}</span>
+          <span className="flex-1 truncate">{label}</span>
+        </button>
+        {onToggleExpanded && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpanded();
+            }}
+            aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
+            aria-expanded={expanded}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
+          >
+            <span
+              aria-hidden="true"
+              className={`inline-block transition-transform ${expanded ? "rotate-0" : "-rotate-90"}`}
+            >
+              ▾
+            </span>
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <aside
@@ -204,12 +271,72 @@ export function Sidebar({
         </button>
       )}
 
-      <NavList
-        mode={mode}
-        accent={accent}
-        collapsed={collapsed}
-        onSelectMode={onSelectMode}
-      />
+      <div
+        data-tour="nav-list"
+        className="overflow-y-auto border-b border-brand-200 py-1 dark:border-brand-800/80"
+      >
+        {renderNavRow({
+          isActive: mode === "saved",
+          label: "Buried Bones",
+          emoji: "🔖",
+          onClick: goToSaved,
+          expanded: savedListExpanded,
+          onToggleExpanded: collapsed ? undefined : onToggleSavedListExpanded,
+        })}
+        {!collapsed && savedListExpanded && (
+          <SidebarSubList
+            dataTour="category-sub-list"
+            pinnedItems={categoryPinnedItems}
+            items={categoryItems}
+            trailingItem={uncategorizedItem}
+            activeKey={activeLinkCategory}
+            accent={accent}
+            editMode={categoryEditMode}
+            addPlaceholder="New category…"
+            onSelect={onSelectLinkCategory}
+            onAdd={onAddLinkCategory}
+            onRename={onRenameLinkCategory}
+            onRemove={onRemoveLinkCategory}
+            onReorder={onReorderLinkCategories}
+            onSetColor={onSetLinkCategoryColor}
+          />
+        )}
+
+        <div className="my-1 border-t border-brand-100 dark:border-brand-800/60" />
+
+        {renderNavRow({
+          isActive: mode === "news",
+          label: "General",
+          emoji: "📰",
+          dataTour: "mode-toggle",
+          onClick: () => onSelectMode("news"),
+        })}
+        {renderNavRow({
+          isActive: mode === "companies",
+          label: "Companies",
+          emoji: "🏢",
+          onClick: goToCompanies,
+          expanded: companiesListExpanded,
+          onToggleExpanded: collapsed ? undefined : onToggleCompaniesListExpanded,
+        })}
+        {!collapsed && companiesListExpanded && (
+          <SidebarSubList
+            dataTour="industry-sub-list"
+            pinnedItems={industryPinnedItems}
+            items={industryItems}
+            activeKey={activeIndustry}
+            accent={accent}
+            editMode={editMode}
+            addPlaceholder="New industry…"
+            onSelect={onSelectIndustry}
+            onAdd={onAddIndustry}
+            onRename={onRenameIndustry}
+            onRemove={onRemoveIndustry}
+            onReorder={onReorderIndustries}
+            onSetEmoji={onSetIndustryEmoji}
+          />
+        )}
+      </div>
 
       <div className="flex-1" />
 

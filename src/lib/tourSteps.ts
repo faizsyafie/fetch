@@ -15,12 +15,12 @@ export const TOUR_STEPS: TourStep[] = [
       "A quick tour of everything you can do here — industries, news fetching, customization, and shortcuts. Use Next/Back (or the arrow keys) to move around, and Esc any time to skip.",
   },
   {
-    id: "industry-tab-bar",
-    selector: '[data-tour="industry-tab-bar"]',
+    id: "industry-sub-list",
+    selector: '[data-tour="industry-sub-list"]',
     title: "Industries & watchlist",
     description:
-      "Companies are grouped into industries here, right below the top bar. 🌐 All shows everything across every industry, and ⭐ Watchlist shows just the companies you've starred. Click a tab to switch; turn on Edit Lists (in the sidebar) to rename, delete or drag tabs to reorder them, or use the + at the end to add a new one.",
-    placement: "bottom",
+      "Companies are grouped into industries here, tucked under Companies in the sidebar. 🌐 All shows everything across every industry, and ⭐ Watchlist shows just the companies you've starred. Click one to switch; turn on Edit Lists below to rename, delete or drag rows to reorder them, or use the + at the bottom to add a new one.",
+    placement: "right",
   },
   {
     id: "sidebar-header",

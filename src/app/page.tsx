@@ -11,7 +11,6 @@ import {
 } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
-import { CompanyActions } from "@/components/CompanyActions";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
 import { CustomizePanel } from "@/components/CustomizePanel";
 import { EditThemesModal } from "@/components/EditThemesModal";
@@ -25,7 +24,6 @@ import { Sidebar, type AppMode } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesModal } from "@/components/SourcesModal";
 import { SpotlightTour } from "@/components/SpotlightTour";
-import { TabBar } from "@/components/TabBar";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -147,6 +145,8 @@ function DashboardForProfile({
   const [searchQuery, setSearchQuery] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [categoryEditMode, setCategoryEditMode] = useState(false);
+  const [companiesListExpanded, setCompaniesListExpanded] = useState(false);
+  const [savedListExpanded, setSavedListExpanded] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -199,9 +199,11 @@ function DashboardForProfile({
 
   // The tutorial walks through Companies-mode UI first, so always land there
   // before opening it — regardless of which mode (or screen) it was opened
-  // from.
+  // from — and expand its sidebar sub-list so the industries step has
+  // something to point at.
   const openTutorial = useCallback(() => {
     setMode("companies");
+    setCompaniesListExpanded(true);
     setTutorialOpen(true);
   }, [setMode]);
 
@@ -633,6 +635,19 @@ function DashboardForProfile({
     [setMode, setActiveIndustry]
   );
 
+  // The category sub-list lives in the sidebar now, reachable regardless of
+  // which page is currently active — so selecting a category, like selecting
+  // an industry above, needs to switch the page itself rather than assuming
+  // Buried Bones is already showing.
+  const handleSelectLinkCategory = useCallback(
+    (category: string) => {
+      setMode("saved");
+      setActiveLinkCategory(category);
+      setSearchQuery("");
+    },
+    [setMode, setActiveLinkCategory]
+  );
+
   const handleAddCompanyTag = useCallback(
     (name: string) => addCompany(name, preferences.activeIndustry),
     [addCompany, preferences.activeIndustry]
@@ -755,6 +770,29 @@ function DashboardForProfile({
         onToggleCategoryEditMode={() => setCategoryEditMode((v) => !v)}
         themesOpen={themesOpen}
         onToggleThemesPanel={() => setThemesOpen((v) => !v)}
+        companiesListExpanded={companiesListExpanded}
+        onToggleCompaniesListExpanded={() => setCompaniesListExpanded((v) => !v)}
+        activeIndustry={preferences.activeIndustry}
+        industryPinnedItems={industryTabPinnedItems}
+        industryItems={industryTabItems}
+        onSelectIndustry={handleSelectIndustry}
+        onAddIndustry={addIndustry}
+        onRenameIndustry={renameIndustry}
+        onRemoveIndustry={removeIndustry}
+        onReorderIndustries={reorderIndustries}
+        onSetIndustryEmoji={setIndustryEmoji}
+        savedListExpanded={savedListExpanded}
+        onToggleSavedListExpanded={() => setSavedListExpanded((v) => !v)}
+        activeLinkCategory={preferences.activeLinkCategory}
+        categoryPinnedItems={categoryTabPinnedItems}
+        categoryItems={categoryTabItems}
+        uncategorizedItem={uncategorizedTabItem}
+        onSelectLinkCategory={handleSelectLinkCategory}
+        onAddLinkCategory={addLinkCategory}
+        onRenameLinkCategory={renameLinkCategory}
+        onRemoveLinkCategory={removeLinkCategory}
+        onReorderLinkCategories={reorderLinkCategories}
+        onSetLinkCategoryColor={setLinkCategoryColor}
       />
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
@@ -783,57 +821,14 @@ function DashboardForProfile({
           onSetNewsDays={setNewsDays}
           newsLoading={newsLoading}
           onRefreshNews={() => void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder)}
+          selectedCount={selected.size}
+          totalCount={companiesInIndustry.length}
+          batchRunning={batchRunning}
+          loadingCount={loadingSet.size}
+          onClearSelection={clearSelection}
+          onCollapseAll={collapseAll}
+          onFetchCompanies={fetchSmart}
         />
-
-        {mode === "companies" && (
-          <TabBar
-            dataTour="industry-tab-bar"
-            pinnedItems={industryTabPinnedItems}
-            items={industryTabItems}
-            activeKey={preferences.activeIndustry}
-            accent={uiSettings.accent}
-            editMode={editMode}
-            addPlaceholder="New industry…"
-            onSelect={handleSelectIndustry}
-            onAdd={addIndustry}
-            onRename={renameIndustry}
-            onRemove={removeIndustry}
-            onReorder={reorderIndustries}
-            onSetEmoji={setIndustryEmoji}
-            actions={
-              <CompanyActions
-                dataTour="topbar-fetch"
-                selectedCount={selected.size}
-                totalCount={companiesInIndustry.length}
-                batchRunning={batchRunning}
-                loadingCount={loadingSet.size}
-                accent={uiSettings.accent}
-                onClear={clearSelection}
-                onCollapse={collapseAll}
-                onFetch={fetchSmart}
-              />
-            }
-          />
-        )}
-
-        {mode === "saved" && (
-          <TabBar
-            dataTour="category-tab-bar"
-            pinnedItems={categoryTabPinnedItems}
-            items={categoryTabItems}
-            trailingItem={uncategorizedTabItem}
-            activeKey={preferences.activeLinkCategory}
-            accent={uiSettings.accent}
-            editMode={categoryEditMode}
-            addPlaceholder="New category…"
-            onSelect={setActiveLinkCategory}
-            onAdd={addLinkCategory}
-            onRename={renameLinkCategory}
-            onRemove={removeLinkCategory}
-            onReorder={reorderLinkCategories}
-            onSetColor={setLinkCategoryColor}
-          />
-        )}
 
         <ViewTransition key={mode} enter="board-fade" exit="board-fade" default="none">
         {mode === "news" ? (
