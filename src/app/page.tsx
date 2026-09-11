@@ -947,10 +947,7 @@ function DashboardForProfile({
       )}
 
       {aboutOpen && (
-        <AboutModal
-          accent={uiSettings.accent}
-          onClose={() => setAboutOpen(false)}
-        />
+        <AboutModal onClose={() => setAboutOpen(false)} />
       )}
 
       {themesOpen && (
