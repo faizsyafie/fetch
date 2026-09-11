@@ -114,6 +114,66 @@ body {
   }
 }
 
+/* Renders Readability's extracted article HTML (SavedView's inline reader)
+   — plain prose styling since the @tailwindcss/typography plugin isn't
+   installed; kept intentionally minimal (paragraph rhythm, headings,
+   images, links, lists) rather than pulling in a whole plugin for one
+   view. */
+.article-body {
+  color: var(--color-brand-800);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.dark .article-body {
+  color: var(--color-brand-200);
+}
+.article-body p,
+.article-body ul,
+.article-body ol,
+.article-body blockquote,
+.article-body figure,
+.article-body pre {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+.article-body h1,
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 700;
+  color: var(--color-brand-900);
+}
+.dark .article-body h1,
+.dark .article-body h2,
+.dark .article-body h3,
+.dark .article-body h4 {
+  color: white;
+}
+.article-body a {
+  color: var(--color-blue-600);
+  text-decoration: underline;
+}
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+.article-body ul,
+.article-body ol {
+  padding-left: 1.5em;
+}
+.article-body blockquote {
+  border-left: 3px solid var(--color-brand-300);
+  padding-left: 1em;
+  color: var(--color-brand-500);
+}
+.dark .article-body blockquote {
+  border-left-color: var(--color-brand-700);
+  color: var(--color-brand-400);
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(.page-fade),
   ::view-transition-new(.page-fade),

@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { parseSafeFetchUrl } from "@/lib/urlSafety";
 
 // Best-effort title fetch for the Save Link modal — never blocks saving if
 // it fails, so errors here just mean the user types their own title.
 const FETCH_TIMEOUT_MS = 8000;
 const MAX_HTML_BYTES = 200_000; // enough for <head>; avoids reading huge pages fully
-
-const PRIVATE_HOSTNAME_PATTERNS = [
-  /^localhost$/i,
-  /^127\./,
-  /^0\.0\.0\.0$/,
-  /^10\./,
-  /^192\.168\./,
-  /^172\.(1[6-9]|2\d|3[01])\./,
-  /^\[?::1\]?$/,
-  /\.local$/i,
-];
-
-function isBlockedHostname(hostname: string): boolean {
-  return PRIVATE_HOSTNAME_PATTERNS.some((pattern) => pattern.test(hostname));
-}
 
 function decodeEntities(text: string): string {
   return text
@@ -47,17 +33,8 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const rawUrl = typeof body?.url === "string" ? body.url : "";
 
-  let parsed: URL;
-  try {
-    parsed = new URL(rawUrl);
-  } catch {
-    return NextResponse.json({ title: null });
-  }
-
-  if (!["http:", "https:"].includes(parsed.protocol)) {
-    return NextResponse.json({ title: null });
-  }
-  if (isBlockedHostname(parsed.hostname)) {
+  const parsed = parseSafeFetchUrl(rawUrl);
+  if (!parsed) {
     return NextResponse.json({ title: null });
   }
 

@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "date-fns": "^4.4.0",
+    "isomorphic-dompurify": "^4.2.0",
+    "jsdom": "^30.0.1",
     "next": "16.2.9",
     "pg": "^8.23.0",
     "react": "19.2.4",
@@ -18,6 +21,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
