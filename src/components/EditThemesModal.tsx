@@ -42,7 +42,7 @@ export function EditThemesModal({
               Edit Themes
             </h2>
             <p className="text-[11px] text-brand-400 dark:text-brand-600">
-              Pick which columns show up on the General page — drag a
+              Pick which columns show up on The Yard — drag a
               column&rsquo;s ⠿ handle on the board itself to reorder.
             </p>
           </div>

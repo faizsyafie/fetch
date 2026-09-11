@@ -18,9 +18,9 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "nav-list",
     selector: '[data-tour="nav-list"]',
-    title: "General, Companies & Buried Bones",
+    title: "Three places to be",
     description:
-      "Three places to be: General for curated news, Companies for your tracked watchlist, Buried Bones for anything you've saved. Pick one anytime.",
+      "🦴 Buried Bones is what you've saved. 📰 The Yard is curated general news. 🏢 Pack Watch is your tracked companies. Hover any of them for the plain-English version if the names don't stick.",
     placement: "right",
   },
   {
@@ -50,7 +50,7 @@ export const TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="topbar-fetch"]',
     title: "🦴 Fetch!",
     description:
-      "The bone button! Tick a few companies and Fetch! grabs just those — leave nothing ticked and it grabs the whole industry. Same trick on General as Re-fetch!.",
+      "The bone button! Tick a few companies and Fetch! grabs just those — leave nothing ticked and it grabs the whole industry. Same trick on The Yard as Re-fetch!.",
     placement: "bottom",
   },
   {

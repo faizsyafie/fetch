@@ -129,6 +129,7 @@ export function Sidebar({
   function renderNavRow({
     isActive,
     label,
+    subtitle,
     emoji,
     dataTour,
     onClick,
@@ -137,6 +138,10 @@ export function Sidebar({
   }: {
     isActive: boolean;
     label: string;
+    // Plain-language translation shown on hover — the themed names are fun,
+    // but shouldn't be the only way a first-time user finds out what a nav
+    // item actually does.
+    subtitle: string;
     emoji: string;
     dataTour?: string;
     onClick: () => void;
@@ -148,7 +153,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onClick}
-          title={label}
+          title={`${label} — ${subtitle}`}
           className={`mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
             isActive
               ? `${accentPreset.border} bg-brand-100 dark:bg-brand-800/70`
@@ -171,6 +176,7 @@ export function Sidebar({
           type="button"
           data-tour={dataTour}
           onClick={onClick}
+          title={subtitle}
           className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap py-2 pl-3 pr-1 text-left text-[13px] font-semibold transition-colors ${
             isActive
               ? "text-brand-900 dark:text-white"
@@ -226,7 +232,7 @@ export function Sidebar({
           type="button"
           onClick={() => onSelectMode("news")}
           title="fetch"
-          aria-label="Go to General"
+          aria-label="Go to The Yard (General News)"
           className="rounded-md transition-opacity hover:opacity-80"
         >
           <Logo theme={theme} compact={collapsed} />
@@ -263,6 +269,7 @@ export function Sidebar({
         {renderNavRow({
           isActive: mode === "saved",
           label: "Buried Bones",
+          subtitle: "Saved Articles and Notes",
           emoji: "🔖",
           onClick: () => onSelectMode("saved"),
           expanded: savedListExpanded,
@@ -297,14 +304,16 @@ export function Sidebar({
 
         {renderNavRow({
           isActive: mode === "news",
-          label: "General",
+          label: "The Yard",
+          subtitle: "General News",
           emoji: "📰",
           dataTour: "mode-toggle",
           onClick: () => onSelectMode("news"),
         })}
         {renderNavRow({
           isActive: mode === "companies",
-          label: "Companies",
+          label: "Pack Watch",
+          subtitle: "Company News",
           emoji: "🏢",
           onClick: () => onSelectMode("companies"),
           expanded: companiesListExpanded,
