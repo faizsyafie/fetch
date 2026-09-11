@@ -197,6 +197,20 @@ function DashboardForProfile({
     [setMode]
   );
 
+  // Edit Lists / Edit Categories are page-scoped toggles — leaving a page
+  // (by any path: sidebar nav, selecting an industry/category, the
+  // tutorial, the command palette) should never leave its edit affordances
+  // switched on somewhere the user can't see them. Adjusted during render
+  // (React's documented pattern for resetting state when a value changes)
+  // rather than in an effect, so it takes effect in the same render as the
+  // mode change instead of introducing an extra one.
+  const [editModeResetForMode, setEditModeResetForMode] = useState(mode);
+  if (mode !== editModeResetForMode) {
+    setEditModeResetForMode(mode);
+    if (mode !== "companies") setEditMode(false);
+    if (mode !== "saved") setCategoryEditMode(false);
+  }
+
   // The tutorial walks through Companies-mode UI first, so always land there
   // before opening it — regardless of which mode (or screen) it was opened
   // from — and expand its sidebar sub-list so the industries step has
