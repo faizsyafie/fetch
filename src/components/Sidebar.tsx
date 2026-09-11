@@ -331,7 +331,7 @@ export function Sidebar({
                   : "hover:bg-brand-100 dark:hover:bg-brand-800"
               }`}
             >
-              🎛️
+              ✏️
             </button>
           ) : (
             <>
@@ -347,7 +347,7 @@ export function Sidebar({
                     : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
                 }`}
               >
-                🎛️ Edit Themes
+                ✏️ Edit Themes
               </button>
             </>
           )}

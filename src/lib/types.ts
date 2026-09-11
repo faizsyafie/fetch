@@ -83,7 +83,15 @@ export type NewsTopicId =
   | "industrials"
   | "materials"
   | "monetaryPolicy"
-  | "tradeGeopolitics";
+  | "tradeGeopolitics"
+  | "realEstate"
+  | "communicationServices"
+  | "northAmerica"
+  | "latam"
+  | "europe"
+  | "apac"
+  | "middleEast"
+  | "africa";
 
 export interface UiSettings {
   sidebarWidth: number;
