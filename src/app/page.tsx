@@ -763,10 +763,7 @@ function DashboardForProfile({
     FONT_SCALE_PRESETS[uiSettings.fontScale].value;
 
   return (
-    <div
-      style={fontStyle}
-      className="flex h-screen flex-col overflow-hidden lg:flex-row"
-    >
+    <div style={fontStyle} className="flex h-screen overflow-hidden">
       <Sidebar
         theme={theme}
         mode={mode}
