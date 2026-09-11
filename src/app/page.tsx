@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  ViewTransition,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { CommandPalette } from "@/components/CommandPalette";
 import { CompanyList, type NewsCacheEntry } from "@/components/CompanyList";
@@ -163,17 +155,7 @@ function DashboardForProfile({
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   // Lands on General (news) right after picking a profile — there's no
   // separate welcome screen anymore.
-  const [mode, setModeState] = useState<AppMode>("news");
-  // Wrapped in startTransition so the ViewTransition around the board content
-  // (keyed on `mode`) actually activates — plain setState doesn't trigger it.
-  const setMode = useCallback(
-    (next: AppMode | ((prev: AppMode) => AppMode)) => {
-      startTransition(() => {
-        setModeState(next);
-      });
-    },
-    []
-  );
+  const [mode, setMode] = useState<AppMode>("news");
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
   const [saveLinkModal, setSaveLinkModal] = useState<{
     url?: string;
@@ -842,7 +824,6 @@ function DashboardForProfile({
           onFetchCompanies={fetchSmart}
         />
 
-        <ViewTransition key={mode} enter="board-fade" exit="board-fade" default="none">
         {mode === "news" ? (
           <NewsBoard
             articlesByTopic={visibleNewsArticlesByTopic}
@@ -912,7 +893,6 @@ function DashboardForProfile({
             />
           </>
         )}
-        </ViewTransition>
         </div>
       </div>
 
