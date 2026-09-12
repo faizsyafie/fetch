@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY } from "@/lib/defaults";
 import type { AccentColor, SavedLink } from "@/lib/types";
+
+interface ArticleData {
+  title: string | null;
+  byline: string | null;
+  siteName: string | null;
+  content: string;
+}
 
 interface SavedViewProps {
   links: SavedLink[];
@@ -43,6 +50,50 @@ export function SavedView({
   const selected = links.find((l) => l.id === selectedId) ?? null;
   const [titleDraft, setTitleDraft] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
+
+  // Inline reader — Buried Bones only, best-effort (see /api/article-content).
+  // Result is keyed by link id (rather than resetting state synchronously at
+  // the top of the effect) so a stale response for a link the user has since
+  // navigated away from never gets rendered, and "loading" is simply "no
+  // result yet for the currently selected link" — derived at render time.
+  const [articleResult, setArticleResult] = useState<
+    { id: string; status: "loaded"; data: ArticleData } | { id: string; status: "error"; error: string } | null
+  >(null);
+
+  useEffect(() => {
+    if (!selected) return;
+    let cancelled = false;
+    const id = selected.id;
+
+    fetch("/api/article-content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: selected.url }),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (!res.ok || data.error) {
+          setArticleResult({ id, status: "error", error: data.error || "Couldn't load this article." });
+          return;
+        }
+        setArticleResult({ id, status: "loaded", data });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setArticleResult({ id, status: "error", error: "Couldn't reach that page." });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selected]);
+
+  const articleForSelected = selected && articleResult?.id === selected.id ? articleResult : null;
+  const articleLoading = Boolean(selected) && !articleForSelected;
+  const articleLoaded = articleForSelected?.status === "loaded" ? articleForSelected.data : null;
+  const articleErrorMessage = articleForSelected?.status === "error" ? articleForSelected.error : null;
 
   if (links.length === 0) {
     return (
@@ -115,96 +166,146 @@ export function SavedView({
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-5">
-        {!selected ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-brand-400 dark:text-brand-500">
-            Select a link to see its notes.
-          </div>
-        ) : (
-          <div className="mx-auto w-full max-w-xl">
-            <div className="flex items-start justify-between gap-2">
-              <input
-                value={activeTitle}
-                onChange={(e) => setTitleDraft(e.target.value)}
-                onBlur={() => {
-                  if (titleDraft !== null && titleDraft !== selected.title) {
-                    onUpdateLink(selected.id, { title: titleDraft.trim() || selected.url });
-                  }
-                  setTitleDraft(null);
-                }}
-                className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 text-xl font-bold text-brand-900 outline-none hover:border-brand-200 focus:border-brand-300 focus:bg-white dark:text-white dark:hover:border-brand-700 dark:focus:bg-brand-900"
+      {!selected ? (
+        <div className="flex min-w-0 flex-1 items-center justify-center text-sm text-brand-400 dark:text-brand-500">
+          Select a link to see its notes.
+        </div>
+      ) : (
+        <div className="flex min-w-0 flex-1 overflow-hidden">
+          {articleLoaded && (
+            <article className="min-w-0 flex-1 overflow-y-auto border-r border-brand-200 p-6 dark:border-brand-800">
+              {articleLoaded.siteName && (
+                <div className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+                  {articleLoaded.siteName}
+                </div>
+              )}
+              <h1 className="mt-1 text-2xl font-bold text-brand-900 dark:text-white">
+                {articleLoaded.title ?? selected.title}
+              </h1>
+              {articleLoaded.byline && (
+                <div className="mt-1 text-xs text-brand-400 dark:text-brand-500">
+                  {articleLoaded.byline}
+                </div>
+              )}
+              <div
+                className="article-body mt-4"
+                dangerouslySetInnerHTML={{ __html: articleLoaded.content }}
               />
-              <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => onTogglePinned(selected.id)}
-                  aria-label={selected.pinned ? "Unpin" : "Pin"}
-                  title={selected.pinned ? "Unpin" : "Pin"}
-                  className={`rounded px-1.5 py-1 text-sm transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
-                    selected.pinned ? "opacity-100" : "opacity-30 hover:opacity-70"
-                  }`}
-                >
-                  ⭐
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDeleteLink(selected.id)}
-                  aria-label="Delete"
-                  title="Delete"
-                  className="rounded px-1.5 py-1 text-sm text-brand-400 opacity-60 transition-opacity hover:bg-brand-100 hover:text-red-500 hover:opacity-100 dark:hover:bg-brand-800"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-            <a
-              href={selected.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`mt-1 block truncate text-xs ${accentPreset.text} hover:underline`}
-            >
-              {selected.url}
-            </a>
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-brand-400 dark:text-brand-600">
-              <select
-                value={
-                  linkCategories.includes(selected.category)
-                    ? selected.category
-                    : UNCATEGORIZED_CATEGORY
-                }
-                onChange={(e) => onUpdateLink(selected.id, { category: e.target.value })}
-                className="rounded border border-brand-200 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-brand-600 outline-none dark:border-brand-700 dark:text-brand-300"
-              >
-                <option value={UNCATEGORIZED_CATEGORY}>{UNCATEGORIZED_CATEGORY}</option>
-                {linkCategories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <span>
-                · saved{" "}
-                {formatDistanceToNow(new Date(selected.savedAt), { addSuffix: true })}
-                {selected.editedAt !== selected.savedAt &&
-                  ` · edited ${formatDistanceToNow(new Date(selected.editedAt), { addSuffix: true })}`}
-              </span>
-            </div>
+            </article>
+          )}
 
-            <textarea
-              value={activeNotes}
-              onChange={(e) => setNotesDraft(e.target.value)}
-              onBlur={() => {
-                if (notesDraft !== null && notesDraft !== selected.notes) {
-                  onUpdateLink(selected.id, { notes: notesDraft });
-                }
-                setNotesDraft(null);
-              }}
-              placeholder="Add a note…"
-              className="mt-4 h-64 w-full resize-none rounded-lg border border-brand-200 bg-white p-3 text-sm text-brand-800 outline-none focus:border-brand-300 dark:border-brand-800 dark:bg-brand-900 dark:text-brand-200"
-            />
+          <div
+            className={`flex min-w-0 flex-col overflow-y-auto p-5 ${
+              articleLoaded ? "w-80 shrink-0" : "flex-1"
+            }`}
+          >
+            <div className={articleLoaded ? "w-full" : "mx-auto w-full max-w-xl"}>
+              <div className="flex items-start justify-between gap-2">
+                <input
+                  value={activeTitle}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onBlur={() => {
+                    if (titleDraft !== null && titleDraft !== selected.title) {
+                      onUpdateLink(selected.id, { title: titleDraft.trim() || selected.url });
+                    }
+                    setTitleDraft(null);
+                  }}
+                  className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 text-xl font-bold text-brand-900 outline-none hover:border-brand-200 focus:border-brand-300 focus:bg-white dark:text-white dark:hover:border-brand-700 dark:focus:bg-brand-900"
+                />
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onTogglePinned(selected.id)}
+                    aria-label={selected.pinned ? "Unpin" : "Pin"}
+                    title={selected.pinned ? "Unpin" : "Pin"}
+                    className={`rounded px-1.5 py-1 text-sm transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
+                      selected.pinned ? "opacity-100" : "opacity-30 hover:opacity-70"
+                    }`}
+                  >
+                    ⭐
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteLink(selected.id)}
+                    aria-label="Delete"
+                    title="Delete"
+                    className="rounded px-1.5 py-1 text-sm text-brand-400 opacity-60 transition-opacity hover:bg-brand-100 hover:text-red-500 hover:opacity-100 dark:hover:bg-brand-800"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <a
+                href={selected.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`mt-1 block truncate text-xs ${accentPreset.text} hover:underline`}
+              >
+                {selected.url}
+              </a>
+
+              {articleLoading && (
+                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-brand-400 dark:text-brand-500">
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-brand-300 border-t-blue-500 dark:border-brand-700 dark:border-t-blue-400" />
+                  Loading inline reader…
+                </div>
+              )}
+              {articleErrorMessage && (
+                <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400">
+                  {articleErrorMessage} You can still{" "}
+                  <a
+                    href={selected.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold underline"
+                  >
+                    open the original ↗
+                  </a>
+                  .
+                </div>
+              )}
+
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-brand-400 dark:text-brand-600">
+                <select
+                  value={
+                    linkCategories.includes(selected.category)
+                      ? selected.category
+                      : UNCATEGORIZED_CATEGORY
+                  }
+                  onChange={(e) => onUpdateLink(selected.id, { category: e.target.value })}
+                  className="rounded border border-brand-200 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-brand-600 outline-none dark:border-brand-700 dark:text-brand-300"
+                >
+                  <option value={UNCATEGORIZED_CATEGORY}>{UNCATEGORIZED_CATEGORY}</option>
+                  {linkCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <span>
+                  · saved{" "}
+                  {formatDistanceToNow(new Date(selected.savedAt), { addSuffix: true })}
+                  {selected.editedAt !== selected.savedAt &&
+                    ` · edited ${formatDistanceToNow(new Date(selected.editedAt), { addSuffix: true })}`}
+                </span>
+              </div>
+
+              <textarea
+                value={activeNotes}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                onBlur={() => {
+                  if (notesDraft !== null && notesDraft !== selected.notes) {
+                    onUpdateLink(selected.id, { notes: notesDraft });
+                  }
+                  setNotesDraft(null);
+                }}
+                placeholder="Add a note…"
+                className="mt-4 h-64 w-full resize-none rounded-lg border border-brand-200 bg-white p-3 text-sm text-brand-800 outline-none focus:border-brand-300 dark:border-brand-800 dark:bg-brand-900 dark:text-brand-200"
+              />
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

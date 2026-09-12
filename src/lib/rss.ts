@@ -1,4 +1,5 @@
 import Parser from "rss-parser";
+import { createHash } from "crypto";
 import { subDays, isAfter, parseISO, isValid } from "date-fns";
 import type { NewsTopic } from "./newsTopics";
 import type {
@@ -64,8 +65,16 @@ function normalizeTitle(title: string): string {
     .trim();
 }
 
+// Hashed rather than just base64-truncated: many links from the same source
+// share a long common prefix (e.g. "https://techcrunch.com/"), so slicing
+// the encoded string collapses distinct articles to the same id. A hash
+// spreads the whole link's entropy across the truncated output.
+function hashLink(link: string): string {
+  return createHash("sha1").update(link).digest("base64url").slice(0, 16);
+}
+
 function articleId(link: string, companyId: string, sourceId: string): string {
-  return `${sourceId}-${companyId}-${Buffer.from(link).toString("base64url").slice(0, 24)}`;
+  return `${sourceId}-${companyId}-${hashLink(link)}`;
 }
 
 async function fetchFeed(url: string) {
@@ -216,7 +225,7 @@ function extractImageUrl(item: Parser.Item): string | null {
 }
 
 function topicArticleId(topicId: string, link: string): string {
-  return `${topicId}-${Buffer.from(link).toString("base64url").slice(0, 24)}`;
+  return `${topicId}-${hashLink(link)}`;
 }
 
 async function fetchTopicSourceArticles(

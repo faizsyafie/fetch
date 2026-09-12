@@ -28,6 +28,14 @@ export const EMPTY_NEWS_ARTICLES: Record<NewsTopicId, TopicArticle[]> = {
   materials: [],
   monetaryPolicy: [],
   tradeGeopolitics: [],
+  realEstate: [],
+  communicationServices: [],
+  northAmerica: [],
+  latam: [],
+  europe: [],
+  apac: [],
+  middleEast: [],
+  africa: [],
 };
 export const EMPTY_NEWS_ERRORS: Record<NewsTopicId, string[]> = {
   world: [],
@@ -42,6 +50,14 @@ export const EMPTY_NEWS_ERRORS: Record<NewsTopicId, string[]> = {
   materials: [],
   monetaryPolicy: [],
   tradeGeopolitics: [],
+  realEstate: [],
+  communicationServices: [],
+  northAmerica: [],
+  latam: [],
+  europe: [],
+  apac: [],
+  middleEast: [],
+  africa: [],
 };
 
 // The full catalog of General-page columns. Unlike company tracking, these
@@ -59,7 +75,7 @@ export const EMPTY_NEWS_ERRORS: Record<NewsTopicId, string[]> = {
 export const NEWS_TOPICS: NewsTopic[] = [
   {
     id: "world",
-    label: "World",
+    label: "Global",
     emoji: "🌍",
     sources: [
       { name: "BBC News", feedUrl: "https://feeds.bbci.co.uk/news/world/rss.xml" },
@@ -225,6 +241,126 @@ export const NEWS_TOPICS: NewsTopic[] = [
       {
         name: "Al Jazeera",
         feedUrl: "https://www.aljazeera.com/xml/rss/all.xml",
+      },
+    ],
+  },
+  {
+    id: "realEstate",
+    label: "Real Estate",
+    emoji: "🏘️",
+    sources: [
+      {
+        name: "The Guardian Housing Market",
+        feedUrl: "https://www.theguardian.com/business/housingmarket/rss",
+      },
+      {
+        name: "The Guardian Property",
+        feedUrl: "https://www.theguardian.com/business/property/rss",
+      },
+    ],
+  },
+  {
+    id: "communicationServices",
+    label: "Communication Services",
+    emoji: "📡",
+    sources: [
+      {
+        name: "The Guardian Telecoms",
+        feedUrl: "https://www.theguardian.com/business/telecoms/rss",
+      },
+      {
+        name: "The Guardian Media",
+        feedUrl: "https://www.theguardian.com/media/rss",
+      },
+    ],
+  },
+  {
+    id: "northAmerica",
+    label: "North America",
+    emoji: "🌎",
+    sources: [
+      {
+        name: "BBC US & Canada",
+        feedUrl: "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
+      },
+      {
+        name: "The Guardian US",
+        feedUrl: "https://www.theguardian.com/us-news/rss",
+      },
+    ],
+  },
+  {
+    id: "latam",
+    label: "LATAM",
+    emoji: "🌎",
+    sources: [
+      {
+        name: "BBC Latin America",
+        feedUrl: "https://feeds.bbci.co.uk/news/world/latin_america/rss.xml",
+      },
+      {
+        name: "The Guardian Americas",
+        feedUrl: "https://www.theguardian.com/world/americas/rss",
+      },
+    ],
+  },
+  {
+    id: "europe",
+    label: "Europe",
+    emoji: "🇪🇺",
+    sources: [
+      {
+        name: "BBC Europe",
+        feedUrl: "https://feeds.bbci.co.uk/news/world/europe/rss.xml",
+      },
+      {
+        name: "The Guardian Europe",
+        feedUrl: "https://www.theguardian.com/world/europe-news/rss",
+      },
+    ],
+  },
+  {
+    id: "apac",
+    label: "APAC",
+    emoji: "🌏",
+    sources: [
+      {
+        name: "BBC Asia",
+        feedUrl: "https://feeds.bbci.co.uk/news/world/asia/rss.xml",
+      },
+      {
+        name: "The Guardian Asia Pacific",
+        feedUrl: "https://www.theguardian.com/world/asia/rss",
+      },
+    ],
+  },
+  {
+    id: "middleEast",
+    label: "Middle East",
+    emoji: "🕌",
+    sources: [
+      {
+        name: "BBC Middle East",
+        feedUrl: "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml",
+      },
+      {
+        name: "Al Jazeera",
+        feedUrl: "https://www.aljazeera.com/xml/rss/all.xml",
+      },
+    ],
+  },
+  {
+    id: "africa",
+    label: "Africa",
+    emoji: "🌍",
+    sources: [
+      {
+        name: "BBC Africa",
+        feedUrl: "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
+      },
+      {
+        name: "The Guardian Africa",
+        feedUrl: "https://www.theguardian.com/world/africa/rss",
       },
     ],
   },

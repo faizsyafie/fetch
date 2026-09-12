@@ -3,8 +3,9 @@ import type { TourStep } from "@/components/SpotlightTour";
 /**
  * The guided-tour script. Each step (other than the intro/outro, which have
  * `selector: null`) targets a `data-tour="..."` attribute placed on the real
- * UI element elsewhere in the app — see Sidebar.tsx, TopBar.tsx and
- * CompanyList.tsx. Keep this list in sync whenever a major feature is added.
+ * UI element elsewhere in the app — see Sidebar.tsx and TopBar.tsx. Keep this
+ * list in sync whenever a major feature is added. Kept short and light on
+ * purpose — nine steps, one idea each.
  */
 export const TOUR_STEPS: TourStep[] = [
   {
@@ -12,62 +13,36 @@ export const TOUR_STEPS: TourStep[] = [
     selector: null,
     title: "Welcome to fetch",
     description:
-      "A quick tour of everything you can do here — industries, news fetching, customization, and shortcuts. Use Next/Back (or the arrow keys) to move around, and Esc any time to skip.",
-  },
-  {
-    id: "industry-tab-bar",
-    selector: '[data-tour="industry-tab-bar"]',
-    title: "Industries & watchlist",
-    description:
-      "Companies are grouped into industries here, right below the top bar. 🌐 All shows everything across every industry, and ⭐ Watchlist shows just the companies you've starred. Click a tab to switch; turn on Edit Lists (in the sidebar) to rename, delete or drag tabs to reorder them, or use the + at the end to add a new one.",
-    placement: "bottom",
-  },
-  {
-    id: "sidebar-header",
-    selector: '[data-tour="sidebar-header"]',
-    title: "Resize or collapse the sidebar",
-    description:
-      "Drag the sidebar's right edge to resize it, or click « to collapse it down to icons only — handy on smaller screens. Click » to bring it back.",
-    placement: "right",
+      "🐾 A 30-second tour, then you're off the leash. Esc skips anytime.",
   },
   {
     id: "nav-list",
     selector: '[data-tour="nav-list"]',
-    title: "General, Companies & Buried Bones",
+    title: "Three places to be",
     description:
-      "General is a board of columns — World, Malaysia and more — each pulling straight from curated RSS feeds with no company matching involved; drag a column by its ⠿ handle to reorder them, or pick which ones show up under Edit Themes. Companies is your industry-tracked watchlist. Buried Bones is where anything you bookmark (🔖 on an article) lives, sorted into categories you manage yourself.",
+      "🦴 Buried Bones is what you've saved. 📰 The Yard is curated general news. 🏢 Pack Watch is your tracked companies. Hover any of them for the plain-English version if the names don't stick.",
     placement: "right",
   },
   {
-    id: "sidebar-manage",
-    selector: '[data-tour="sidebar-manage"]',
-    title: "Edit lists & sources",
+    id: "industry-sub-list",
+    selector: '[data-tour="industry-sub-list"]',
+    title: "Industries, unfolded",
     description:
-      "Edit Lists lets you add, rename, delete and reorder industries and companies, with a custom emoji per industry. Edit Sources opens a picker of recommended and regional outlets to add with one click, plus your own custom domains.",
+      "Click Companies or Buried Bones and its list unfolds right here — industries, or your saved-link categories. Drag to reorder, hover a row for the ✏️/✕ to rename or delete it.",
     placement: "right",
   },
   {
     id: "topbar-search",
     selector: '[data-tour="topbar-search"]',
-    title: "Search everywhere",
-    description:
-      "Search for a company across every industry at once — press / anywhere on the page to jump straight here.",
+    title: "Search",
+    description: "🔍 or hit / to search — companies, articles, or saved links, wherever you are.",
     placement: "bottom",
   },
   {
     id: "topbar-timerange",
     selector: '[data-tour="topbar-timerange"]',
-    title: "Choose a time range",
-    description:
-      "Pick how far back to pull news for the active industry — anywhere from the last day up to the last 30 days.",
-    placement: "bottom",
-  },
-  {
-    id: "topbar-settings",
-    selector: '[data-tour="topbar-settings"]',
-    title: "Settings",
-    description:
-      "Everything appearance-related lives here now: Light/Dark theme, row spacing (Compact/Comfortable), an accent color (7 to choose from — it colors the sidebar nav too), font family and font size — all saved to your profile.",
+    title: "Time range",
+    description: "Pick how far back to look — a day up to a month.",
     placement: "bottom",
   },
   {
@@ -75,30 +50,28 @@ export const TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="topbar-fetch"]',
     title: "🦴 Fetch!",
     description:
-      "Tick a few companies with the checkboxes and Fetch! grabs news for just those — leave nothing selected and it fetches the whole industry instead. Collapse closes every expanded card at once.",
+      "The bone button! Tick a few companies and Fetch! grabs just those — leave nothing ticked and it grabs the whole industry. Same trick on The Yard as Re-fetch!.",
+    placement: "bottom",
+  },
+  {
+    id: "topbar-settings",
+    selector: '[data-tour="topbar-settings"]',
+    title: "Settings",
+    description: "Theme, spacing, accent color, fonts — all here, all saved to you.",
     placement: "bottom",
   },
   {
     id: "topbar-user",
     selector: '[data-tour="topbar-user"]',
-    title: "Your team profile",
-    description:
-      "Your watchlist, industries and sources sync under your profile name — no password needed. Switch profiles or log out from here.",
+    title: "Your profile",
+    description: "Your name in the corner. Switch profiles or log out from here.",
     placement: "bottom",
-  },
-  {
-    id: "company-list",
-    selector: '[data-tour="company-list"]',
-    title: "Working with companies",
-    description:
-      "Click a row to expand it and load its news. 📌 pins a company to the top of its industry, ⭐ adds it to your Watchlist, and every expanded card has a private notes field. A blue badge marks articles you haven't read yet.",
-    placement: "top",
   },
   {
     id: "shortcuts",
     selector: null,
-    title: "Keyboard shortcuts",
+    title: "That's the trick",
     description:
-      "↑/↓ or j/k move through the list, Enter expands the highlighted row, / focuses search, and ⌘K / Ctrl+K opens the command palette. You can always reopen this tour from the ❓ Tutorial button. You're all set!",
+      "↑/↓ to move, Enter to expand, ⌘K / Ctrl+K for the command palette. Reopen this anytime from ❓. Go fetch! 🐕",
   },
 ];

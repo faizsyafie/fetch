@@ -19,12 +19,14 @@ import type {
 import type { AppMode } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { BoneButton } from "@/components/BoneButton";
+import { CompanyActions } from "@/components/CompanyActions";
 
 interface TopBarProps {
   mode: AppMode;
   profileName: string;
   onLogOut: () => void;
   onOpenFeedback: () => void;
+  onOpenAbout: () => void;
   activeIndustry: Industry;
   industries: Industry[];
   companiesInIndustry: Company[];
@@ -45,6 +47,16 @@ interface TopBarProps {
   onSetNewsDays: (days: NewsTimeFrame) => void;
   newsLoading: boolean;
   onRefreshNews: () => void;
+  // Companies mode: the Clear/Collapse/Fetch! cluster, formerly anchored to
+  // the right edge of the (now-removed) industry TabBar — lives next to the
+  // time-frame pills here instead, same as Re-fetch! does for News.
+  selectedCount: number;
+  totalCount: number;
+  batchRunning: boolean;
+  loadingCount: number;
+  onClearSelection: () => void;
+  onCollapseAll: () => void;
+  onFetchCompanies: () => void;
 }
 
 export function TopBar({
@@ -52,6 +64,7 @@ export function TopBar({
   profileName,
   onLogOut,
   onOpenFeedback,
+  onOpenAbout,
   activeIndustry,
   industries,
   companiesInIndustry,
@@ -69,8 +82,25 @@ export function TopBar({
   onSetNewsDays,
   newsLoading,
   onRefreshNews,
+  selectedCount,
+  totalCount,
+  batchRunning,
+  loadingCount,
+  onClearSelection,
+  onCollapseAll,
+  onFetchCompanies,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
+  // Committed only on Enter (see the input below) — a local draft that only
+  // resets to match `searchQuery` when something ELSE clears it externally
+  // (switching pages, etc.), adjusted during render rather than in an
+  // effect per React's docs on syncing state to a changing prop.
+  const [draftQuery, setDraftQuery] = useState(searchQuery);
+  const [draftSyncedFor, setDraftSyncedFor] = useState(searchQuery);
+  if (searchQuery !== draftSyncedFor) {
+    setDraftSyncedFor(searchQuery);
+    setDraftQuery(searchQuery);
+  }
   const isNews = mode === "news";
   const isCompanies = mode === "companies";
   const isSaved = mode === "saved";
@@ -120,24 +150,37 @@ export function TopBar({
             </div>
           )}
           {isCompanies && (
-            <div
-              data-tour="topbar-timerange"
-              className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
-            >
-              {TIME_FRAME_OPTIONS.map((opt) => (
-                <button
-                  key={opt.days}
-                  type="button"
-                  onClick={() => onSetDays(opt.days)}
-                  className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                    days === opt.days
-                      ? `${accentPreset.solid} text-white shadow-sm`
-                      : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-                  }`}
-                >
-                  {opt.label.toUpperCase()}
-                </button>
-              ))}
+            <div className="flex shrink-0 items-center gap-2">
+              <div
+                data-tour="topbar-timerange"
+                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
+              >
+                {TIME_FRAME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.days}
+                    type="button"
+                    onClick={() => onSetDays(opt.days)}
+                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                      days === opt.days
+                        ? `${accentPreset.solid} text-white shadow-sm`
+                        : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
+                    }`}
+                  >
+                    {opt.label.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <CompanyActions
+                dataTour="topbar-fetch"
+                selectedCount={selectedCount}
+                totalCount={totalCount}
+                batchRunning={batchRunning}
+                loadingCount={loadingCount}
+                accent={accent}
+                onClear={onClearSelection}
+                onCollapse={onCollapseAll}
+                onFetch={onFetchCompanies}
+              />
             </div>
           )}
         </div>
@@ -149,13 +192,24 @@ export function TopBar({
             </span>
             <input
               id="company-search-input"
-              value={searchQuery}
-              onChange={(e) => onSearch(e.target.value)}
+              value={draftQuery}
+              onChange={(e) => {
+                const next = e.target.value;
+                setDraftQuery(next);
+                // Companies search just filters an in-memory list (no
+                // highlight spans, no per-keystroke RSS work), so it's safe
+                // — and nicer — to search live here. News stays Enter-gated;
+                // see the commit that introduced draftQuery for why.
+                if (isCompanies) onSearch(next);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
+              }}
               placeholder={
                 isNews
-                  ? "Search articles…"
+                  ? "Search articles… (Enter)"
                   : isSaved
-                    ? "Search saved links…"
+                    ? "Search saved links… (Enter)"
                     : "Search companies…"
               }
               className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
@@ -190,6 +244,7 @@ export function TopBar({
               name={profileName}
               onLogOut={onLogOut}
               onOpenFeedback={onOpenFeedback}
+              onOpenAbout={onOpenAbout}
             />
           </div>
         </div>

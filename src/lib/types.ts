@@ -11,6 +11,18 @@ export type TimeFrameDays = 1 | 3 | 7 | 14 | 30;
 // genuinely different, older slice instead of repeating the same list.
 export type NewsTimeFrame = "now" | 1 | 3 | 7 | 14;
 
+// A selectable row in one of the sidebar's collapsible sub-lists (industries
+// under Companies, categories under Buried Bones) — see SidebarSubList.
+export interface SidebarListItem {
+  key: string;
+  emoji: string;
+  label: string;
+  count: number;
+  /** When set, renders a colored circle instead of `emoji` — used by
+   *  saved-link categories (see onSetColor) instead of per-item emoji. */
+  swatchColor?: AccentColor;
+}
+
 export type Industry = string;
 
 export interface Company {
@@ -83,7 +95,15 @@ export type NewsTopicId =
   | "industrials"
   | "materials"
   | "monetaryPolicy"
-  | "tradeGeopolitics";
+  | "tradeGeopolitics"
+  | "realEstate"
+  | "communicationServices"
+  | "northAmerica"
+  | "latam"
+  | "europe"
+  | "apac"
+  | "middleEast"
+  | "africa";
 
 export interface UiSettings {
   sidebarWidth: number;
