@@ -29,8 +29,32 @@ export const HOME_TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="nav-saved"]',
     title: "🦴 Buried Bones",
     description:
-      "Your stash — bookmark any article with 🔖, or bury a link of your own. Dig it back up anytime to read inline and jot down notes. Forget any of this? Click ❓ on any page for a refresher on just that page.",
+      "Your stash — bookmark any article with 🔖, or bury a link of your own. Dig it back up anytime to read inline and jot down notes.",
     placement: "right",
+  },
+  {
+    id: "topbar-settings",
+    selector: '[data-tour="topbar-settings"]',
+    title: "⚙️ Settings",
+    description:
+      "Theme, accent color, font and row spacing all live here — saved to your profile, so it follows you between sessions.",
+    placement: "bottom",
+  },
+  {
+    id: "topbar-user",
+    selector: '[data-tour="topbar-user"]',
+    title: "🐕 Your profile",
+    description:
+      "Your name in the corner. Switch profiles, send feedback, or log out from here.",
+    placement: "bottom",
+  },
+  {
+    id: "topbar-help",
+    selector: '[data-tour="topbar-help"]',
+    title: "❓ Help",
+    description:
+      "Forget any of this? Click ❓ on any page, anytime, for a refresher on just that page's own functions.",
+    placement: "bottom",
   },
 ];
 

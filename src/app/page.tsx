@@ -128,7 +128,7 @@ function DashboardForProfile({
     setSidebarWidth,
     toggleSidebarCollapsed,
     setDensity,
-    markTutorialSeen,
+    markTourSeen,
     setAccent,
     setFontFamily,
     setFontScale,
@@ -290,18 +290,24 @@ function DashboardForProfile({
 
   const hydrated = prefsHydrated && uiHydrated && seenHydrated;
 
+  // Each of the four spotlight tours (Home + each mode) auto-plays exactly
+  // once — the very first time its own page is visited — then never again.
+  // Runs on every mode change (including the initial mount, landing on
+  // Home) rather than just once, so switching into a mode for the first
+  // time triggers its own tour even if Home's has already been seen.
+  // Reads the store's synchronous getter directly rather than `uiSettings`:
+  // this can run before useSyncExternalStore's post-hydration snapshot
+  // correction, so the reactive value may still be the transient SSR
+  // default here — keeping the check out of the render body also avoids
+  // opening the tour during the SSR pass itself.
   useEffect(() => {
-    // A one-time, client-only check of persisted state after mount — keeping
-    // this out of the render body avoids opening the modal in the SSR pass
-    // (whose default "not seen" wouldn't match a returning visitor's client
-    // storage) and the resulting hydration mismatch. Read the store's
-    // synchronous getter directly rather than `uiSettings`: this effect can
-    // run before useSyncExternalStore's post-hydration snapshot correction,
-    // so the reactive value may still be the transient SSR default here.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!readUiSettings().tutorialSeen) openHelp();
+    if (!readUiSettings().toursSeen?.[mode]) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHelpOpen(true);
+      markTourSeen(mode);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mode]);
 
   const isVirtualIndustry =
     preferences.activeIndustry === ALL_INDUSTRY ||
@@ -945,10 +951,7 @@ function DashboardForProfile({
         <SpotlightTour
           steps={helpSteps}
           accent={uiSettings.accent}
-          onClose={() => {
-            setHelpOpen(false);
-            markTutorialSeen();
-          }}
+          onClose={() => setHelpOpen(false)}
         />
       )}
 

@@ -86,6 +86,17 @@
   animation: modal-backdrop-out 0.15s ease-in forwards;
 }
 
+/* Home's cycling welcome message — a plain crossfade each time the text
+   swaps in, keyed by message index so it replays on every change. */
+@keyframes text-cycle-fade {
+  from {
+    opacity: 0;
+  }
+}
+.animate-text-fade {
+  animation: text-cycle-fade 0.4s ease-out;
+}
+
 /* The Fetch! button (itself shaped like a bone) hops and shakes on hover —
    like a dog spotting its bone. */
 @keyframes bone-jump {
@@ -188,7 +199,8 @@ body {
   .animate-modal-panel,
   .animate-modal-panel-out,
   .animate-modal-fullscreen,
-  .animate-modal-fullscreen-out {
+  .animate-modal-fullscreen-out,
+  .animate-text-fade {
     animation: none !important;
   }
 }

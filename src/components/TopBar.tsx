@@ -130,8 +130,8 @@ export function TopBar({
   }
 
   return (
-    <div className="border-b border-brand-200 bg-white px-5 py-3 dark:border-brand-800/80 dark:bg-brand-900">
-      <div className="flex items-center gap-3">
+    <div className="bg-white dark:bg-brand-900">
+      <div className="flex h-14 items-center gap-3 border-b border-brand-200 px-5 dark:border-brand-800/80">
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           {isNews && (
             <div className="flex shrink-0 items-center gap-2">
@@ -219,6 +219,7 @@ export function TopBar({
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <button
             type="button"
+            data-tour="topbar-help"
             onClick={onOpenHelp}
             title="Help"
             aria-label="Help"
@@ -251,12 +252,12 @@ export function TopBar({
 
       {isCompanies && !isSearching && !isVirtualIndustry && (
         <div
-          className="grid transition-[grid-template-rows] duration-200 ease-out"
+          className="grid px-5 pb-3 pt-2 transition-[grid-template-rows] duration-200 ease-out"
           style={{ gridTemplateRows: editMode ? "1fr" : "0fr" }}
         >
           <div className="overflow-hidden">
             <div
-              className={`mt-2 rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
+              className={`rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
             >
               <div className={`mb-1.5 text-[11px] font-bold ${palette.badgeText}`}>
                 Editing: {activeIndustry}

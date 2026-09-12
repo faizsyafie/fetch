@@ -228,7 +228,7 @@ export function Sidebar({
 
       <div
         data-tour="sidebar-header"
-        className={`flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800/80`}
+        className={`flex h-14 items-center justify-between border-b border-brand-200 px-4 dark:border-brand-800/80`}
       >
         <button
           type="button"

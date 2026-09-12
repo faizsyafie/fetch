@@ -109,7 +109,13 @@ export interface UiSettings {
   sidebarWidth: number;
   sidebarCollapsed: boolean;
   density: Density;
-  tutorialSeen: boolean;
+  /** Which of the four spotlight tours (Home + each of the three modes)
+   *  has already auto-played once. Each only auto-opens the first time its
+   *  own page is ever visited, never again after — see page.tsx's
+   *  mode-change effect and modeGuide.ts. Keyed loosely by string (AppMode)
+   *  rather than importing that type here, to avoid a cross-layer import
+   *  cycle between lib/types and components/Sidebar. */
+  toursSeen: Partial<Record<string, boolean>>;
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
 import type { AppMode } from "@/components/Sidebar";
@@ -25,7 +25,8 @@ interface HomeHubProps {
 }
 
 // {name} is replaced with the profile name at render — keep it somewhere in
-// every variant. Picked once per Home visit so it doesn't shuffle mid-read.
+// every variant. Cycles automatically while Home stays on screen (see the
+// interval effect below) rather than picking just one per visit.
 const WELCOME_MESSAGES = [
   "Welcome back, {name}",
   "Good to see you, {name}",
@@ -53,9 +54,18 @@ export function HomeHub({
   const iconSrc = theme === "dark" ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
   // Lazy initializer runs once on mount — the recommended way to seed state
   // from something impure (Math.random) without re-rolling on every render.
-  const [welcomeMessage] = useState(
-    () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
+  const [messageIndex, setMessageIndex] = useState(() =>
+    Math.floor(Math.random() * WELCOME_MESSAGES.length)
   );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((i) => (i + 1) % WELCOME_MESSAGES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const welcomeMessage = WELCOME_MESSAGES[messageIndex];
 
   function modeCard({
     mode,
@@ -129,7 +139,10 @@ export function HomeHub({
             className="h-16 w-16 shrink-0 rounded-2xl object-cover shadow-sm"
           />
           <div>
-            <h1 className="text-2xl font-bold text-brand-900 dark:text-white">
+            <h1
+              key={messageIndex}
+              className="animate-text-fade text-2xl font-bold text-brand-900 dark:text-white"
+            >
               {welcomeMessage.replace("{name}", profileName)}
             </h1>
             <p className="text-sm text-brand-500 dark:text-brand-400">
