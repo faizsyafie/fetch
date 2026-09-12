@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FEEDBACK_TO_EMAIL = "faizsyafie@gmail.com";
+const FEEDBACK_TO_EMAIL = "faizsyafie5@gmail.com";
 const MAX_TITLE_LENGTH = 200;
 const MAX_MESSAGE_LENGTH = 5000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
