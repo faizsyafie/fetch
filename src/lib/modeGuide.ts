@@ -34,28 +34,99 @@ export const HOME_TOUR_STEPS: TourStep[] = [
   },
 ];
 
-// Each mode's own ❓ — a single centered slide explaining just that page,
-// rather than restarting the whole tour.
-export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStep> = {
-  news: {
-    id: "help-news",
-    selector: null,
-    title: "📰 The Yard",
-    description:
-      'Each column is a theme — World, Malaysia, Tech, and whatever else you\'ve let off the leash in Edit Themes (sidebar → Manage). Time-range pills page backward through the archive: "Now" is the freshest batch, "7d" means at least 7 days old — not "in the last 7 days". Search commits on Enter and highlights matches in your accent color. Drag a column\'s ⠿ handle to reorder it.',
-  },
-  companies: {
-    id: "help-companies",
-    selector: null,
-    title: "🏢 Pack Watch",
-    description:
-      "Companies are grouped by industry in the sidebar — click one to see just its pack. Tick checkboxes and Fetch! (N) grabs just those; leave nothing ticked and it fetches the whole industry instead. Search here is instant, no Enter needed. Hover an industry row for the rename/delete circles, or add one from the + row. Edit Lists and Edit Sources at the bottom manage your roster and RSS feeds.",
-  },
-  saved: {
-    id: "help-saved",
-    selector: null,
-    title: "🦴 Buried Bones",
-    description:
-      "Bookmark an article via its 🔖 icon on The Yard or Pack Watch, or bury a link yourself with + Save link. Selecting a saved link opens it inline when possible, with a fallback to the original site if it blocks extraction. Categories live in the sidebar — hover one to rename or delete it, or add a new one from the + row. Pin your most-dug-up bones to keep them at the top.",
-  },
+// Each mode's own ❓ — a short spotlight tour of just that page's own
+// sections, rather than restarting the whole cross-mode tour.
+export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStep[]> = {
+  news: [
+    {
+      id: "news-columns",
+      selector: '[data-tour="news-columns"]',
+      title: "📰 Columns",
+      description:
+        "Each column is a theme — World, Malaysia, Tech, and whatever else is off the leash. Drag a column's ⠿ handle to reorder it; duplicate headlines from the same story get merged automatically.",
+      placement: "bottom",
+    },
+    {
+      id: "news-timerange",
+      selector: '[data-tour="topbar-timerange"]',
+      title: "🕐 Time range",
+      description:
+        '"Now" is the freshest batch. "7d" means at least 7 days old — not "in the last 7 days" — so each option digs up a genuinely older slice instead of repeating the same one.',
+      placement: "bottom",
+    },
+    {
+      id: "news-fetch",
+      selector: '[data-tour="topbar-fetch"]',
+      title: "🦴 Re-fetch!",
+      description: "Reloads every column for the current time range. Search commits on Enter and highlights matches in your accent color.",
+      placement: "bottom",
+    },
+    {
+      id: "news-themes",
+      selector: '[data-tour="sidebar-manage-themes"]',
+      title: "✏️ Edit Themes",
+      description:
+        "Turn columns on or off, and raise how many articles each one fetches — though most feeds only carry their most recent ~20-50 items regardless.",
+      placement: "right",
+    },
+  ],
+  companies: [
+    {
+      id: "companies-industries",
+      selector: '[data-tour="industry-sub-list"]',
+      title: "🏢 Industries",
+      description:
+        "Click one to see just its pack. Hover a row for the rename/delete circles, or add a new industry from the + row at the bottom.",
+      placement: "right",
+    },
+    {
+      id: "companies-list",
+      selector: '[data-tour="company-list"]',
+      title: "🐕 Your pack",
+      description:
+        "Tick a company's checkbox to include it in a targeted fetch, or expand a row to add a private note. Search here is instant — no Enter needed.",
+      placement: "top",
+    },
+    {
+      id: "companies-fetch",
+      selector: '[data-tour="topbar-fetch"]',
+      title: "🦴 Fetch!",
+      description:
+        "Tick a few and Fetch! (N) grabs just those. Leave nothing ticked and it fetches the whole industry instead — Clear and Collapse pop up alongside once there's something to act on.",
+      placement: "bottom",
+    },
+    {
+      id: "companies-manage",
+      selector: '[data-tour="sidebar-manage"]',
+      title: "✏️ Manage",
+      description: "Edit Lists manages your company roster; Edit Sources manages the RSS feeds each search checks.",
+      placement: "right",
+    },
+  ],
+  saved: [
+    {
+      id: "saved-categories",
+      selector: '[data-tour="category-sub-list"]',
+      title: "🦴 Categories",
+      description:
+        "Organize your buried bones by topic. Hover a category for the rename/delete circles, or add a new one from the + row.",
+      placement: "right",
+    },
+    {
+      id: "saved-add",
+      selector: '[data-tour="saved-add-link"]',
+      title: "🔖 Bury a link",
+      description:
+        "Paste any URL here, or bookmark an article straight from its 🔖 icon on The Yard or Pack Watch.",
+      placement: "bottom",
+    },
+    {
+      id: "saved-list",
+      selector: '[data-tour="saved-links-list"]',
+      title: "📖 Dig it back up",
+      description:
+        "Select a saved link to read it inline when possible (with a fallback to the original site if it blocks extraction) and jot down notes. Pin your favorites to keep them at the top.",
+      placement: "right",
+    },
+  ],
 };

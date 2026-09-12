@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
 import type { AppMode } from "@/components/Sidebar";
@@ -9,15 +10,32 @@ interface HomeHubProps {
   theme: Theme;
   profileName: string;
   accent: AccentColor;
-  /** Whichever of the two cards was most recently visited gets the accent
-   *  highlight — neither one is permanently favored over the other. */
+  /** Whichever of the two cards was most recently visited (or clicked to
+   *  preview) gets the accent highlight — neither one is permanently
+   *  favored over the other. */
   activeMode: "news" | "companies";
   sourcesCount: number;
   companiesCount: number;
   savedCount: number;
   onSelectMode: (mode: AppMode) => void;
+  /** Clicking a card's own body (not its CTA button) just previews it —
+   *  highlights it in accent color without navigating away. */
+  onPreviewMode: (mode: "news" | "companies") => void;
   onOpenTour: () => void;
 }
+
+// {name} is replaced with the profile name at render — keep it somewhere in
+// every variant. Picked once per Home visit so it doesn't shuffle mid-read.
+const WELCOME_MESSAGES = [
+  "Welcome back, {name}",
+  "Good to see you, {name}",
+  "Sniffing around again, {name}?",
+  "{name}'s here — let's fetch",
+  "Back for more headlines, {name}?",
+  "Heel, {name} — let's get to work",
+  "Paws and reflect, {name}: what are we fetching today?",
+  "Look who's back — hey, {name}",
+];
 
 export function HomeHub({
   theme,
@@ -28,10 +46,16 @@ export function HomeHub({
   companiesCount,
   savedCount,
   onSelectMode,
+  onPreviewMode,
   onOpenTour,
 }: HomeHubProps) {
   const accentPreset = ACCENT_PRESETS[accent];
   const iconSrc = theme === "dark" ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
+  // Lazy initializer runs once on mount — the recommended way to seed state
+  // from something impure (Math.random) without re-rolling on every render.
+  const [welcomeMessage] = useState(
+    () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
+  );
 
   function modeCard({
     mode,
@@ -51,10 +75,11 @@ export function HomeHub({
     const isActive = mode === activeMode;
     return (
       <div
-        className={`flex flex-col rounded-xl border-2 p-5 shadow-sm transition-colors ${
+        onClick={() => onPreviewMode(mode)}
+        className={`flex cursor-pointer flex-col rounded-xl border-2 p-5 shadow-sm transition-colors ${
           isActive
             ? `${accentPreset.border} bg-white dark:bg-brand-900`
-            : "border-brand-200 bg-white dark:border-brand-700 dark:bg-brand-900"
+            : "border-brand-200 bg-white hover:border-brand-300 dark:border-brand-700 dark:bg-brand-900 dark:hover:border-brand-600"
         }`}
       >
         <div
@@ -77,7 +102,10 @@ export function HomeHub({
         </p>
         <button
           type="button"
-          onClick={() => onSelectMode(mode)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectMode(mode);
+          }}
           className={`w-full rounded-lg py-2 text-sm font-semibold transition-colors ${
             isActive
               ? `text-white ${accentPreset.solid} ${accentPreset.solidHover}`
@@ -102,7 +130,7 @@ export function HomeHub({
           />
           <div>
             <h1 className="text-2xl font-bold text-brand-900 dark:text-white">
-              Welcome back, {profileName}
+              {welcomeMessage.replace("{name}", profileName)}
             </h1>
             <p className="text-sm text-brand-500 dark:text-brand-400">
               How would you like to fetch today? Pick a mode to start sniffing

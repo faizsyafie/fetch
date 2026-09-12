@@ -100,6 +100,7 @@ export function SavedView({
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <button
           type="button"
+          data-tour="saved-add-link"
           onClick={onAddLink}
           className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${accentPreset.solid} ${accentPreset.solidHover}`}
         >
@@ -121,13 +122,14 @@ export function SavedView({
           </span>
           <button
             type="button"
+            data-tour="saved-add-link"
             onClick={onAddLink}
             className={`rounded-md px-2.5 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solid} ${accentPreset.solidHover}`}
           >
             + Save link
           </button>
         </div>
-        <div className="flex-1 space-y-1 overflow-y-auto p-2">
+        <div data-tour="saved-links-list" className="flex-1 space-y-1 overflow-y-auto p-2">
           {links.map((link) => {
             const isActive = link.id === selectedId;
             return (

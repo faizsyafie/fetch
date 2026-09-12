@@ -208,7 +208,7 @@ function DashboardForProfile({
   // it's clicked from: Home gets the brief multi-mode spotlight tour, any
   // other page gets just its own longer explanation — see modeGuide.ts.
   const openHelp = useCallback(() => setHelpOpen(true), []);
-  const helpSteps = mode === "home" ? HOME_TOUR_STEPS : [MODE_DETAILED_STEPS[mode]];
+  const helpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
 
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
@@ -855,6 +855,7 @@ function DashboardForProfile({
             companiesCount={preferences.companies.length}
             savedCount={preferences.links.length}
             onSelectMode={selectMode}
+            onPreviewMode={setHomeActiveMode}
             onOpenTour={openHelp}
           />
         ) : mode === "news" ? (
