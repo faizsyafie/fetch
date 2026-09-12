@@ -9,7 +9,7 @@ import { EditThemesModal } from "@/components/EditThemesModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
-import { HelpModal } from "@/components/HelpModal";
+import { SpotlightTour } from "@/components/SpotlightTour";
 import { HomeHub } from "@/components/HomeHub";
 import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
@@ -44,7 +44,7 @@ import {
   EMPTY_NEWS_ERRORS,
   NEWS_TOPICS,
 } from "@/lib/newsTopics";
-import { MODE_DETAILED_GUIDE, MODE_OVERVIEW_STEPS } from "@/lib/modeGuide";
+import { HOME_TOUR_STEPS, MODE_DETAILED_STEPS } from "@/lib/modeGuide";
 import type {
   Company,
   FetchNewsResponse,
@@ -160,6 +160,10 @@ function DashboardForProfile({
   // Lands on the Home hub right after picking a profile, where the user
   // picks a mode themselves — there's no separate welcome screen anymore.
   const [mode, setMode] = useState<AppMode>("home");
+  // Which of Home's two big cards is highlighted as "active" — tracks
+  // whichever of the two the user most recently visited, defaulting to The
+  // Yard, rather than always favoring one over the other.
+  const [homeActiveMode, setHomeActiveMode] = useState<"news" | "companies">("news");
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
   const [saveLinkModal, setSaveLinkModal] = useState<{
     url?: string;
@@ -175,6 +179,7 @@ function DashboardForProfile({
   const selectMode = useCallback(
     (next: AppMode) => {
       setMode(next);
+      if (next === "news" || next === "companies") setHomeActiveMode(next);
       setSearchQuery("");
       setSelected(new Set());
       setFocusedIndex(null);
@@ -200,10 +205,10 @@ function DashboardForProfile({
   }
 
   // What the ❓ (or Home's "Take the tour" button) opens depends on where
-  // it's clicked from: Home gets the brief multi-mode overview, any other
-  // page gets just its own longer explanation — see HelpModal/modeGuide.ts.
+  // it's clicked from: Home gets the brief multi-mode spotlight tour, any
+  // other page gets just its own longer explanation — see modeGuide.ts.
   const openHelp = useCallback(() => setHelpOpen(true), []);
-  const helpSteps = mode === "home" ? MODE_OVERVIEW_STEPS : [MODE_DETAILED_GUIDE[mode]];
+  const helpSteps = mode === "home" ? HOME_TOUR_STEPS : [MODE_DETAILED_STEPS[mode]];
 
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
@@ -636,6 +641,7 @@ function DashboardForProfile({
   const handleSelectIndustry = useCallback(
     (industry: string) => {
       setMode("companies");
+      setHomeActiveMode("companies");
       setActiveIndustry(industry);
       setSearchQuery("");
       setSelected(new Set());
@@ -844,6 +850,7 @@ function DashboardForProfile({
             theme={theme}
             profileName={profileName}
             accent={uiSettings.accent}
+            activeMode={homeActiveMode}
             sourcesCount={preferences.sources.filter((s) => s.enabled).length}
             companiesCount={preferences.companies.length}
             savedCount={preferences.links.length}
@@ -933,16 +940,16 @@ function DashboardForProfile({
         onClose={() => setCommandPaletteOpen(false)}
       />
 
-      <HelpModal
-        open={helpOpen}
-        steps={helpSteps}
-        accent={uiSettings.accent}
-        onSelectMode={selectMode}
-        onClose={() => {
-          setHelpOpen(false);
-          markTutorialSeen();
-        }}
-      />
+      {helpOpen && (
+        <SpotlightTour
+          steps={helpSteps}
+          accent={uiSettings.accent}
+          onClose={() => {
+            setHelpOpen(false);
+            markTutorialSeen();
+          }}
+        />
+      )}
 
       <CustomizePanel
         open={customizeOpen}

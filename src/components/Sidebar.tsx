@@ -273,6 +273,7 @@ export function Sidebar({
           label: "Buried Bones",
           subtitle: "Saved Articles and Notes",
           emoji: "🔖",
+          dataTour: "nav-saved",
           onClick: () => onSelectMode("saved"),
           expanded: savedListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleSavedListExpanded,
@@ -309,7 +310,7 @@ export function Sidebar({
           label: "The Yard",
           subtitle: "General News",
           emoji: "📰",
-          dataTour: "mode-toggle",
+          dataTour: "nav-news",
           onClick: () => onSelectMode("news"),
         })}
         {renderNavRow({
@@ -317,6 +318,7 @@ export function Sidebar({
           label: "Pack Watch",
           subtitle: "Company News",
           emoji: "🏢",
+          dataTour: "nav-companies",
           onClick: () => onSelectMode("companies"),
           expanded: companiesListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleCompaniesListExpanded,
