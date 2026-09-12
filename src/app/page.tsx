@@ -885,6 +885,7 @@ function DashboardForProfile({
             links={visibleLinks}
             linkCategories={preferences.linkCategories}
             accent={uiSettings.accent}
+            searchQuery={searchQuery}
             onAddLink={() => setSaveLinkModal({})}
             onSelectLink={setSelectedLinkId}
             selectedId={selectedLinkId}

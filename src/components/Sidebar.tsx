@@ -426,19 +426,24 @@ export function Sidebar({
                   ▾
                 </span>
               </button>
-              {sourcesListExpanded && (
-                <div className="space-y-1">
-                  {enabledSources.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
-                    >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                      <span className="truncate">{s.name}</span>
-                    </div>
-                  ))}
+              <div
+                className="grid transition-[grid-template-rows] duration-200 ease-out"
+                style={{ gridTemplateRows: sourcesListExpanded ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden">
+                  <div className="space-y-1">
+                    {enabledSources.map((s) => (
+                      <div
+                        key={s.id}
+                        className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
+                      >
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                        <span className="truncate">{s.name}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
+              </div>
               <div className="mt-2 flex items-center justify-between text-[10px] text-brand-400 dark:text-brand-600">
                 <span>
                   Last {days} day{days !== 1 ? "s" : ""}

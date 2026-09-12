@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS } from "@/lib/defaults";
+import { highlightMatches } from "@/lib/highlight";
 import type { AccentColor, TopicArticle } from "@/lib/types";
 
 interface ArticleCardProps {
@@ -12,33 +13,6 @@ interface ArticleCardProps {
    *  the title/summary below (see highlightMatches). */
   searchQuery?: string;
   accent: AccentColor;
-}
-
-// Splits `text` on every case-insensitive occurrence of `query`, wrapping
-// matches in an accent-colored span. Returns `text` unchanged when there's
-// no query or no match, so the common (non-searching) case stays cheap.
-function highlightMatches(text: string, query: string, highlightClass: string) {
-  if (!query) return text;
-  const lower = text.toLowerCase();
-  const q = query.toLowerCase();
-  const firstIndex = lower.indexOf(q);
-  if (firstIndex === -1) return text;
-
-  const parts: React.ReactNode[] = [];
-  let cursor = 0;
-  let index = firstIndex;
-  while (index !== -1) {
-    if (index > cursor) parts.push(text.slice(cursor, index));
-    parts.push(
-      <span key={index} className={`rounded px-0.5 font-semibold ${highlightClass}`}>
-        {text.slice(index, index + q.length)}
-      </span>
-    );
-    cursor = index + q.length;
-    index = lower.indexOf(q, cursor);
-  }
-  if (cursor < text.length) parts.push(text.slice(cursor));
-  return parts;
 }
 
 export function ArticleCard({ article, isSaved, onSave, searchQuery, accent }: ArticleCardProps) {

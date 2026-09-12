@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY } from "@/lib/defaults";
+import { highlightMatches } from "@/lib/highlight";
 import type { AccentColor, SavedLink } from "@/lib/types";
 
 interface ArticleData {
@@ -16,6 +17,9 @@ interface SavedViewProps {
   links: SavedLink[];
   linkCategories: string[];
   accent: AccentColor;
+  /** Active search term, if any — matches get highlighted in the title and
+   *  notes preview below (see highlightMatches). */
+  searchQuery?: string;
   onAddLink: () => void;
   onSelectLink: (id: string) => void;
   selectedId: string | null;
@@ -39,6 +43,7 @@ export function SavedView({
   links,
   linkCategories,
   accent,
+  searchQuery,
   onAddLink,
   onSelectLink,
   selectedId,
@@ -47,6 +52,8 @@ export function SavedView({
   onDeleteLink,
 }: SavedViewProps) {
   const accentPreset = ACCENT_PRESETS[accent];
+  const highlightClass = `${accentPreset.softBg} ${accentPreset.text}`;
+  const query = searchQuery?.trim() ?? "";
   const selected = links.find((l) => l.id === selectedId) ?? null;
   const [titleDraft, setTitleDraft] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
@@ -150,7 +157,7 @@ export function SavedView({
                 <div className="flex items-center gap-1.5">
                   {link.pinned && <span className="shrink-0 text-xs">⭐</span>}
                   <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-brand-900 dark:text-white">
-                    {link.title}
+                    {highlightMatches(link.title, query, highlightClass)}
                   </span>
                 </div>
                 <div className="mt-0.5 truncate text-[11px] text-brand-400 dark:text-brand-500">
@@ -159,7 +166,7 @@ export function SavedView({
                 </div>
                 {link.notes && (
                   <div className="mt-1 truncate text-[11px] text-brand-500 dark:text-brand-400">
-                    {link.notes}
+                    {highlightMatches(link.notes, query, highlightClass)}
                   </div>
                 )}
               </button>
