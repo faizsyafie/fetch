@@ -9,6 +9,8 @@ import { EditThemesModal } from "@/components/EditThemesModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
+import { HelpModal } from "@/components/HelpModal";
+import { HomeHub } from "@/components/HomeHub";
 import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
 import { SaveLinkModal } from "@/components/SaveLinkModal";
@@ -16,7 +18,6 @@ import { SavedView } from "@/components/SavedView";
 import { Sidebar, type AppMode } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesModal } from "@/components/SourcesModal";
-import { SpotlightTour } from "@/components/SpotlightTour";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -43,7 +44,7 @@ import {
   EMPTY_NEWS_ERRORS,
   NEWS_TOPICS,
 } from "@/lib/newsTopics";
-import { TOUR_STEPS } from "@/lib/tourSteps";
+import { MODE_DETAILED_GUIDE, MODE_OVERVIEW_STEPS } from "@/lib/modeGuide";
 import type {
   Company,
   FetchNewsResponse,
@@ -152,13 +153,13 @@ function DashboardForProfile({
   const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  // Lands on General (news) right after picking a profile — there's no
-  // separate welcome screen anymore.
-  const [mode, setMode] = useState<AppMode>("news");
+  // Lands on the Home hub right after picking a profile, where the user
+  // picks a mode themselves — there's no separate welcome screen anymore.
+  const [mode, setMode] = useState<AppMode>("home");
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
   const [saveLinkModal, setSaveLinkModal] = useState<{
     url?: string;
@@ -198,16 +199,11 @@ function DashboardForProfile({
     setSavedListExpanded(mode === "saved");
   }
 
-  // The tutorial walks through Companies-mode UI first, so always land there
-  // before opening it — regardless of which mode (or screen) it was opened
-  // from — and force its sidebar sub-list open (the mode-change effect above
-  // only fires when mode actually changes, so this also covers reopening
-  // the tutorial from within Companies itself after manually collapsing it).
-  const openTutorial = useCallback(() => {
-    setMode("companies");
-    setCompaniesListExpanded(true);
-    setTutorialOpen(true);
-  }, [setMode]);
+  // What the ❓ (or Home's "Take the tour" button) opens depends on where
+  // it's clicked from: Home gets the brief multi-mode overview, any other
+  // page gets just its own longer explanation — see HelpModal/modeGuide.ts.
+  const openHelp = useCallback(() => setHelpOpen(true), []);
+  const helpSteps = mode === "home" ? MODE_OVERVIEW_STEPS : [MODE_DETAILED_GUIDE[mode]];
 
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
@@ -298,7 +294,7 @@ function DashboardForProfile({
     // run before useSyncExternalStore's post-hydration snapshot correction,
     // so the reactive value may still be the transient SSR default here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!readUiSettings().tutorialSeen) openTutorial();
+    if (!readUiSettings().tutorialSeen) openHelp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -696,7 +692,7 @@ function DashboardForProfile({
       }
       if (e.key === "Escape") {
         setCommandPaletteOpen(false);
-        setTutorialOpen(false);
+        setHelpOpen(false);
         setCustomizeOpen(false);
         setSourcesOpen(false);
         setFeedbackOpen(false);
@@ -825,7 +821,7 @@ function DashboardForProfile({
           onSetDays={setDays}
           onAddCompany={handleAddCompanyTag}
           onRemoveCompany={removeCompany}
-          onOpenTutorial={openTutorial}
+          onOpenHelp={openHelp}
           onOpenSettings={() => setCustomizeOpen(true)}
           newsDays={newsDays}
           onSetNewsDays={setNewsDays}
@@ -843,7 +839,18 @@ function DashboardForProfile({
           onFetchCompanies={fetchSmart}
         />
 
-        {mode === "news" ? (
+        {mode === "home" ? (
+          <HomeHub
+            theme={theme}
+            profileName={profileName}
+            accent={uiSettings.accent}
+            sourcesCount={preferences.sources.filter((s) => s.enabled).length}
+            companiesCount={preferences.companies.length}
+            savedCount={preferences.links.length}
+            onSelectMode={selectMode}
+            onOpenTour={openHelp}
+          />
+        ) : mode === "news" ? (
           <NewsBoard
             articlesByTopic={visibleNewsArticlesByTopic}
             errorsByTopic={newsErrorsByTopic}
@@ -926,16 +933,16 @@ function DashboardForProfile({
         onClose={() => setCommandPaletteOpen(false)}
       />
 
-      {tutorialOpen && (
-        <SpotlightTour
-          steps={TOUR_STEPS}
-          accent={uiSettings.accent}
-          onClose={() => {
-            setTutorialOpen(false);
-            markTutorialSeen();
-          }}
-        />
-      )}
+      <HelpModal
+        open={helpOpen}
+        steps={helpSteps}
+        accent={uiSettings.accent}
+        onSelectMode={selectMode}
+        onClose={() => {
+          setHelpOpen(false);
+          markTutorialSeen();
+        }}
+      />
 
       <CustomizePanel
         open={customizeOpen}

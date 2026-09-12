@@ -46,7 +46,7 @@ interface TopBarProps {
   onSetDays: (days: TimeFrameDays) => void;
   onAddCompany: (name: string) => void;
   onRemoveCompany: (id: string) => void;
-  onOpenTutorial: () => void;
+  onOpenHelp: () => void;
   onOpenSettings: () => void;
   // News mode: the same time-range/refresh concept, bound to its own state
   // rather than the Companies preferences, since the two fetches are
@@ -86,7 +86,7 @@ export function TopBar({
   onSetDays,
   onAddCompany,
   onRemoveCompany,
-  onOpenTutorial,
+  onOpenHelp,
   onOpenSettings,
   newsDays,
   onSetNewsDays,
@@ -115,6 +115,7 @@ export function TopBar({
   const isNews = mode === "news";
   const isCompanies = mode === "companies";
   const isSaved = mode === "saved";
+  const isHome = mode === "home";
   const isSearching = searchQuery.trim().length > 0;
   const isVirtualIndustry =
     activeIndustry === ALL_INDUSTRY || activeIndustry === WATCHLIST_INDUSTRY;
@@ -182,43 +183,45 @@ export function TopBar({
         </div>
 
         <div className="flex min-w-0 flex-1 justify-center">
-          <div data-tour="topbar-search" className="relative min-w-0 w-80 max-w-full">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
-              🔍
-            </span>
-            <input
-              id="company-search-input"
-              value={draftQuery}
-              onChange={(e) => {
-                const next = e.target.value;
-                setDraftQuery(next);
-                // Companies search just filters an in-memory list (no
-                // highlight spans, no per-keystroke RSS work), so it's safe
-                // — and nicer — to search live here. News stays Enter-gated;
-                // see the commit that introduced draftQuery for why.
-                if (isCompanies) onSearch(next);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
-              }}
-              placeholder={
-                isNews
-                  ? "Search articles… (Enter)"
-                  : isSaved
-                    ? "Search saved links… (Enter)"
-                    : "Search companies…"
-              }
-              className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
-            />
-          </div>
+          {!isHome && (
+            <div data-tour="topbar-search" className="relative min-w-0 w-80 max-w-full">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
+                🔍
+              </span>
+              <input
+                id="company-search-input"
+                value={draftQuery}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setDraftQuery(next);
+                  // Companies search just filters an in-memory list (no
+                  // highlight spans, no per-keystroke RSS work), so it's safe
+                  // — and nicer — to search live here. News stays Enter-gated;
+                  // see the commit that introduced draftQuery for why.
+                  if (isCompanies) onSearch(next);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
+                }}
+                placeholder={
+                  isNews
+                    ? "Search articles… (Enter)"
+                    : isSaved
+                      ? "Search saved links… (Enter)"
+                      : "Search companies…"
+                }
+                className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <button
             type="button"
-            onClick={onOpenTutorial}
-            title="Open tutorial"
-            aria-label="Open tutorial"
+            onClick={onOpenHelp}
+            title="Help"
+            aria-label="Help"
             className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
           >
             <span aria-hidden="true">❓</span>

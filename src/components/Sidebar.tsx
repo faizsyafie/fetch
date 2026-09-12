@@ -7,7 +7,9 @@ import { Logo } from "@/components/Logo";
 import { SidebarSubList } from "@/components/SidebarSubList";
 import type { Theme } from "@/hooks/useTheme";
 
-export type AppMode = "companies" | "news" | "saved";
+// "home" is the post-login landing hub (HomeHub) — reachable by clicking
+// the logo, but not a persistent nav row like the other three.
+export type AppMode = "companies" | "news" | "saved" | "home";
 
 interface SidebarProps {
   theme: Theme;
@@ -230,9 +232,9 @@ export function Sidebar({
       >
         <button
           type="button"
-          onClick={() => onSelectMode("news")}
+          onClick={() => onSelectMode("home")}
           title="fetch"
-          aria-label="Go to The Yard (General News)"
+          aria-label="Go home"
           className="rounded-md transition-opacity hover:opacity-80"
         >
           <Logo theme={theme} compact={collapsed} />
