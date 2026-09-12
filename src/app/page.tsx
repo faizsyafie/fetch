@@ -900,17 +900,16 @@ function DashboardForProfile({
         </div>
       </div>
 
-      {commandPaletteOpen && (
-        <CommandPalette
-          companies={preferences.companies}
-          industries={preferences.industries}
-          industryEmojis={preferences.industryEmojis}
-          accent={uiSettings.accent}
-          onSelectCompany={openCompany}
-          onSelectIndustry={handleSelectIndustry}
-          onClose={() => setCommandPaletteOpen(false)}
-        />
-      )}
+      <CommandPalette
+        open={commandPaletteOpen}
+        companies={preferences.companies}
+        industries={preferences.industries}
+        industryEmojis={preferences.industryEmojis}
+        accent={uiSettings.accent}
+        onSelectCompany={openCompany}
+        onSelectIndustry={handleSelectIndustry}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
 
       {tutorialOpen && (
         <SpotlightTour
@@ -923,41 +922,36 @@ function DashboardForProfile({
         />
       )}
 
-      {customizeOpen && (
-        <CustomizePanel
-          theme={theme}
-          accent={uiSettings.accent}
-          fontFamily={uiSettings.fontFamily}
-          fontScale={uiSettings.fontScale}
-          density={uiSettings.density}
-          onToggleTheme={toggleTheme}
-          onSetAccent={setAccent}
-          onSetFontFamily={setFontFamily}
-          onSetFontScale={setFontScale}
-          onSetDensity={setDensity}
-          onClose={() => setCustomizeOpen(false)}
-        />
-      )}
+      <CustomizePanel
+        open={customizeOpen}
+        theme={theme}
+        accent={uiSettings.accent}
+        fontFamily={uiSettings.fontFamily}
+        fontScale={uiSettings.fontScale}
+        density={uiSettings.density}
+        onToggleTheme={toggleTheme}
+        onSetAccent={setAccent}
+        onSetFontFamily={setFontFamily}
+        onSetFontScale={setFontScale}
+        onSetDensity={setDensity}
+        onClose={() => setCustomizeOpen(false)}
+      />
 
-      {feedbackOpen && (
-        <FeedbackModal
-          accent={uiSettings.accent}
-          onClose={() => setFeedbackOpen(false)}
-        />
-      )}
+      <FeedbackModal
+        open={feedbackOpen}
+        accent={uiSettings.accent}
+        onClose={() => setFeedbackOpen(false)}
+      />
 
-      {aboutOpen && (
-        <AboutModal onClose={() => setAboutOpen(false)} />
-      )}
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
 
-      {themesOpen && (
-        <EditThemesModal
-          enabledTopics={uiSettings.newsTopicOrder}
-          accent={uiSettings.accent}
-          onToggle={handleToggleTopic}
-          onClose={() => setThemesOpen(false)}
-        />
-      )}
+      <EditThemesModal
+        open={themesOpen}
+        enabledTopics={uiSettings.newsTopicOrder}
+        accent={uiSettings.accent}
+        onToggle={handleToggleTopic}
+        onClose={() => setThemesOpen(false)}
+      />
 
       {saveLinkModal && (
         <SaveLinkModal
@@ -971,17 +965,16 @@ function DashboardForProfile({
         />
       )}
 
-      {sourcesOpen && (
-        <SourcesModal
-          sources={preferences.sources}
-          accent={uiSettings.accent}
-          onAdd={addSource}
-          onRemove={removeSource}
-          onResetDefaults={resetSources}
-          onClearCache={clearCache}
-          onClose={() => setSourcesOpen(false)}
-        />
-      )}
+      <SourcesModal
+        open={sourcesOpen}
+        sources={preferences.sources}
+        accent={uiSettings.accent}
+        onAdd={addSource}
+        onRemove={removeSource}
+        onResetDefaults={resetSources}
+        onClearCache={clearCache}
+        onClose={() => setSourcesOpen(false)}
+      />
     </div>
   );
 }

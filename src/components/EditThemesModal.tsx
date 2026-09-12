@@ -3,8 +3,10 @@
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import { NEWS_TOPICS } from "@/lib/newsTopics";
 import type { AccentColor, NewsTopicId } from "@/lib/types";
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
 
 interface EditThemesModalProps {
+  open: boolean;
   enabledTopics: NewsTopicId[];
   accent: AccentColor;
   onToggle: (id: NewsTopicId, enabled: boolean) => void;
@@ -15,25 +17,29 @@ interface EditThemesModalProps {
 // rest below to add) — General-page columns are opt-in/out the same way
 // news sources are, just without regions to group the "more" list by.
 export function EditThemesModal({
+  open,
   enabledTopics,
   accent,
   onToggle,
   onClose,
 }: EditThemesModalProps) {
   const accentPreset = ACCENT_PRESETS[accent];
+  const { mounted, closing } = useAnimatedModal(open);
   const enabledSet = new Set(enabledTopics);
   const yourTopics = enabledTopics
     .map((id) => NEWS_TOPICS.find((t) => t.id === id))
     .filter((t): t is (typeof NEWS_TOPICS)[number] => Boolean(t));
   const moreTopics = NEWS_TOPICS.filter((t) => !enabledSet.has(t.id));
 
+  if (!mounted) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 animate-modal-backdrop"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border border-brand-200 bg-white shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
+        className={`flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">

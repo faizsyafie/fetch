@@ -7,8 +7,10 @@ import {
 } from "@/lib/defaults";
 import type { AccentColor, Density, FontFamily, FontScale } from "@/lib/types";
 import type { Theme } from "@/hooks/useTheme";
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
 
 interface CustomizePanelProps {
+  open: boolean;
   theme: Theme;
   accent: AccentColor;
   fontFamily: FontFamily;
@@ -23,6 +25,7 @@ interface CustomizePanelProps {
 }
 
 export function CustomizePanel({
+  open,
   theme,
   accent,
   fontFamily,
@@ -35,13 +38,16 @@ export function CustomizePanel({
   onSetDensity,
   onClose,
 }: CustomizePanelProps) {
+  const { mounted, closing } = useAnimatedModal(open);
+  if (!mounted) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 animate-modal-backdrop"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
+        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">

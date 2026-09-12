@@ -33,6 +33,15 @@ export function SaveLinkModal({
   const [notes, setNotes] = useState("");
   const [category, setCategory] = useState(defaultCategory);
   const [fetchingTitle, setFetchingTitle] = useState(false);
+  // This modal is unmounted by the parent as soon as its data goes away
+  // (unlike the boolean-driven modals, see useAnimatedModal), so instead
+  // of that hook, X/Cancel/backdrop just play the exit animation locally
+  // before calling the real onClose a tick later.
+  const [closing, setClosing] = useState(false);
+  function handleClose() {
+    setClosing(true);
+    setTimeout(onClose, 160);
+  }
 
   // Only arbitrary manually-pasted URLs need an auto-fetched title — a
   // known article already carries its own title from the RSS feed.
@@ -68,13 +77,13 @@ export function SaveLinkModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 animate-modal-backdrop"
-      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
+      onClick={handleClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
+        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">
@@ -82,7 +91,7 @@ export function SaveLinkModal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close"
             className="rounded px-1.5 py-0.5 text-sm text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
@@ -164,7 +173,7 @@ export function SaveLinkModal({
         <div className="flex justify-end gap-2 border-t border-brand-200 px-4 py-3 dark:border-brand-800">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-800"
           >
             Cancel

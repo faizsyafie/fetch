@@ -3,21 +3,41 @@
 import { useState } from "react";
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
 
 interface FeedbackModalProps {
+  open: boolean;
   accent: AccentColor;
   onClose: () => void;
 }
 
 type Status = "idle" | "sending" | "sent" | "error";
 
-export function FeedbackModal({ accent, onClose }: FeedbackModalProps) {
+export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
   const accentPreset = ACCENT_PRESETS[accent];
+  const { mounted, closing } = useAnimatedModal(open);
   const [senderEmail, setSenderEmail] = useState("");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorText, setErrorText] = useState<string | null>(null);
+
+  // Stays mounted (invisible) between opens now — see useAnimatedModal —
+  // so clear the form each time it's freshly reopened instead of showing
+  // the last submission's leftovers.
+  const [openTrackedFor, setOpenTrackedFor] = useState(open);
+  if (open !== openTrackedFor) {
+    setOpenTrackedFor(open);
+    if (open) {
+      setSenderEmail("");
+      setTitle("");
+      setMessage("");
+      setStatus("idle");
+      setErrorText(null);
+    }
+  }
+
+  if (!mounted) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,11 +67,11 @@ export function FeedbackModal({ accent, onClose }: FeedbackModalProps) {
   if (status === "sent") {
     return (
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 animate-modal-backdrop"
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
         onClick={onClose}
       >
         <div
-          className="w-full max-w-md rounded-lg border border-brand-200 bg-white p-6 text-center shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
+          className={`w-full max-w-md rounded-lg border border-brand-200 bg-white p-6 text-center shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-3xl">🐾</p>
@@ -75,13 +95,13 @@ export function FeedbackModal({ accent, onClose }: FeedbackModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 animate-modal-backdrop"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
       onClick={onClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
+        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">

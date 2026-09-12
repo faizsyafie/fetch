@@ -39,12 +39,18 @@
   --animate-bone-jump: bone-jump 0.5s ease-in-out;
 }
 
-/* Shared entrance animation for every modal/popup (backdrop fades in,
-   panel floats up and fades in slightly after) — applied via
-   .animate-modal-backdrop / .animate-modal-panel on mount. Exit isn't
-   animated since these are conditionally unmounted, not toggled. */
+/* Shared entrance/exit animation for every modal/popup (backdrop fades,
+   panel floats up/down and fades) — applied via .animate-modal-backdrop
+   / .animate-modal-panel on mount, and their -out counterparts while a
+   modal lingers for one tick after close so the reverse plays instead
+   of it just vanishing (see useAnimatedModal). */
 @keyframes modal-backdrop-in {
   from {
+    opacity: 0;
+  }
+}
+@keyframes modal-backdrop-out {
+  to {
     opacity: 0;
   }
 }
@@ -54,15 +60,30 @@
     transform: translateY(10px) scale(0.97);
   }
 }
+@keyframes modal-panel-out {
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
 .animate-modal-backdrop {
   animation: modal-backdrop-in 0.15s ease-out;
+}
+.animate-modal-backdrop-out {
+  animation: modal-backdrop-out 0.15s ease-in forwards;
 }
 .animate-modal-panel {
   animation: modal-panel-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.animate-modal-panel-out {
+  animation: modal-panel-out 0.16s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
 /* Full-screen overlays (no separate backdrop/panel) just fade. */
 .animate-modal-fullscreen {
   animation: modal-backdrop-in 0.18s ease-out;
+}
+.animate-modal-fullscreen-out {
+  animation: modal-backdrop-out 0.15s ease-in forwards;
 }
 
 /* The Fetch! button (itself shaped like a bone) hops and shakes on hover —
@@ -163,8 +184,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-bone-jump,
   .animate-modal-backdrop,
+  .animate-modal-backdrop-out,
   .animate-modal-panel,
-  .animate-modal-fullscreen {
+  .animate-modal-panel-out,
+  .animate-modal-fullscreen,
+  .animate-modal-fullscreen-out {
     animation: none !important;
   }
 }
