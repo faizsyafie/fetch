@@ -29,7 +29,7 @@ export const HOME_TOUR_STEPS: TourStep[] = [
     selector: '[data-tour="nav-saved"]',
     title: "🦴 Buried Bones",
     description:
-      "Your stash — bookmark any article with 🔖, or bury a link of your own. Dig it back up anytime to read inline and jot down notes.",
+      "Your stash — bookmark any article with 🔖, or bury a link of your own. Dig it back up anytime to read inline and jot down notes. Forget any of this? Click ❓ on any page for a refresher on just that page.",
     placement: "right",
   },
 ];
