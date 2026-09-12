@@ -3,13 +3,23 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { THEME_STORAGE_KEY } from "@/lib/defaults";
 
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "coral" | "midnight";
+
+const VALID_THEMES: Theme[] = ["light", "dark", "coral", "midnight"];
+
+// "dark" and "midnight" are both dark-leaning (deserve the .dark class and
+// the dark dog-logo assets); "light" and "coral" are light-leaning.
+export function isDarkTheme(theme: Theme): boolean {
+  return theme === "dark" || theme === "midnight";
+}
 
 const THEME_EVENT = "credit-news-analyst-theme-change";
 
 function readTheme(): Theme {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored === "light" || stored === "dark") return stored;
+  if (stored && (VALID_THEMES as string[]).includes(stored)) {
+    return stored as Theme;
+  }
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
@@ -32,16 +42,16 @@ export function useTheme() {
   const theme = useSyncExternalStore(subscribe, readTheme, getServerSnapshot);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.classList.toggle("dark", isDarkTheme(theme));
+    document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  const toggleTheme = useCallback(() => {
-    const next: Theme = readTheme() === "dark" ? "light" : "dark";
+  const setTheme = useCallback((next: Theme) => {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next);
     } catch {}
     window.dispatchEvent(new Event(THEME_EVENT));
   }, []);
 
-  return { theme, toggleTheme };
+  return { theme, setTheme };
 }

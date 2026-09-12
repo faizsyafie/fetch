@@ -19,7 +19,15 @@ import type {
 import type { AppMode } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { BoneButton } from "@/components/BoneButton";
-import { CompanyActions } from "@/components/CompanyActions";
+import { CompanySelectionActions } from "@/components/CompanySelectionActions";
+import { TimeFramePills } from "@/components/TimeFramePills";
+
+// TimeFramePills wants a flat {label, value}[] shape; TIME_FRAME_OPTIONS
+// uses `days` instead of `value` for its own (non-UI) clarity elsewhere.
+const companiesTimeFrameOptions = TIME_FRAME_OPTIONS.map((opt) => ({
+  label: opt.label,
+  value: opt.days,
+}));
 
 interface TopBarProps {
   mode: AppMode;
@@ -38,7 +46,7 @@ interface TopBarProps {
   onSetDays: (days: TimeFrameDays) => void;
   onAddCompany: (name: string) => void;
   onRemoveCompany: (id: string) => void;
-  onOpenTutorial: () => void;
+  onOpenHelp: () => void;
   onOpenSettings: () => void;
   // News mode: the same time-range/refresh concept, bound to its own state
   // rather than the Companies preferences, since the two fetches are
@@ -47,11 +55,13 @@ interface TopBarProps {
   onSetNewsDays: (days: NewsTimeFrame) => void;
   newsLoading: boolean;
   onRefreshNews: () => void;
-  // Companies mode: the Clear/Collapse/Fetch! cluster, formerly anchored to
-  // the right edge of the (now-removed) industry TabBar — lives next to the
-  // time-frame pills here instead, same as Re-fetch! does for News.
+  // Companies mode: Fetch! sits right after the time-frame pills, in the
+  // exact spot News's Re-fetch! occupies, so the blank-state bar matches.
+  // Clear/Collapse only render (in CompanySelectionActions) once there's a
+  // selection or an expanded row to act on.
   selectedCount: number;
   totalCount: number;
+  expandedCount: number;
   batchRunning: boolean;
   loadingCount: number;
   onClearSelection: () => void;
@@ -76,7 +86,7 @@ export function TopBar({
   onSetDays,
   onAddCompany,
   onRemoveCompany,
-  onOpenTutorial,
+  onOpenHelp,
   onOpenSettings,
   newsDays,
   onSetNewsDays,
@@ -84,6 +94,7 @@ export function TopBar({
   onRefreshNews,
   selectedCount,
   totalCount,
+  expandedCount,
   batchRunning,
   loadingCount,
   onClearSelection,
@@ -104,6 +115,7 @@ export function TopBar({
   const isNews = mode === "news";
   const isCompanies = mode === "companies";
   const isSaved = mode === "saved";
+  const isHome = mode === "home";
   const isSearching = searchQuery.trim().length > 0;
   const isVirtualIndustry =
     activeIndustry === ALL_INDUSTRY || activeIndustry === WATCHLIST_INDUSTRY;
@@ -118,30 +130,18 @@ export function TopBar({
   }
 
   return (
-    <div className="border-b border-brand-200 bg-white px-5 py-3 dark:border-brand-800/80 dark:bg-brand-900">
-      <div className="flex items-center gap-3">
+    <div className="bg-white dark:bg-brand-900">
+      <div className="flex h-14 items-center gap-3 border-b border-brand-200 px-5 dark:border-brand-800/80">
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           {isNews && (
             <div className="flex shrink-0 items-center gap-2">
-              <div
-                data-tour="topbar-timerange"
-                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
-              >
-                {NEWS_TIME_FRAME_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => onSetNewsDays(opt.value)}
-                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                      newsDays === opt.value
-                        ? `${accentPreset.solid} text-white shadow-sm`
-                        : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-                    }`}
-                  >
-                    {opt.label.toUpperCase()}
-                  </button>
-                ))}
-              </div>
+              <TimeFramePills
+                dataTour="topbar-timerange"
+                options={NEWS_TIME_FRAME_OPTIONS}
+                value={newsDays}
+                accent={accent}
+                onChange={onSetNewsDays}
+              />
               <div data-tour="topbar-fetch">
                 <BoneButton onClick={onRefreshNews} disabled={newsLoading} accent={accent}>
                   {newsLoading ? "Refreshing…" : "Re-fetch!"}
@@ -151,78 +151,78 @@ export function TopBar({
           )}
           {isCompanies && (
             <div className="flex shrink-0 items-center gap-2">
-              <div
-                data-tour="topbar-timerange"
-                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
-              >
-                {TIME_FRAME_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.days}
-                    type="button"
-                    onClick={() => onSetDays(opt.days)}
-                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                      days === opt.days
-                        ? `${accentPreset.solid} text-white shadow-sm`
-                        : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-                    }`}
-                  >
-                    {opt.label.toUpperCase()}
-                  </button>
-                ))}
+              <TimeFramePills
+                dataTour="topbar-timerange"
+                options={companiesTimeFrameOptions}
+                value={days}
+                accent={accent}
+                onChange={onSetDays}
+              />
+              <div data-tour="topbar-fetch">
+                <BoneButton
+                  onClick={onFetchCompanies}
+                  disabled={batchRunning || (selectedCount === 0 && totalCount === 0)}
+                  accent={accent}
+                >
+                  {batchRunning
+                    ? `Fetching… (${loadingCount})`
+                    : selectedCount > 0
+                      ? `Fetch! (${selectedCount})`
+                      : "Fetch!"}
+                </BoneButton>
               </div>
-              <CompanyActions
-                dataTour="topbar-fetch"
+              <CompanySelectionActions
                 selectedCount={selectedCount}
-                totalCount={totalCount}
-                batchRunning={batchRunning}
-                loadingCount={loadingCount}
+                expandedCount={expandedCount}
                 accent={accent}
                 onClear={onClearSelection}
                 onCollapse={onCollapseAll}
-                onFetch={onFetchCompanies}
               />
             </div>
           )}
         </div>
 
         <div className="flex min-w-0 flex-1 justify-center">
-          <div data-tour="topbar-search" className="relative min-w-0 w-80 max-w-full">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
-              🔍
-            </span>
-            <input
-              id="company-search-input"
-              value={draftQuery}
-              onChange={(e) => {
-                const next = e.target.value;
-                setDraftQuery(next);
-                // Companies search just filters an in-memory list (no
-                // highlight spans, no per-keystroke RSS work), so it's safe
-                // — and nicer — to search live here. News stays Enter-gated;
-                // see the commit that introduced draftQuery for why.
-                if (isCompanies) onSearch(next);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
-              }}
-              placeholder={
-                isNews
-                  ? "Search articles… (Enter)"
-                  : isSaved
-                    ? "Search saved links… (Enter)"
-                    : "Search companies…"
-              }
-              className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
-            />
-          </div>
+          {!isHome && (
+            <div data-tour="topbar-search" className="relative min-w-0 w-80 max-w-full">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
+                🔍
+              </span>
+              <input
+                id="company-search-input"
+                value={draftQuery}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setDraftQuery(next);
+                  // Companies search just filters an in-memory list (no
+                  // highlight spans, no per-keystroke RSS work), so it's safe
+                  // — and nicer — to search live here. News stays Enter-gated;
+                  // see the commit that introduced draftQuery for why.
+                  if (isCompanies) onSearch(next);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
+                }}
+                placeholder={
+                  isNews
+                    ? "Search articles… (Enter)"
+                    : isSaved
+                      ? "Search saved links… (Enter)"
+                      : "Search companies…"
+                }
+                className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           <button
             type="button"
-            onClick={onOpenTutorial}
-            title="Open tutorial"
-            aria-label="Open tutorial"
+            data-tour="topbar-help"
+            onClick={onOpenHelp}
+            title="Help"
+            aria-label="Help"
             className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
           >
             <span aria-hidden="true">❓</span>
@@ -250,37 +250,44 @@ export function TopBar({
         </div>
       </div>
 
-      {isCompanies && editMode && !isSearching && !isVirtualIndustry && (
+      {isCompanies && !isSearching && !isVirtualIndustry && (
         <div
-          className={`mt-2 rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
+          className="grid px-5 pb-3 pt-2 transition-[grid-template-rows] duration-200 ease-out"
+          style={{ gridTemplateRows: editMode ? "1fr" : "0fr" }}
         >
-          <div className={`mb-1.5 text-[11px] font-bold ${palette.badgeText}`}>
-            Editing: {activeIndustry}
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {companiesInIndustry.map((company) => (
-              <span
-                key={company.id}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${palette.badgeBg} ${palette.badgeText}`}
-              >
-                {company.name}
-                <button
-                  type="button"
-                  onClick={() => onRemoveCompany(company.id)}
-                  className="text-sm leading-none opacity-60 hover:opacity-100"
-                  aria-label={`Remove ${company.name}`}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            <input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagKey}
-              placeholder="+ Add company"
-              className={`w-28 bg-transparent text-xs outline-none ${palette.badgeText}`}
-            />
+          <div className="overflow-hidden">
+            <div
+              className={`rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
+            >
+              <div className={`mb-1.5 text-[11px] font-bold ${palette.badgeText}`}>
+                Editing: {activeIndustry}
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {companiesInIndustry.map((company) => (
+                  <span
+                    key={company.id}
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${palette.badgeBg} ${palette.badgeText}`}
+                  >
+                    {company.name}
+                    <button
+                      type="button"
+                      onClick={() => onRemoveCompany(company.id)}
+                      className="text-sm leading-none opacity-60 hover:opacity-100"
+                      aria-label={`Remove ${company.name}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKey}
+                  placeholder="+ Add company"
+                  className={`w-28 bg-transparent text-xs outline-none ${palette.badgeText}`}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}

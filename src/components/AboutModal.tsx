@@ -1,12 +1,20 @@
 "use client";
 
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
+
 interface AboutModalProps {
+  open: boolean;
   onClose: () => void;
 }
 
-export function AboutModal({ onClose }: AboutModalProps) {
+export function AboutModal({ open, onClose }: AboutModalProps) {
+  const { mounted, closing } = useAnimatedModal(open);
+  if (!mounted) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-brand-50 px-4 py-16 text-center dark:bg-brand-900">
+    <div
+      className={`fixed inset-0 z-50 flex flex-col overflow-y-auto bg-brand-50 px-4 py-16 text-center dark:bg-brand-900 ${closing ? "animate-modal-fullscreen-out" : "animate-modal-fullscreen"}`}
+    >
       <button
         type="button"
         onClick={onClose}

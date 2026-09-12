@@ -165,7 +165,7 @@ export function SidebarSubList({
           onClick={() => onSelect(item.key)}
           className={baseClass}
         >
-          {onSetEmoji || onSetColor ? (
+          {editable && (onSetEmoji || onSetColor) ? (
             <span
               role="button"
               tabIndex={0}

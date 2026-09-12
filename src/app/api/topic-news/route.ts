@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchTopicNews } from "@/lib/rss";
+import { fetchTopicNews, MAX_ARTICLES_PER_TOPIC } from "@/lib/rss";
 import { NEWS_TOPICS } from "@/lib/newsTopics";
+import { DEFAULT_NEWS_ARTICLE_LIMIT } from "@/lib/defaults";
 import type { NewsTimeFrame, NewsTopicId } from "@/lib/types";
 
 const VALID_TIME_FRAMES: NewsTimeFrame[] = ["now", 1, 3, 7, 14];
@@ -25,8 +26,12 @@ export async function POST(request: NextRequest) {
       requestedTopics.length > 0
         ? NEWS_TOPICS.filter((t) => requestedTopics.includes(t.id))
         : NEWS_TOPICS;
+    const limit =
+      typeof body?.limit === "number" && Number.isFinite(body.limit)
+        ? Math.min(Math.max(1, Math.trunc(body.limit)), MAX_ARTICLES_PER_TOPIC)
+        : DEFAULT_NEWS_ARTICLE_LIMIT;
 
-    const topics = await fetchTopicNews(topicsToFetch, timeFrame);
+    const topics = await fetchTopicNews(topicsToFetch, timeFrame, limit);
 
     return NextResponse.json({
       topics,

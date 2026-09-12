@@ -2,9 +2,11 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 import {
+  DEFAULT_NEWS_ARTICLE_LIMIT,
   DEFAULT_SIDEBAR_WIDTH,
   MAX_SIDEBAR_WIDTH,
   MIN_SIDEBAR_WIDTH,
+  NEWS_ARTICLE_LIMIT_OPTIONS,
   UI_STORAGE_KEY,
 } from "@/lib/defaults";
 import { DEFAULT_NEWS_TOPIC_ORDER, NEWS_TOPICS } from "@/lib/newsTopics";
@@ -21,12 +23,37 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   sidebarCollapsed: false,
   density: "comfortable",
-  tutorialSeen: false,
+  toursSeen: {},
   accent: "blue",
   fontFamily: "system",
   fontScale: "md",
   newsTopicOrder: DEFAULT_NEWS_TOPIC_ORDER,
+  newsArticleLimit: DEFAULT_NEWS_ARTICLE_LIMIT,
 };
+
+function sanitizeArticleLimit(value: unknown): number {
+  return typeof value === "number" && (NEWS_ARTICLE_LIMIT_OPTIONS as readonly number[]).includes(value)
+    ? value
+    : DEFAULT_NEWS_ARTICLE_LIMIT;
+}
+
+// Replaces the old single `tutorialSeen` boolean with a per-page record.
+// A returning user who'd already seen the old one-shot intro shouldn't
+// suddenly get all four new tours thrown at them at once — treat that as
+// every page already seen. A genuinely fresh install has neither field and
+// starts with everything unseen.
+function sanitizeToursSeen(
+  toursSeen: unknown,
+  legacyTutorialSeen: unknown
+): Partial<Record<string, boolean>> {
+  if (toursSeen && typeof toursSeen === "object") {
+    return toursSeen as Partial<Record<string, boolean>>;
+  }
+  if (legacyTutorialSeen === true) {
+    return { home: true, news: true, companies: true, saved: true };
+  }
+  return {};
+}
 
 const UI_SETTINGS_EVENT = "credit-news-analyst-ui-change";
 
@@ -74,7 +101,9 @@ function readUiSettings(): UiSettings {
     return cachedSettings;
   }
   try {
-    const parsed = JSON.parse(raw) as Partial<UiSettings>;
+    const parsed = JSON.parse(raw) as Partial<UiSettings> & {
+      tutorialSeen?: boolean;
+    };
     cachedSettings = {
       ...DEFAULT_UI_SETTINGS,
       ...parsed,
@@ -82,6 +111,8 @@ function readUiSettings(): UiSettings {
         parsed.sidebarWidth ?? DEFAULT_UI_SETTINGS.sidebarWidth
       ),
       newsTopicOrder: sanitizeTopicOrder(parsed.newsTopicOrder),
+      newsArticleLimit: sanitizeArticleLimit(parsed.newsArticleLimit),
+      toursSeen: sanitizeToursSeen(parsed.toursSeen, parsed.tutorialSeen),
     };
   } catch {
     cachedSettings = DEFAULT_UI_SETTINGS;
@@ -146,9 +177,12 @@ export function useUiSettings() {
     [update]
   );
 
-  const markTutorialSeen = useCallback(() => {
-    update((prev) => ({ ...prev, tutorialSeen: true }));
-  }, [update]);
+  const markTourSeen = useCallback(
+    (mode: string) => {
+      update((prev) => ({ ...prev, toursSeen: { ...prev.toursSeen, [mode]: true } }));
+    },
+    [update]
+  );
 
   const setAccent = useCallback(
     (accent: AccentColor) => {
@@ -178,16 +212,24 @@ export function useUiSettings() {
     [update]
   );
 
+  const setNewsArticleLimit = useCallback(
+    (newsArticleLimit: number) => {
+      update((prev) => ({ ...prev, newsArticleLimit }));
+    },
+    [update]
+  );
+
   return {
     settings,
     hydrated: true,
     setSidebarWidth,
     toggleSidebarCollapsed,
     setDensity,
-    markTutorialSeen,
+    markTourSeen,
     setAccent,
     setFontFamily,
     setFontScale,
     setNewsTopicOrder,
+    setNewsArticleLimit,
   };
 }

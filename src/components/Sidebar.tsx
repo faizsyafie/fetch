@@ -7,7 +7,9 @@ import { Logo } from "@/components/Logo";
 import { SidebarSubList } from "@/components/SidebarSubList";
 import type { Theme } from "@/hooks/useTheme";
 
-export type AppMode = "companies" | "news" | "saved";
+// "home" is the post-login landing hub (HomeHub) — reachable by clicking
+// the logo, but not a persistent nav row like the other three.
+export type AppMode = "companies" | "news" | "saved" | "home";
 
 interface SidebarProps {
   theme: Theme;
@@ -226,13 +228,13 @@ export function Sidebar({
 
       <div
         data-tour="sidebar-header"
-        className={`flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800/80`}
+        className={`flex h-14 items-center justify-between border-b border-brand-200 px-4 dark:border-brand-800/80`}
       >
         <button
           type="button"
-          onClick={() => onSelectMode("news")}
+          onClick={() => onSelectMode("home")}
           title="fetch"
-          aria-label="Go to The Yard (General News)"
+          aria-label="Go home"
           className="rounded-md transition-opacity hover:opacity-80"
         >
           <Logo theme={theme} compact={collapsed} />
@@ -271,6 +273,7 @@ export function Sidebar({
           label: "Buried Bones",
           subtitle: "Saved Articles and Notes",
           emoji: "🔖",
+          dataTour: "nav-saved",
           onClick: () => onSelectMode("saved"),
           expanded: savedListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleSavedListExpanded,
@@ -307,7 +310,7 @@ export function Sidebar({
           label: "The Yard",
           subtitle: "General News",
           emoji: "📰",
-          dataTour: "mode-toggle",
+          dataTour: "nav-news",
           onClick: () => onSelectMode("news"),
         })}
         {renderNavRow({
@@ -315,6 +318,7 @@ export function Sidebar({
           label: "Pack Watch",
           subtitle: "Company News",
           emoji: "🏢",
+          dataTour: "nav-companies",
           onClick: () => onSelectMode("companies"),
           expanded: companiesListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleCompaniesListExpanded,
@@ -422,19 +426,24 @@ export function Sidebar({
                   ▾
                 </span>
               </button>
-              {sourcesListExpanded && (
-                <div className="space-y-1">
-                  {enabledSources.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
-                    >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                      <span className="truncate">{s.name}</span>
-                    </div>
-                  ))}
+              <div
+                className="grid transition-[grid-template-rows] duration-200 ease-out"
+                style={{ gridTemplateRows: sourcesListExpanded ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden">
+                  <div className="space-y-1">
+                    {enabledSources.map((s) => (
+                      <div
+                        key={s.id}
+                        className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
+                      >
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                        <span className="truncate">{s.name}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
+              </div>
               <div className="mt-2 flex items-center justify-between text-[10px] text-brand-400 dark:text-brand-600">
                 <span>
                   Last {days} day{days !== 1 ? "s" : ""}

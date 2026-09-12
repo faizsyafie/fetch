@@ -1,6 +1,6 @@
 "use client";
 
-import type { Theme } from "@/hooks/useTheme";
+import { isDarkTheme, type Theme } from "@/hooks/useTheme";
 
 interface DogWatermarkProps {
   theme: Theme;
@@ -17,7 +17,7 @@ interface DogWatermarkProps {
 // pick up their own stacking context (e.g. rows with a `transition` on
 // transform/opacity).
 export function DogWatermark({ theme }: DogWatermarkProps) {
-  const src = theme === "dark" ? "/bg-dog-dark-new.png" : "/bg-dog-light-new.png";
+  const src = isDarkTheme(theme) ? "/bg-dog-dark-new.png" : "/bg-dog-light-new.png";
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img

@@ -7,14 +7,23 @@ import {
 } from "@/lib/defaults";
 import type { AccentColor, Density, FontFamily, FontScale } from "@/lib/types";
 import type { Theme } from "@/hooks/useTheme";
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
+
+const THEME_OPTIONS: { key: Theme; label: string }[] = [
+  { key: "light", label: "☀️ Light" },
+  { key: "dark", label: "🌙 Dark" },
+  { key: "coral", label: "🌸 Coral" },
+  { key: "midnight", label: "🌌 Midnight" },
+];
 
 interface CustomizePanelProps {
+  open: boolean;
   theme: Theme;
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;
   density: Density;
-  onToggleTheme: () => void;
+  onSetTheme: (theme: Theme) => void;
   onSetAccent: (accent: AccentColor) => void;
   onSetFontFamily: (fontFamily: FontFamily) => void;
   onSetFontScale: (fontScale: FontScale) => void;
@@ -23,25 +32,29 @@ interface CustomizePanelProps {
 }
 
 export function CustomizePanel({
+  open,
   theme,
   accent,
   fontFamily,
   fontScale,
   density,
-  onToggleTheme,
+  onSetTheme,
   onSetAccent,
   onSetFontFamily,
   onSetFontScale,
   onSetDensity,
   onClose,
 }: CustomizePanelProps) {
+  const { mounted, closing } = useAnimatedModal(open);
+  if (!mounted) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
@@ -64,18 +77,11 @@ export function CustomizePanel({
               Theme
             </p>
             <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  { key: "light" as Theme, label: "☀️ Light" },
-                  { key: "dark" as Theme, label: "🌙 Dark" },
-                ] as const
-              ).map(({ key, label }) => (
+              {THEME_OPTIONS.map(({ key, label }) => (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => {
-                    if (key !== theme) onToggleTheme();
-                  }}
+                  onClick={() => onSetTheme(key)}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                     theme === key
                       ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"

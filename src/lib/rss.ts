@@ -213,7 +213,10 @@ export async function fetchNewsForWatchlist(
   return { articles: sorted, errors: [...new Set(errors)] };
 }
 
-const MAX_ARTICLES_PER_TOPIC = 30;
+// Hard ceiling regardless of what the client asks for — see
+// NEWS_ARTICLE_LIMIT_OPTIONS in defaults.ts for the options this bounds.
+export const MAX_ARTICLES_PER_TOPIC = 100;
+const DEFAULT_ARTICLES_PER_TOPIC = 30;
 
 function extractImageUrl(item: Parser.Item): string | null {
   // rss-parser exposes <enclosure> out of the box; most other thumbnail
@@ -269,19 +272,24 @@ async function fetchTopicSourceArticles(
  * the same story to more than one of their own feeds).
  *
  * `timeFrame` pages backward through the archive rather than narrowing a
- * recency window: each column is a flat top-30-most-recent slice, so "last
- * N days" would almost always return the same handful of items regardless
- * of N. "now" takes the newest 30 with no age floor; a numeric value keeps
- * only items at least that many days old, so 1/3/7/14 each surface a
- * distinctly older slice instead of repeating the freshest one.
+ * recency window: each column is a flat top-N-most-recent slice (N =
+ * `limit`, clamped to MAX_ARTICLES_PER_TOPIC), so "last N days" would
+ * almost always return the same handful of items regardless of N. "now"
+ * takes the newest N with no age floor; a numeric value keeps only items
+ * at least that many days old, so 1/3/7/14 each surface a distinctly
+ * older slice instead of repeating the freshest one. Note the real
+ * ceiling is often the source feed itself — most RSS feeds only expose
+ * their most recent ~20-50 items regardless of what's asked for here.
  */
 export async function fetchTopicNews(
   topics: NewsTopic[],
-  timeFrame: NewsTimeFrame
+  timeFrame: NewsTimeFrame,
+  limit: number = DEFAULT_ARTICLES_PER_TOPIC
 ): Promise<Record<string, { articles: TopicArticle[]; errors: string[] }>> {
   const boundary = timeFrame === "now" ? null : subDays(new Date(), timeFrame);
   const isInRange = (pubDate: Date) =>
     boundary === null || !isAfter(pubDate, boundary);
+  const cappedLimit = Math.min(Math.max(1, limit), MAX_ARTICLES_PER_TOPIC);
 
   const entries = await Promise.all(
     topics.map(async (topic) => {
@@ -305,7 +313,7 @@ export async function fetchTopicNews(
         .sort(
           (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
         )
-        .slice(0, MAX_ARTICLES_PER_TOPIC);
+        .slice(0, cappedLimit);
 
       return [topic.id, { articles: sorted, errors }] as const;
     })

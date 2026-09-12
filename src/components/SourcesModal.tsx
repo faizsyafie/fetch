@@ -4,8 +4,10 @@ import { useState } from "react";
 import { flushSync } from "react-dom";
 import { ACCENT_PRESETS, SUGGESTED_SOURCES } from "@/lib/defaults";
 import type { AccentColor, NewsSource, SourceRegion } from "@/lib/types";
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
 
 interface SourcesModalProps {
+  open: boolean;
   sources: NewsSource[];
   accent: AccentColor;
   onAdd: (name: string, domain: string, feedUrls: string[]) => void;
@@ -57,6 +59,7 @@ function withGlide(update: () => void) {
 }
 
 export function SourcesModal({
+  open,
   sources,
   accent,
   onAdd,
@@ -65,6 +68,7 @@ export function SourcesModal({
   onClearCache,
   onClose,
 }: SourcesModalProps) {
+  const { mounted, closing } = useAnimatedModal(open);
   const [name, setName] = useState("");
   const [domain, setDomain] = useState("");
   const accentPreset = ACCENT_PRESETS[accent];
@@ -89,13 +93,15 @@ export function SourcesModal({
     setDomain("");
   }
 
+  if (!mounted) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className={`flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
