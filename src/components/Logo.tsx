@@ -1,6 +1,6 @@
 "use client";
 
-import type { Theme } from "@/hooks/useTheme";
+import { isDarkTheme, type Theme } from "@/hooks/useTheme";
 
 interface LogoProps {
   theme: Theme;
@@ -16,13 +16,13 @@ interface LogoProps {
 // without cropping, letterboxing blends into the sidebar's own matching
 // background. full-logo-dog-*.png: dog + wordmark + "Daily RSS" side by
 // side, wide aspect ratio (~2:1) — used for the large standalone treatment.
+// Coral/Midnight reuse these same two asset sets (no dedicated art) — see
+// isDarkTheme.
 export function Logo({ theme, compact = false, large = false }: LogoProps) {
-  const iconSrc =
-    theme === "dark" ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
-  const textSrc =
-    theme === "dark" ? "/text-dog-dark-new.png" : "/text-dog-light-new.png";
-  const fullSrc =
-    theme === "dark" ? "/full-logo-dog-dark.png" : "/full-logo-dog-light.png";
+  const dark = isDarkTheme(theme);
+  const iconSrc = dark ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
+  const textSrc = dark ? "/text-dog-dark-new.png" : "/text-dog-light-new.png";
+  const fullSrc = dark ? "/full-logo-dog-dark.png" : "/full-logo-dog-light.png";
 
   if (compact) {
     return (

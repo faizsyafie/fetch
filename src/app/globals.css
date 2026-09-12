@@ -5,11 +5,71 @@
 :root {
   --background: #fcf9f2;
   --foreground: #342d2d;
+
+  /* Warm neutral scale matching the fetch logo's exact cream/charcoal
+     background colours — used for base chrome (surfaces, borders, body
+     text) in place of the default Tailwind slate. brand-50 (#fcf9f2) and
+     brand-900 (#342d2d) are the logo's own light/dark backgrounds, so any
+     surface showing the logo (landing page, sidebar) uses those two tones
+     exactly. Defined as custom properties (rather than inline in @theme)
+     so the "coral" and "midnight" themes below can override the whole
+     ramp — every dark:/light bg-brand-N, text-brand-N, border-brand-N
+     utility everywhere in the app reads through these same variables. */
+  --brand-50: #fcf9f2;
+  --brand-100: #f0ebdd;
+  --brand-200: #e2dac5;
+  --brand-300: #cabda1;
+  --brand-400: #a7987a;
+  --brand-500: #7e7160;
+  --brand-600: #5b5148;
+  --brand-700: #443b35;
+  --brand-800: #383130;
+  --brand-900: #342d2d;
+  --brand-950: #262121;
 }
 
 .dark {
   --background: #342d2d;
   --foreground: #fcf9f2;
+}
+
+/* Coral — light-leaning, warm rose/terracotta instead of cream. Uses the
+   same light dog-logo assets (see isDarkTheme in useTheme.ts). Doubled
+   :root specificity (vs plain :root above) so this reliably wins regardless
+   of source order. */
+:root[data-theme="coral"] {
+  --background: #fdeae5;
+  --foreground: #4a2c2a;
+  --brand-50: #fdeae5;
+  --brand-100: #f9d6cc;
+  --brand-200: #f3bcae;
+  --brand-300: #eb9884;
+  --brand-400: #dd7562;
+  --brand-500: #c85a48;
+  --brand-600: #a8453a;
+  --brand-700: #833a34;
+  --brand-800: #5c322f;
+  --brand-900: #4a2c2a;
+  --brand-950: #34201f;
+}
+
+/* Midnight — dark-leaning, cool blue-slate instead of warm charcoal. Also
+   gets the .dark class (see useTheme.ts) so every existing dark: utility
+   activates normally; only the brand-* values it reads change. */
+:root[data-theme="midnight"] {
+  --background: #1a1f2e;
+  --foreground: #e8ecf4;
+  --brand-50: #e8ecf4;
+  --brand-100: #d3dae8;
+  --brand-200: #b0bcd6;
+  --brand-300: #8a9cc0;
+  --brand-400: #6478a0;
+  --brand-500: #4a5c82;
+  --brand-600: #384768;
+  --brand-700: #2a3552;
+  --brand-800: #212a41;
+  --brand-900: #1a1f2e;
+  --brand-950: #12151f;
 }
 
 @theme inline {
@@ -18,23 +78,17 @@
   --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
 
-  /* Warm neutral scale matching the fetch logo's exact cream/charcoal
-     background colours — used for base chrome (surfaces, borders, body
-     text) in place of the default Tailwind slate. brand-50 (#fcf9f2) and
-     brand-900 (#342d2d) are the logo's own light/dark backgrounds, so any
-     surface showing the logo (landing page, sidebar) uses those two tones
-     exactly. */
-  --color-brand-50: #fcf9f2;
-  --color-brand-100: #f0ebdd;
-  --color-brand-200: #e2dac5;
-  --color-brand-300: #cabda1;
-  --color-brand-400: #a7987a;
-  --color-brand-500: #7e7160;
-  --color-brand-600: #5b5148;
-  --color-brand-700: #443b35;
-  --color-brand-800: #383130;
-  --color-brand-900: #342d2d;
-  --color-brand-950: #262121;
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-brand-950: var(--brand-950);
 
   --animate-bone-jump: bone-jump 0.5s ease-in-out;
 }
@@ -130,6 +184,14 @@ body {
 
 .dark * {
   scrollbar-color: #5a5148 transparent;
+}
+
+:root[data-theme="coral"] * {
+  scrollbar-color: #eb9884 transparent;
+}
+
+:root[data-theme="midnight"] * {
+  scrollbar-color: #384768 transparent;
 }
 
 /* Renders Readability's extracted article HTML (SavedView's inline reader)

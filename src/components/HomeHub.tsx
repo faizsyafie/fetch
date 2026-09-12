@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
 import type { AppMode } from "@/components/Sidebar";
-import type { Theme } from "@/hooks/useTheme";
+import { isDarkTheme, type Theme } from "@/hooks/useTheme";
 
 interface HomeHubProps {
   theme: Theme;
@@ -51,7 +51,7 @@ export function HomeHub({
   onOpenTour,
 }: HomeHubProps) {
   const accentPreset = ACCENT_PRESETS[accent];
-  const iconSrc = theme === "dark" ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
+  const iconSrc = isDarkTheme(theme) ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
   // Lazy initializer runs once on mount — the recommended way to seed state
   // from something impure (Math.random) without re-rolling on every render.
   const [messageIndex, setMessageIndex] = useState(() =>

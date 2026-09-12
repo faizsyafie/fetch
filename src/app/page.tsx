@@ -121,7 +121,7 @@ function DashboardForProfile({
     reorderLinkCategories,
     setLinkCategoryColor,
   } = usePreferences(profileName);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const {
     settings: uiSettings,
     hydrated: uiHydrated,
@@ -963,7 +963,7 @@ function DashboardForProfile({
         fontFamily={uiSettings.fontFamily}
         fontScale={uiSettings.fontScale}
         density={uiSettings.density}
-        onToggleTheme={toggleTheme}
+        onSetTheme={setTheme}
         onSetAccent={setAccent}
         onSetFontFamily={setFontFamily}
         onSetFontScale={setFontScale}
