@@ -2,9 +2,11 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 import {
+  DEFAULT_NEWS_ARTICLE_LIMIT,
   DEFAULT_SIDEBAR_WIDTH,
   MAX_SIDEBAR_WIDTH,
   MIN_SIDEBAR_WIDTH,
+  NEWS_ARTICLE_LIMIT_OPTIONS,
   UI_STORAGE_KEY,
 } from "@/lib/defaults";
 import { DEFAULT_NEWS_TOPIC_ORDER, NEWS_TOPICS } from "@/lib/newsTopics";
@@ -26,7 +28,14 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   fontFamily: "system",
   fontScale: "md",
   newsTopicOrder: DEFAULT_NEWS_TOPIC_ORDER,
+  newsArticleLimit: DEFAULT_NEWS_ARTICLE_LIMIT,
 };
+
+function sanitizeArticleLimit(value: unknown): number {
+  return typeof value === "number" && (NEWS_ARTICLE_LIMIT_OPTIONS as readonly number[]).includes(value)
+    ? value
+    : DEFAULT_NEWS_ARTICLE_LIMIT;
+}
 
 const UI_SETTINGS_EVENT = "credit-news-analyst-ui-change";
 
@@ -82,6 +91,7 @@ function readUiSettings(): UiSettings {
         parsed.sidebarWidth ?? DEFAULT_UI_SETTINGS.sidebarWidth
       ),
       newsTopicOrder: sanitizeTopicOrder(parsed.newsTopicOrder),
+      newsArticleLimit: sanitizeArticleLimit(parsed.newsArticleLimit),
     };
   } catch {
     cachedSettings = DEFAULT_UI_SETTINGS;
@@ -178,6 +188,13 @@ export function useUiSettings() {
     [update]
   );
 
+  const setNewsArticleLimit = useCallback(
+    (newsArticleLimit: number) => {
+      update((prev) => ({ ...prev, newsArticleLimit }));
+    },
+    [update]
+  );
+
   return {
     settings,
     hydrated: true,
@@ -189,5 +206,6 @@ export function useUiSettings() {
     setFontFamily,
     setFontScale,
     setNewsTopicOrder,
+    setNewsArticleLimit,
   };
 }

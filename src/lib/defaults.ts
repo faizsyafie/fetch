@@ -169,6 +169,13 @@ export const NEWS_TIME_FRAME_OPTIONS: { label: string; value: NewsTimeFrame }[] 
   { label: "14d", value: 14 },
 ];
 
+// Selectable "articles per topic" caps for the General page (Edit Themes
+// panel) — the server clamps to the same range regardless (see
+// MAX_ARTICLES_PER_TOPIC in rss.ts), so this list and that clamp must stay
+// in sync.
+export const NEWS_ARTICLE_LIMIT_OPTIONS = [30, 50, 75, 100] as const;
+export const DEFAULT_NEWS_ARTICLE_LIMIT = 30;
+
 export const DEFAULT_SOURCES: NewsSource[] = [
   {
     id: "bloomberg",

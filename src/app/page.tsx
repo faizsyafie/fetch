@@ -132,6 +132,7 @@ function DashboardForProfile({
     setFontFamily,
     setFontScale,
     setNewsTopicOrder,
+    setNewsArticleLimit,
   } = useUiSettings();
   const { hydrated: seenHydrated, markSeen, isSeen } = useSeenArticles();
 
@@ -208,13 +209,13 @@ function DashboardForProfile({
     setTutorialOpen(true);
   }, [setMode]);
 
-  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[]) => {
+  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
     try {
       const response = await fetch("/api/topic-news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ days, topics }),
+        body: JSON.stringify({ days, topics, limit }),
       });
       if (!response.ok) throw new Error("Failed to fetch news.");
       const data = await response.json();
@@ -242,9 +243,9 @@ function DashboardForProfile({
   const setNewsDays = useCallback(
     (days: NewsTimeFrame) => {
       setNewsDaysState(days);
-      void fetchNewsBoard(days, uiSettings.newsTopicOrder);
+      void fetchNewsBoard(days, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit);
     },
-    [fetchNewsBoard, uiSettings.newsTopicOrder]
+    [fetchNewsBoard, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit]
   );
 
   // Refresh as soon as the board is switched into — i.e. every time the
@@ -252,7 +253,7 @@ function DashboardForProfile({
   useEffect(() => {
     if (mode === "news") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder);
+      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
@@ -265,9 +266,20 @@ function DashboardForProfile({
         ? [...uiSettings.newsTopicOrder, id]
         : uiSettings.newsTopicOrder.filter((t) => t !== id);
       setNewsTopicOrder(next);
-      void fetchNewsBoard(newsDays, next);
+      void fetchNewsBoard(newsDays, next, uiSettings.newsArticleLimit);
     },
-    [uiSettings.newsTopicOrder, setNewsTopicOrder, fetchNewsBoard, newsDays]
+    [uiSettings.newsTopicOrder, uiSettings.newsArticleLimit, setNewsTopicOrder, fetchNewsBoard, newsDays]
+  );
+
+  // Same idea as handleToggleTopic — changing the per-column cap should
+  // repopulate the board right away rather than waiting for a manual
+  // refresh, so raising it actually shows the extra articles immediately.
+  const handleSetArticleLimit = useCallback(
+    (limit: number) => {
+      setNewsArticleLimit(limit);
+      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, limit);
+    },
+    [setNewsArticleLimit, fetchNewsBoard, newsDays, uiSettings.newsTopicOrder]
   );
 
   const expandedRef = useRef<Set<string>>(new Set());
@@ -818,9 +830,12 @@ function DashboardForProfile({
           newsDays={newsDays}
           onSetNewsDays={setNewsDays}
           newsLoading={newsLoading}
-          onRefreshNews={() => void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder)}
+          onRefreshNews={() =>
+            void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit)
+          }
           selectedCount={selected.size}
           totalCount={companiesInIndustry.length}
+          expandedCount={expanded.size}
           batchRunning={batchRunning}
           loadingCount={loadingSet.size}
           onClearSelection={clearSelection}
@@ -948,8 +963,10 @@ function DashboardForProfile({
       <EditThemesModal
         open={themesOpen}
         enabledTopics={uiSettings.newsTopicOrder}
+        articleLimit={uiSettings.newsArticleLimit}
         accent={uiSettings.accent}
         onToggle={handleToggleTopic}
+        onSetArticleLimit={handleSetArticleLimit}
         onClose={() => setThemesOpen(false)}
       />
 

@@ -19,7 +19,15 @@ import type {
 import type { AppMode } from "@/components/Sidebar";
 import { UserMenu } from "@/components/UserMenu";
 import { BoneButton } from "@/components/BoneButton";
-import { CompanyActions } from "@/components/CompanyActions";
+import { CompanySelectionActions } from "@/components/CompanySelectionActions";
+import { TimeFramePills } from "@/components/TimeFramePills";
+
+// TimeFramePills wants a flat {label, value}[] shape; TIME_FRAME_OPTIONS
+// uses `days` instead of `value` for its own (non-UI) clarity elsewhere.
+const companiesTimeFrameOptions = TIME_FRAME_OPTIONS.map((opt) => ({
+  label: opt.label,
+  value: opt.days,
+}));
 
 interface TopBarProps {
   mode: AppMode;
@@ -47,11 +55,13 @@ interface TopBarProps {
   onSetNewsDays: (days: NewsTimeFrame) => void;
   newsLoading: boolean;
   onRefreshNews: () => void;
-  // Companies mode: the Clear/Collapse/Fetch! cluster, formerly anchored to
-  // the right edge of the (now-removed) industry TabBar — lives next to the
-  // time-frame pills here instead, same as Re-fetch! does for News.
+  // Companies mode: Fetch! sits right after the time-frame pills, in the
+  // exact spot News's Re-fetch! occupies, so the blank-state bar matches.
+  // Clear/Collapse only render (in CompanySelectionActions) once there's a
+  // selection or an expanded row to act on.
   selectedCount: number;
   totalCount: number;
+  expandedCount: number;
   batchRunning: boolean;
   loadingCount: number;
   onClearSelection: () => void;
@@ -84,6 +94,7 @@ export function TopBar({
   onRefreshNews,
   selectedCount,
   totalCount,
+  expandedCount,
   batchRunning,
   loadingCount,
   onClearSelection,
@@ -123,25 +134,13 @@ export function TopBar({
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           {isNews && (
             <div className="flex shrink-0 items-center gap-2">
-              <div
-                data-tour="topbar-timerange"
-                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
-              >
-                {NEWS_TIME_FRAME_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => onSetNewsDays(opt.value)}
-                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                      newsDays === opt.value
-                        ? `${accentPreset.solid} text-white shadow-sm`
-                        : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-                    }`}
-                  >
-                    {opt.label.toUpperCase()}
-                  </button>
-                ))}
-              </div>
+              <TimeFramePills
+                dataTour="topbar-timerange"
+                options={NEWS_TIME_FRAME_OPTIONS}
+                value={newsDays}
+                accent={accent}
+                onChange={onSetNewsDays}
+              />
               <div data-tour="topbar-fetch">
                 <BoneButton onClick={onRefreshNews} disabled={newsLoading} accent={accent}>
                   {newsLoading ? "Refreshing…" : "Re-fetch!"}
@@ -151,35 +150,32 @@ export function TopBar({
           )}
           {isCompanies && (
             <div className="flex shrink-0 items-center gap-2">
-              <div
-                data-tour="topbar-timerange"
-                className="flex shrink-0 items-center gap-0.5 rounded-lg border border-brand-200 bg-brand-50 p-0.5 dark:border-brand-800 dark:bg-brand-950/50"
-              >
-                {TIME_FRAME_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.days}
-                    type="button"
-                    onClick={() => onSetDays(opt.days)}
-                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
-                      days === opt.days
-                        ? `${accentPreset.solid} text-white shadow-sm`
-                        : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
-                    }`}
-                  >
-                    {opt.label.toUpperCase()}
-                  </button>
-                ))}
+              <TimeFramePills
+                dataTour="topbar-timerange"
+                options={companiesTimeFrameOptions}
+                value={days}
+                accent={accent}
+                onChange={onSetDays}
+              />
+              <div data-tour="topbar-fetch">
+                <BoneButton
+                  onClick={onFetchCompanies}
+                  disabled={batchRunning || (selectedCount === 0 && totalCount === 0)}
+                  accent={accent}
+                >
+                  {batchRunning
+                    ? `Fetching… (${loadingCount})`
+                    : selectedCount > 0
+                      ? `Fetch! (${selectedCount})`
+                      : "Fetch!"}
+                </BoneButton>
               </div>
-              <CompanyActions
-                dataTour="topbar-fetch"
+              <CompanySelectionActions
                 selectedCount={selectedCount}
-                totalCount={totalCount}
-                batchRunning={batchRunning}
-                loadingCount={loadingCount}
+                expandedCount={expandedCount}
                 accent={accent}
                 onClear={onClearSelection}
                 onCollapse={onCollapseAll}
-                onFetch={onFetchCompanies}
               />
             </div>
           )}

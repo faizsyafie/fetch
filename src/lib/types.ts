@@ -114,6 +114,10 @@ export interface UiSettings {
   fontFamily: FontFamily;
   fontScale: FontScale;
   newsTopicOrder: NewsTopicId[];
+  /** Max articles fetched per General-page topic column — see
+   *  NEWS_ARTICLE_LIMIT_OPTIONS in defaults.ts for the selectable values
+   *  and MAX_ARTICLES_PER_TOPIC in rss.ts for the server-side hard cap. */
+  newsArticleLimit: number;
 }
 
 export interface TopicArticle {
