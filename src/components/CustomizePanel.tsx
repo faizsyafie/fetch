@@ -37,11 +37,11 @@ export function CustomizePanel({
 }: CustomizePanelProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 animate-modal-backdrop"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">

@@ -99,11 +99,11 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-brand-950/40 pt-[12vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-brand-950/40 pt-[12vh] animate-modal-backdrop"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className="w-full max-w-lg overflow-hidden rounded-lg border border-brand-200 bg-white shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-brand-200 px-3 py-2.5 dark:border-brand-800">

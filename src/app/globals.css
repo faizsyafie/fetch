@@ -39,6 +39,32 @@
   --animate-bone-jump: bone-jump 0.5s ease-in-out;
 }
 
+/* Shared entrance animation for every modal/popup (backdrop fades in,
+   panel floats up and fades in slightly after) — applied via
+   .animate-modal-backdrop / .animate-modal-panel on mount. Exit isn't
+   animated since these are conditionally unmounted, not toggled. */
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+.animate-modal-backdrop {
+  animation: modal-backdrop-in 0.15s ease-out;
+}
+.animate-modal-panel {
+  animation: modal-panel-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Full-screen overlays (no separate backdrop/panel) just fade. */
+.animate-modal-fullscreen {
+  animation: modal-backdrop-in 0.18s ease-out;
+}
+
 /* The Fetch! button (itself shaped like a bone) hops and shakes on hover —
    like a dog spotting its bone. */
 @keyframes bone-jump {
@@ -135,7 +161,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-bone-jump {
+  .animate-bone-jump,
+  .animate-modal-backdrop,
+  .animate-modal-panel,
+  .animate-modal-fullscreen {
     animation: none !important;
   }
 }

@@ -6,7 +6,7 @@ interface AboutModalProps {
 
 export function AboutModal({ onClose }: AboutModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-brand-50 px-4 py-16 text-center dark:bg-brand-900">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-brand-50 px-4 py-16 text-center animate-modal-fullscreen dark:bg-brand-900">
       <button
         type="button"
         onClick={onClose}

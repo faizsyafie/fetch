@@ -68,13 +68,13 @@ export function SaveLinkModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 animate-modal-backdrop"
       onClick={onClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl animate-modal-panel dark:border-brand-700 dark:bg-brand-900"
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">

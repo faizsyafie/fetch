@@ -250,37 +250,44 @@ export function TopBar({
         </div>
       </div>
 
-      {isCompanies && editMode && !isSearching && !isVirtualIndustry && (
+      {isCompanies && !isSearching && !isVirtualIndustry && (
         <div
-          className={`mt-2 rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
+          className="grid transition-[grid-template-rows] duration-200 ease-out"
+          style={{ gridTemplateRows: editMode ? "1fr" : "0fr" }}
         >
-          <div className={`mb-1.5 text-[11px] font-bold ${palette.badgeText}`}>
-            Editing: {activeIndustry}
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {companiesInIndustry.map((company) => (
-              <span
-                key={company.id}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${palette.badgeBg} ${palette.badgeText}`}
-              >
-                {company.name}
-                <button
-                  type="button"
-                  onClick={() => onRemoveCompany(company.id)}
-                  className="text-sm leading-none opacity-60 hover:opacity-100"
-                  aria-label={`Remove ${company.name}`}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            <input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagKey}
-              placeholder="+ Add company"
-              className={`w-28 bg-transparent text-xs outline-none ${palette.badgeText}`}
-            />
+          <div className="overflow-hidden">
+            <div
+              className={`mt-2 rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
+            >
+              <div className={`mb-1.5 text-[11px] font-bold ${palette.badgeText}`}>
+                Editing: {activeIndustry}
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {companiesInIndustry.map((company) => (
+                  <span
+                    key={company.id}
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${palette.badgeBg} ${palette.badgeText}`}
+                  >
+                    {company.name}
+                    <button
+                      type="button"
+                      onClick={() => onRemoveCompany(company.id)}
+                      className="text-sm leading-none opacity-60 hover:opacity-100"
+                      aria-label={`Remove ${company.name}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKey}
+                  placeholder="+ Add company"
+                  className={`w-28 bg-transparent text-xs outline-none ${palette.badgeText}`}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
