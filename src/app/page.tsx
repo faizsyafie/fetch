@@ -770,6 +770,18 @@ function DashboardForProfile({
       ?.scrollIntoView({ block: "nearest" });
   }, [focusedIndex, visibleCompanies]);
 
+  // Scales the actual root font-size (rem-based, so every Tailwind
+  // text-*/spacing utility responds through normal document reflow)
+  // rather than the old `zoom` hack, which scaled the whole rendered
+  // subtree as a single bitmap-like unit — breaking `position: fixed`
+  // modals (every one of them uses `inset-0`, which zoom miscomputes
+  // against its own scaled box instead of the real viewport) and the
+  // h-screen root itself, which is exactly what caused the reported
+  // blank gaps and off-screen controls at non-default sizes.
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${FONT_SCALE_PRESETS[uiSettings.fontScale].value * 100}%`;
+  }, [uiSettings.fontScale]);
+
   if (!hydrated) {
     return <SkeletonLoader />;
   }
@@ -780,8 +792,6 @@ function DashboardForProfile({
   const fontStyle: React.CSSProperties = {
     fontFamily: FONT_FAMILY_PRESETS[uiSettings.fontFamily].stack,
   };
-  (fontStyle as Record<string, string | number>).zoom =
-    FONT_SCALE_PRESETS[uiSettings.fontScale].value;
 
   return (
     <div style={fontStyle} className="flex h-screen overflow-hidden">

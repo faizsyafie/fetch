@@ -73,7 +73,7 @@ export function CustomizePanel({
 
         <div className="space-y-5 px-4 py-4">
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Theme
             </p>
             <div className="flex flex-wrap gap-2">
@@ -95,7 +95,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Accent color
             </p>
             <div className="flex flex-wrap gap-2">
@@ -123,7 +123,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Row spacing
             </p>
             <div className="flex flex-wrap gap-2">
@@ -155,14 +155,14 @@ export function CustomizePanel({
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[10px] text-brand-400 dark:text-brand-600">
+            <p className="mt-2 text-[0.625rem] text-brand-400 dark:text-brand-600">
               Compact packs more companies on screen with smaller rows;
               Comfortable gives each one more room to breathe.
             </p>
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Font
             </p>
             <div className="flex flex-wrap gap-2">
@@ -187,7 +187,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Font size
             </p>
             <div className="flex flex-wrap gap-2">
@@ -206,9 +206,9 @@ export function CustomizePanel({
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[10px] text-brand-400 dark:text-brand-600">
-              Font size is applied as an overall page zoom, so it may render
-              slightly differently across browsers.
+            <p className="mt-2 text-[0.625rem] text-brand-400 dark:text-brand-600">
+              Scales text and spacing throughout the app — layout reflows
+              normally, so nothing gets cut off at larger sizes.
             </p>
           </section>
         </div>

@@ -68,7 +68,7 @@ export function SidebarFlyout({
       style={{ top: anchor.top, left: anchor.left }}
       className="fixed z-50 max-h-[70vh] w-56 overflow-y-auto rounded-md border border-brand-200 bg-white p-1.5 shadow-lg dark:border-brand-700 dark:bg-brand-800"
     >
-      <p className="mb-1 px-2 pt-1 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+      <p className="mb-1 px-2 pt-1 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
         {title}
       </p>
       <div className="space-y-0.5">
@@ -79,7 +79,7 @@ export function SidebarFlyout({
               key={item.key}
               type="button"
               onClick={() => onSelect(item.key)}
-              className={`flex w-full items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-left text-[12px] font-medium transition-colors ${
+              className={`flex w-full items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-left text-[0.75rem] font-medium transition-colors ${
                 isActive
                   ? `${accentPreset.solid} text-white shadow-sm`
                   : "text-brand-600 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-800"

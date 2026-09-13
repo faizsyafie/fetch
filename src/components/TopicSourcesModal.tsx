@@ -81,7 +81,7 @@ export function TopicSourcesModal({
             <h2 className="text-sm font-bold text-brand-900 dark:text-white">
               Edit Sources
             </h2>
-            <p className="text-[11px] text-brand-400 dark:text-brand-600">
+            <p className="text-[0.6875rem] text-brand-400 dark:text-brand-600">
               Pick a column, then add or remove its feeds.
             </p>
           </div>
@@ -90,7 +90,7 @@ export function TopicSourcesModal({
               type="button"
               onClick={() => selectedTopicId && onResetDefaults(selectedTopicId)}
               disabled={!selectedTopicId}
-              className="text-[11px] text-brand-400 transition-colors hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:text-brand-200"
+              className="text-[0.6875rem] text-brand-400 transition-colors hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:text-brand-200"
             >
               Reset defaults
             </button>
@@ -126,7 +126,7 @@ export function TopicSourcesModal({
         <div className={`overflow-y-auto px-4 pb-3 ${sources.length > 0 ? "" : "pt-3"}`}>
           {sources.length > 0 && (
             <div className="sticky top-0 z-10 -mx-4 mb-4 border-b border-brand-200 bg-white px-4 pb-3 dark:border-brand-800 dark:bg-brand-900">
-              <p className="mb-1.5 pt-3 text-[11px] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
+              <p className="mb-1.5 pt-3 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
                 {selectedTopic?.label} sources ({sources.length})
               </p>
               <div className="max-h-40 space-y-1.5 overflow-y-auto">
@@ -139,14 +139,14 @@ export function TopicSourcesModal({
                       <span className="text-sm font-semibold text-brand-900 dark:text-white">
                         {source.name}
                       </span>
-                      <p className="truncate text-[10px] text-brand-400 dark:text-brand-500">
+                      <p className="truncate text-[0.625rem] text-brand-400 dark:text-brand-500">
                         {source.feedUrl}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => selectedTopicId && onRemove(selectedTopicId, source.id)}
-                      className="shrink-0 rounded-md border border-brand-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-brand-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-brand-600 dark:bg-brand-900 dark:text-brand-300 dark:hover:border-red-800 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                      className="shrink-0 rounded-md border border-brand-300 bg-white px-2.5 py-1 text-[0.6875rem] font-semibold text-brand-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-brand-600 dark:bg-brand-900 dark:text-brand-300 dark:hover:border-red-800 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                     >
                       Remove
                     </button>
@@ -157,7 +157,7 @@ export function TopicSourcesModal({
           )}
 
           <div className="mb-3">
-            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Add a feed to {selectedTopic?.label ?? "this column"}
             </p>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -177,14 +177,14 @@ export function TopicSourcesModal({
               <button
                 type="button"
                 onClick={handleAdd}
-                className={`rounded-md px-3 py-1.5 text-[11px] font-semibold text-white ${accentPreset.solid} ${accentPreset.solidHover}`}
+                className={`rounded-md px-3 py-1.5 text-[0.6875rem] font-semibold text-white ${accentPreset.solid} ${accentPreset.solidHover}`}
               >
                 + Add
               </button>
             </div>
           </div>
 
-          <p className="text-[10px] text-brand-400 dark:text-brand-600">
+          <p className="text-[0.625rem] text-brand-400 dark:text-brand-600">
             Each column pulls every recent item from its own feeds directly —
             no keyword matching — so a feed added here should already be
             scoped to {selectedTopic?.label ?? "this column"}&rsquo;s topic

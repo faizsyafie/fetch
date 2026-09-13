@@ -44,7 +44,7 @@ export function CompanySelectionActions({
               <button
                 type="button"
                 onClick={onClear}
-                className="mr-1.5 rounded-md border border-brand-200 bg-white px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-400 dark:hover:bg-brand-800"
+                className="mr-1.5 rounded-md border border-brand-200 bg-white px-2.5 py-1 text-[0.6875rem] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-400 dark:hover:bg-brand-800"
               >
                 Clear
               </button>
@@ -58,7 +58,7 @@ export function CompanySelectionActions({
               <button
                 type="button"
                 onClick={onCollapse}
-                className="rounded-md border border-brand-200 bg-white px-2.5 py-1 text-[11px] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-400 dark:hover:bg-brand-800"
+                className="rounded-md border border-brand-200 bg-white px-2.5 py-1 text-[0.6875rem] font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-400 dark:hover:bg-brand-800"
               >
                 Collapse
               </button>

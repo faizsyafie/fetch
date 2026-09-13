@@ -252,21 +252,21 @@ export function TopBar({
 
       {isCompanies && !isSearching && !isVirtualIndustry && (
         <div
-          className="grid px-5 pb-3 pt-2 transition-[grid-template-rows] duration-200 ease-out"
+          className="grid transition-[grid-template-rows] duration-200 ease-out"
           style={{ gridTemplateRows: editMode ? "1fr" : "0fr" }}
         >
           <div className="overflow-hidden">
             <div
-              className={`rounded-lg border px-3 py-2 ${palette.badgeBg} border-current/10`}
+              className={`rounded-lg border px-3 py-2 mx-5 mb-3 mt-2 ${palette.badgeBg} border-current/10`}
             >
-              <div className={`mb-1.5 text-[11px] font-bold ${palette.badgeText}`}>
+              <div className={`mb-1.5 text-[0.6875rem] font-bold ${palette.badgeText}`}>
                 Editing: {activeIndustry}
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 {companiesInIndustry.map((company) => (
                   <span
                     key={company.id}
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${palette.badgeBg} ${palette.badgeText}`}
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${palette.badgeBg} ${palette.badgeText}`}
                   >
                     {company.name}
                     <button

@@ -124,14 +124,14 @@ export function SavedView({
     <div className="flex min-h-0 flex-1">
       <div className="flex w-full max-w-sm shrink-0 flex-col overflow-hidden border-r border-brand-200 dark:border-brand-800">
         <div className="flex items-center justify-between border-b border-brand-200 p-3 dark:border-brand-800">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+          <span className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
             {links.length} saved
           </span>
           <button
             type="button"
             data-tour="saved-add-link"
             onClick={onAddLink}
-            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solid} ${accentPreset.solidHover}`}
+            className={`rounded-md px-2.5 py-1 text-[0.6875rem] font-semibold text-white transition-colors ${accentPreset.solid} ${accentPreset.solidHover}`}
           >
             + Save link
           </button>
@@ -156,16 +156,16 @@ export function SavedView({
               >
                 <div className="flex items-center gap-1.5">
                   {link.pinned && <span className="shrink-0 text-xs">⭐</span>}
-                  <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-brand-900 dark:text-white">
+                  <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-semibold text-brand-900 dark:text-white">
                     {highlightMatches(link.title, query, highlightClass)}
                   </span>
                 </div>
-                <div className="mt-0.5 truncate text-[11px] text-brand-400 dark:text-brand-500">
+                <div className="mt-0.5 truncate text-[0.6875rem] text-brand-400 dark:text-brand-500">
                   {domainOf(link.url)} ·{" "}
                   {formatDistanceToNow(new Date(link.savedAt), { addSuffix: true })}
                 </div>
                 {link.notes && (
-                  <div className="mt-1 truncate text-[11px] text-brand-500 dark:text-brand-400">
+                  <div className="mt-1 truncate text-[0.6875rem] text-brand-500 dark:text-brand-400">
                     {highlightMatches(link.notes, query, highlightClass)}
                   </div>
                 )}
@@ -184,7 +184,7 @@ export function SavedView({
           {articleLoaded && (
             <article className="min-w-0 flex-1 overflow-y-auto border-r border-brand-200 p-6 dark:border-brand-800">
               {articleLoaded.siteName && (
-                <div className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+                <div className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                   {articleLoaded.siteName}
                 </div>
               )}
@@ -254,13 +254,13 @@ export function SavedView({
               </a>
 
               {articleLoading && (
-                <div className="mt-2 flex items-center gap-1.5 text-[11px] text-brand-400 dark:text-brand-500">
+                <div className="mt-2 flex items-center gap-1.5 text-[0.6875rem] text-brand-400 dark:text-brand-500">
                   <span className="h-3 w-3 animate-spin rounded-full border-2 border-brand-300 border-t-blue-500 dark:border-brand-700 dark:border-t-blue-400" />
                   Loading inline reader…
                 </div>
               )}
               {articleErrorMessage && (
-                <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400">
+                <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[0.6875rem] text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400">
                   {articleErrorMessage} You can still{" "}
                   <a
                     href={selected.url}
@@ -274,7 +274,7 @@ export function SavedView({
                 </div>
               )}
 
-              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-brand-400 dark:text-brand-600">
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[0.6875rem] text-brand-400 dark:text-brand-600">
                 <select
                   value={
                     linkCategories.includes(selected.category)
@@ -282,7 +282,7 @@ export function SavedView({
                       : UNCATEGORIZED_CATEGORY
                   }
                   onChange={(e) => onUpdateLink(selected.id, { category: e.target.value })}
-                  className="rounded border border-brand-200 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-brand-600 outline-none dark:border-brand-700 dark:text-brand-300"
+                  className="rounded border border-brand-200 bg-transparent px-1.5 py-0.5 text-[0.6875rem] font-medium text-brand-600 outline-none dark:border-brand-700 dark:text-brand-300"
                 >
                   <option value={UNCATEGORIZED_CATEGORY}>{UNCATEGORIZED_CATEGORY}</option>
                   {linkCategories.map((c) => (

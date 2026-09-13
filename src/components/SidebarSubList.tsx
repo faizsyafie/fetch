@@ -102,7 +102,7 @@ export function SidebarSubList({
 
   function renderRow(item: SidebarListItem, editable: boolean) {
     const isActive = item.key === activeKey;
-    const baseClass = `flex min-w-0 flex-1 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-left text-[12px] font-medium transition-colors ${
+    const baseClass = `flex min-w-0 flex-1 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-left text-[0.75rem] font-medium transition-colors ${
       isActive
         ? `${accentPreset.solid} text-white shadow-sm`
         : "text-brand-600 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-800"
@@ -216,7 +216,7 @@ export function SidebarSubList({
               }}
               aria-label={`Rename ${item.label}`}
               title="Rename"
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
+              className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.5625rem] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✏
             </button>
@@ -228,7 +228,7 @@ export function SidebarSubList({
               }}
               aria-label={`Delete ${item.label}`}
               title="Delete"
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
+              className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.5625rem] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✕
             </button>
@@ -278,7 +278,7 @@ export function SidebarSubList({
           onClick={() => setAdding(true)}
           aria-label="Add"
           title="Add"
-          className="flex w-full items-center justify-center rounded-md border border-dashed border-brand-300 px-2 py-1 text-[12px] font-medium text-brand-500 transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-800"
+          className="flex w-full items-center justify-center rounded-md border border-dashed border-brand-300 px-2 py-1 text-[0.75rem] font-medium text-brand-500 transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-800"
         >
           +
         </button>

@@ -63,7 +63,7 @@ export function AboutModal({ open, onClose }: AboutModalProps) {
         </p>
 
         <div className="mt-8 w-full max-w-xs rounded-lg border border-brand-200 bg-white p-5 text-left shadow-sm dark:border-brand-700 dark:bg-brand-800">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
+          <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
             Contact
           </p>
           <a

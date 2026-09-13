@@ -51,7 +51,7 @@ export function EditThemesModal({
             <h2 className="text-sm font-bold text-brand-900 dark:text-white">
               Edit Themes
             </h2>
-            <p className="text-[11px] text-brand-400 dark:text-brand-600">
+            <p className="text-[0.6875rem] text-brand-400 dark:text-brand-600">
               Pick which columns show up on The Yard — drag a
               column&rsquo;s ⠿ handle on the board itself to reorder.
             </p>
@@ -68,10 +68,10 @@ export function EditThemesModal({
 
         <div className="flex items-center justify-between gap-3 border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
+            <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
               Articles per column
             </p>
-            <p className="text-[11px] text-brand-400 dark:text-brand-600">
+            <p className="text-[0.6875rem] text-brand-400 dark:text-brand-600">
               Most feeds only expose their most recent ~20-50 items, so a
               higher cap may not change every column.
             </p>
@@ -82,7 +82,7 @@ export function EditThemesModal({
                 key={option}
                 type="button"
                 onClick={() => onSetArticleLimit(option)}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                className={`rounded-md px-2.5 py-1 text-[0.6875rem] font-medium transition-colors ${
                   articleLimit === option
                     ? `${accentPreset.solid} text-white shadow-sm`
                     : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"
@@ -97,7 +97,7 @@ export function EditThemesModal({
         <div className={`overflow-y-auto px-4 pb-3 ${yourTopics.length > 0 ? "" : "pt-3"}`}>
           {yourTopics.length > 0 && (
             <div className="sticky top-0 z-10 -mx-4 mb-4 border-b border-brand-200 bg-white px-4 pb-3 dark:border-brand-800 dark:bg-brand-900">
-              <p className="mb-1.5 pt-3 text-[11px] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
+              <p className="mb-1.5 pt-3 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400">
                 ⭐ Your Themes ({yourTopics.length})
               </p>
               <div className="max-h-40 space-y-1.5 overflow-y-auto">
@@ -119,7 +119,7 @@ export function EditThemesModal({
                           ? "At least one theme must stay enabled"
                           : undefined
                       }
-                      className="shrink-0 rounded-md border border-brand-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-brand-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-brand-300 disabled:hover:bg-white disabled:hover:text-brand-600 dark:border-brand-600 dark:bg-brand-900 dark:text-brand-300 dark:hover:border-red-800 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                      className="shrink-0 rounded-md border border-brand-300 bg-white px-2.5 py-1 text-[0.6875rem] font-semibold text-brand-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-brand-300 disabled:hover:bg-white disabled:hover:text-brand-600 dark:border-brand-600 dark:bg-brand-900 dark:text-brand-300 dark:hover:border-red-800 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                     >
                       Remove
                     </button>
@@ -131,7 +131,7 @@ export function EditThemesModal({
 
           {moreTopics.length > 0 && (
             <div className="mb-2">
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              <p className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                 More Themes
               </p>
               <div className="space-y-1.5">
@@ -147,7 +147,7 @@ export function EditThemesModal({
                     <button
                       type="button"
                       onClick={() => onToggle(topic.id, true)}
-                      className={`shrink-0 rounded-md px-2.5 py-1 text-[11px] font-semibold text-white transition-colors ${accentPreset.solid} ${accentPreset.solidHover}`}
+                      className={`shrink-0 rounded-md px-2.5 py-1 text-[0.6875rem] font-semibold text-white transition-colors ${accentPreset.solid} ${accentPreset.solidHover}`}
                     >
                       + Add
                     </button>

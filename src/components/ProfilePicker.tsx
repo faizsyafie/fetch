@@ -65,7 +65,7 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
 
         {existingProfiles.length > 0 && (
           <div className="mt-4">
-            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Or pick an existing profile
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -84,7 +84,7 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
         )}
 
         {loadError && (
-          <p className="mt-3 text-[11px] text-amber-600 dark:text-amber-400">
+          <p className="mt-3 text-[0.6875rem] text-amber-600 dark:text-amber-400">
             Couldn&rsquo;t reach the shared database — you can still continue, but
             your changes may only be saved locally.
           </p>

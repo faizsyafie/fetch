@@ -38,15 +38,15 @@ export function ArticleCard({ article, isSaved, onSave, searchQuery, accent }: A
           />
         )}
         <div className="p-2.5">
-          <p className="pr-6 text-[10px] font-semibold uppercase tracking-wide text-brand-400 dark:text-brand-500">
+          <p className="pr-6 text-[0.625rem] font-semibold uppercase tracking-wide text-brand-400 dark:text-brand-500">
             {article.source} ·{" "}
             {formatDistanceToNow(new Date(article.pubDate), { addSuffix: true })}
           </p>
-          <p className="mt-1 pr-6 text-[13px] font-semibold leading-snug text-brand-900 dark:text-white">
+          <p className="mt-1 pr-6 text-[0.8125rem] font-semibold leading-snug text-brand-900 dark:text-white">
             {highlightMatches(article.title, query, highlightClass)}
           </p>
           {article.summary && (
-            <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-brand-500 dark:text-brand-400">
+            <p className="mt-1 line-clamp-2 text-[0.6875rem] leading-snug text-brand-500 dark:text-brand-400">
               {highlightMatches(article.summary, query, highlightClass)}
             </p>
           )}

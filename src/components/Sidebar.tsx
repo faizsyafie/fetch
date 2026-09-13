@@ -212,7 +212,7 @@ export function Sidebar({
           data-tour={dataTour}
           onClick={onClick}
           title={subtitle}
-          className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap py-2 pl-3 pr-1 text-left text-[13px] font-semibold transition-colors ${
+          className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap py-2 pl-3 pr-1 text-left text-[0.8125rem] font-semibold transition-colors ${
             isActive
               ? "text-brand-900 dark:text-white"
               : "text-brand-500 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-200"
@@ -230,7 +230,7 @@ export function Sidebar({
             }}
             aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
             aria-expanded={expanded}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[0.625rem] text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
             <span
               aria-hidden="true"
@@ -421,7 +421,7 @@ export function Sidebar({
             </>
           ) : (
             <>
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              <p className="mb-1.5 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                 Manage
               </p>
               <button
@@ -451,7 +451,7 @@ export function Sidebar({
                 type="button"
                 onClick={() => setSourcesListExpanded((v) => !v)}
                 aria-expanded={sourcesListExpanded}
-                className="mb-1.5 mt-3 flex w-full items-center justify-between text-[10px] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+                className="mb-1.5 mt-3 flex w-full items-center justify-between text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
               >
                 <span>Sources ({enabledSources.length})</span>
                 <span
@@ -470,7 +470,7 @@ export function Sidebar({
                     {enabledSources.map((s) => (
                       <div
                         key={s.id}
-                        className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
+                        className="flex items-center gap-1.5 text-[0.6875rem] text-brand-500 dark:text-brand-400"
                       >
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                         <span className="truncate">{s.name}</span>
@@ -479,7 +479,7 @@ export function Sidebar({
                   </div>
                 </div>
               </div>
-              <div className="mt-2 flex items-center justify-between text-[10px] text-brand-400 dark:text-brand-600">
+              <div className="mt-2 flex items-center justify-between text-[0.625rem] text-brand-400 dark:text-brand-600">
                 <span>
                   Last {days} day{days !== 1 ? "s" : ""}
                 </span>
@@ -526,7 +526,7 @@ export function Sidebar({
             </>
           ) : (
             <>
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              <p className="mb-1.5 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                 Manage
               </p>
               <button

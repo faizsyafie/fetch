@@ -136,7 +136,7 @@ export function CommandPalette({
             placeholder="Jump to a company or industry…"
             className="w-full bg-transparent text-sm text-brand-900 outline-none placeholder:text-brand-400 dark:text-white dark:placeholder:text-brand-600"
           />
-          <kbd className="rounded border border-brand-200 px-1.5 py-0.5 text-[10px] text-brand-400 dark:border-brand-700 dark:text-brand-500">
+          <kbd className="rounded border border-brand-200 px-1.5 py-0.5 text-[0.625rem] text-brand-400 dark:border-brand-700 dark:text-brand-500">
             Esc
           </kbd>
         </div>
@@ -163,7 +163,7 @@ export function CommandPalette({
                 {result.label}
               </span>
               {result.sublabel && (
-                <span className="shrink-0 text-[11px] text-brand-400 dark:text-brand-500">
+                <span className="shrink-0 text-[0.6875rem] text-brand-400 dark:text-brand-500">
                   {result.sublabel}
                 </span>
               )}

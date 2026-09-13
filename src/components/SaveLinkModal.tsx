@@ -132,7 +132,7 @@ export function SaveLinkModal({
             </p>
           ) : (
             <div>
-              <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                 URL
               </label>
               <input
@@ -149,7 +149,7 @@ export function SaveLinkModal({
           )}
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Title {fetchingTitle && <span className="normal-case">(fetching…)</span>}
             </label>
             <input
@@ -165,7 +165,7 @@ export function SaveLinkModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Category
             </label>
             {addingCategory ? (
@@ -230,7 +230,7 @@ export function SaveLinkModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Notes
             </label>
             <textarea

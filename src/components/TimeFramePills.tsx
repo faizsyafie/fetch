@@ -59,7 +59,7 @@ export function TimeFramePills<T extends string | number>({
           }}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`relative z-10 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+          className={`relative z-10 rounded-md px-2 py-1 text-[0.6875rem] font-medium transition-colors ${
             value === opt.value
               ? "text-white"
               : "text-brand-500 hover:bg-brand-200/70 dark:text-brand-400 dark:hover:bg-brand-800"

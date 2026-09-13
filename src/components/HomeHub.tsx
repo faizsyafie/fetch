@@ -104,7 +104,7 @@ export function HomeHub({
         <h2 className="text-lg font-bold text-brand-900 dark:text-white">
           {title}
         </h2>
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+        <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
           {tagline}
         </p>
         <p className="mb-5 flex-1 text-sm leading-relaxed text-brand-600 dark:text-brand-300">
@@ -183,7 +183,7 @@ export function HomeHub({
           </button>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-brand-400 dark:text-brand-600">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[0.6875rem] text-brand-400 dark:text-brand-600">
           <span>🔗 {sourcesCount} sources feeding The Yard</span>
           <span aria-hidden="true">•</span>
           <span>🏢 {companiesCount} companies in your Pack</span>

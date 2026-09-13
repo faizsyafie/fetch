@@ -124,7 +124,7 @@ export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
           </p>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Your email
             </label>
             <input
@@ -139,7 +139,7 @@ export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Title
             </label>
             <input
@@ -153,7 +153,7 @@ export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Message
             </label>
             <textarea
