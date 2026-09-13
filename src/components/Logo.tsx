@@ -14,15 +14,15 @@ interface LogoProps {
 // to match the theme. text-dog-*-new.png: wordmark only ("fetch"), also with
 // the theme background baked in — object-contain so the whole word shows
 // without cropping, letterboxing blends into the sidebar's own matching
-// background. full-logo-dog-*.png: dog + wordmark + "Daily RSS" side by
-// side, wide aspect ratio (~2:1) — used for the large standalone treatment.
-// Coral/Midnight reuse these same two asset sets (no dedicated art) — see
-// isDarkTheme.
+// background. full-logo-dog-*-new.png: dog + wordmark + "Daily RSS" side by
+// side, wide aspect ratio (~2:1), transparent background — used for the
+// large standalone treatment. Coral/Midnight reuse these same asset sets
+// (no dedicated art) — see isDarkTheme.
 export function Logo({ theme, compact = false, large = false }: LogoProps) {
   const dark = isDarkTheme(theme);
   const iconSrc = dark ? "/icon-dog-dark-new.png" : "/icon-dog-light-new.png";
   const textSrc = dark ? "/text-dog-dark-new.png" : "/text-dog-light-new.png";
-  const fullSrc = dark ? "/full-logo-dog-dark.png" : "/full-logo-dog-light.png";
+  const fullSrc = dark ? "/full-logo-dog-dark-new.png" : "/full-logo-dog-light-new.png";
 
   if (compact) {
     return (

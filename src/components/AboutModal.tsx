@@ -27,13 +27,13 @@ export function AboutModal({ open, onClose }: AboutModalProps) {
       <div className="m-auto flex w-full flex-col items-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/full-logo-dog-light.png"
+          src="/full-logo-dog-light-new.png"
           alt="fetch — Daily RSS"
           className="block h-24 w-auto object-contain dark:hidden sm:h-32"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/full-logo-dog-dark.png"
+          src="/full-logo-dog-dark-new.png"
           alt="fetch — Daily RSS"
           className="hidden h-24 w-auto object-contain dark:block sm:h-32"
         />
