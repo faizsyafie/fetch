@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: ogTitle,
   description: ogDescription,
   icons: {
-    icon: "/full-logo-dog-dark-new.png",
+    icon: "/banner-icon-dog.png",
   },
   openGraph: {
     title: ogTitle,
