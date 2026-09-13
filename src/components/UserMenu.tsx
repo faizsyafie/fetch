@@ -40,7 +40,7 @@ export function UserMenu({ name, onLogOut, onOpenFeedback, onOpenAbout }: UserMe
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-20 mt-1 w-40 overflow-hidden rounded-lg border border-brand-200 bg-white shadow-lg dark:border-brand-700 dark:bg-brand-900">
+        <div className="animate-dropdown absolute right-0 top-full z-20 mt-1 w-40 overflow-hidden rounded-lg border border-brand-200 bg-white shadow-lg dark:border-brand-700 dark:bg-brand-900">
           <div className="border-b border-brand-200 px-3 py-2 dark:border-brand-800">
             <p className="truncate text-xs font-semibold text-brand-900 dark:text-white">
               {name}
@@ -67,7 +67,7 @@ export function UserMenu({ name, onLogOut, onOpenFeedback, onOpenAbout }: UserMe
             }}
             className="block w-full px-3 py-2 text-left text-xs font-medium text-brand-600 transition-colors hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-800"
           >
-            🐾 Feedback
+            💬 Feedback
           </button>
           <button
             type="button"

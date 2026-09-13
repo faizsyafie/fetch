@@ -309,26 +309,34 @@ export function CompanyList({
             >
               <div className="overflow-hidden">
                 <div className="border-t border-brand-200 bg-brand-50 dark:border-brand-800 dark:bg-brand-950/40">
-                  <div className="px-4 py-2">
+                  <div className={compact ? "px-3 py-1" : "px-4 py-2"}>
                     <input
                       value={company.notes ?? ""}
                       onChange={(e) => onUpdateNotes(company.id, e.target.value)}
                       placeholder="Add a private note…"
-                      className="w-full rounded border border-brand-200 bg-white px-2 py-1 text-[11px] text-brand-700 outline-none focus:border-blue-500 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-200"
+                      className={`w-full rounded border border-brand-200 bg-white text-brand-700 outline-none focus:border-blue-500 dark:border-brand-700 dark:bg-brand-900 dark:text-brand-200 ${
+                        compact ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-1 text-[11px]"
+                      }`}
                     />
                   </div>
                   {isLoading && (
-                    <div className="px-4 py-2.5 text-xs text-brand-500 dark:text-brand-400">
+                    <div
+                      className={`text-brand-500 dark:text-brand-400 ${compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2.5 text-xs"}`}
+                    >
                       🔍 Searching {sourceNames.join(", ")}…
                     </div>
                   )}
                   {!isLoading && news === "error" && (
-                    <div className="px-4 py-2.5 text-xs text-red-500">
+                    <div
+                      className={`text-red-500 ${compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2.5 text-xs"}`}
+                    >
                       Failed to fetch news for {company.name}.
                     </div>
                   )}
                   {!isLoading && Array.isArray(news) && news.length === 0 && (
-                    <div className="px-4 py-2.5 text-xs text-brand-400 dark:text-brand-500">
+                    <div
+                      className={`text-brand-400 dark:text-brand-500 ${compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2.5 text-xs"}`}
+                    >
                       No articles in the last {days} day{days !== 1 ? "s" : ""}{" "}
                       from configured sources.
                     </div>
@@ -350,19 +358,31 @@ export function CompanyList({
                             href={article.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`block px-4 py-2.5 pr-9 transition-colors hover:bg-brand-100 dark:hover:bg-brand-800/60 ${
-                              isArticleSeen(article.id) ? "opacity-70" : ""
-                            }`}
+                            className={`block transition-colors hover:bg-brand-100 dark:hover:bg-brand-800/60 ${
+                              compact ? "px-3 py-1 pr-7" : "px-4 py-2.5 pr-9"
+                            } ${isArticleSeen(article.id) ? "opacity-70" : ""}`}
                           >
                             <div className="flex items-start gap-1.5">
-                              <span className="mt-0.5 shrink-0 rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-bold text-brand-600 dark:bg-brand-800 dark:text-brand-300">
+                              <span
+                                className={`shrink-0 rounded bg-brand-200 font-bold text-brand-600 dark:bg-brand-800 dark:text-brand-300 ${
+                                  compact ? "px-1 py-0 text-[9px]" : "mt-0.5 px-1.5 py-0.5 text-[10px]"
+                                }`}
+                              >
                                 {article.source}
                               </span>
                               <div className="min-w-0">
-                                <div className="text-xs font-medium leading-snug text-brand-800 dark:text-brand-200">
+                                <div
+                                  className={`font-medium leading-snug text-brand-800 dark:text-brand-200 ${
+                                    compact ? "text-[11px]" : "text-xs"
+                                  }`}
+                                >
                                   {article.title}
                                 </div>
-                                <div className="mt-0.5 text-[10px] text-brand-400 dark:text-brand-500">
+                                <div
+                                  className={`text-brand-400 dark:text-brand-500 ${
+                                    compact ? "text-[9px]" : "mt-0.5 text-[10px]"
+                                  }`}
+                                >
                                   {formatDistanceToNow(new Date(article.pubDate), {
                                     addSuffix: true,
                                   })}{" "}
@@ -380,7 +400,9 @@ export function CompanyList({
                             }}
                             aria-label={saved ? "Saved" : "Save link"}
                             title={saved ? "Saved" : "Save link"}
-                            className={`absolute right-2 top-2 rounded p-1 text-xs transition-opacity ${
+                            className={`absolute rounded text-xs transition-opacity ${
+                              compact ? "right-1.5 top-1 p-0.5" : "right-2 top-2 p-1"
+                            } ${
                               saved
                                 ? "opacity-100"
                                 : "opacity-0 hover:bg-brand-200 group-hover:opacity-60 hover:!opacity-100 dark:hover:bg-brand-700"

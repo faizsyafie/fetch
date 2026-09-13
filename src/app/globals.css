@@ -151,6 +151,20 @@
   animation: text-cycle-fade 0.4s ease-out;
 }
 
+/* Small anchored dropdowns (e.g. the profile menu) fading/sliding in from
+   just above their trigger — lighter and snappier than the modal panel
+   animation above, which is sized for a centered dialog rather than a
+   corner-anchored menu. */
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.animate-dropdown {
+  animation: dropdown-in 0.15s ease-out;
+}
+
 /* The Fetch! button (itself shaped like a bone) hops and shakes on hover —
    like a dog spotting its bone. */
 @keyframes bone-jump {
@@ -260,6 +274,7 @@ body {
   .animate-modal-backdrop-out,
   .animate-modal-panel,
   .animate-modal-panel-out,
+  .animate-dropdown,
   .animate-modal-fullscreen,
   .animate-modal-fullscreen-out,
   .animate-text-fade {

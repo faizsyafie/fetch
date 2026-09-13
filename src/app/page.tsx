@@ -1026,6 +1026,7 @@ function DashboardForProfile({
           defaultCategory={defaultSaveCategory}
           accent={uiSettings.accent}
           onSave={handleSaveLinkSubmit}
+          onAddCategory={addLinkCategory}
           onClose={() => setSaveLinkModal(null)}
         />
       )}
