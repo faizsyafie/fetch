@@ -72,6 +72,25 @@
   --brand-950: #12151f;
 }
 
+/* Sage — light-leaning, cool grey-green instead of warm cream. Coral's
+   cool counterpart: same light dog-logo assets (see isDarkTheme), but a
+   muted, cooler palette rather than another warm tone. */
+:root[data-theme="sage"] {
+  --background: #eef2ec;
+  --foreground: #263427;
+  --brand-50: #eef2ec;
+  --brand-100: #dde6d7;
+  --brand-200: #c3d3ba;
+  --brand-300: #a3ba95;
+  --brand-400: #7f9a70;
+  --brand-500: #5f7d52;
+  --brand-600: #4a6440;
+  --brand-700: #3a4f33;
+  --brand-800: #2e3f2a;
+  --brand-900: #263427;
+  --brand-950: #1a241a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -206,6 +225,10 @@ body {
 
 :root[data-theme="midnight"] * {
   scrollbar-color: #384768 transparent;
+}
+
+:root[data-theme="sage"] * {
+  scrollbar-color: #a3ba95 transparent;
 }
 
 /* Renders Readability's extracted article HTML (SavedView's inline reader)

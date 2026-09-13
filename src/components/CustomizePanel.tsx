@@ -14,6 +14,7 @@ const THEME_OPTIONS: { key: Theme; label: string }[] = [
   { key: "dark", label: "🌙 Charcoal" },
   { key: "coral", label: "🌸 Coral" },
   { key: "midnight", label: "🌌 Midnight" },
+  { key: "sage", label: "🌿 Sage" },
 ];
 
 interface CustomizePanelProps {

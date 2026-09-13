@@ -40,7 +40,7 @@ export default function RootLayout({
           // logic (duplicated rather than imported since this must run
           // standalone before hydration) — keep the two in sync.
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("credit-news-analyst-theme");if(t!=="light"&&t!=="dark"&&t!=="coral"&&t!=="midnight"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);if(t==="dark"||t==="midnight"){document.documentElement.classList.add("dark");}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("credit-news-analyst-theme");if(t!=="light"&&t!=="dark"&&t!=="coral"&&t!=="midnight"&&t!=="sage"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);if(t==="dark"||t==="midnight"){document.documentElement.classList.add("dark");}}catch(e){}})();`,
           }}
         />
       </head>

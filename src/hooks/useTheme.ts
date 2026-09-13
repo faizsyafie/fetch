@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { THEME_STORAGE_KEY } from "@/lib/defaults";
 
-export type Theme = "light" | "dark" | "coral" | "midnight";
+export type Theme = "light" | "dark" | "coral" | "midnight" | "sage";
 
-const VALID_THEMES: Theme[] = ["light", "dark", "coral", "midnight"];
+const VALID_THEMES: Theme[] = ["light", "dark", "coral", "midnight", "sage"];
 
 // "dark" and "midnight" are both dark-leaning (deserve the .dark class and
-// the dark dog-logo assets); "light" and "coral" are light-leaning.
+// the dark dog-logo assets); "light", "coral" and "sage" are light-leaning.
 export function isDarkTheme(theme: Theme): boolean {
   return theme === "dark" || theme === "midnight";
 }
