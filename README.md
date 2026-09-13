@@ -4,9 +4,7 @@
 
 *"Like a loyal retriever, credit analysts never rest..."*
 
-Fetch flies across the web collecting company news so you don't have to. Built for credit analysts, investors, and news junkies, Fetch scans public RSS feeds and aggregates relevant company headlines into a single dashboard.
-
-No endless tab switching. No manually checking multiple websites. Just point Fetch at the companies you care about and let it bring the news home.
+No endless tab switching. No manually checking multiple websites. Just point Fetch and let it bring the news home.
 
 🌐 Live App: https://fetchforme.vercel.app/
 
@@ -14,11 +12,13 @@ No endless tab switching. No manually checking multiple websites. Just point Fet
 
 ## What is Fetch?
 
-Fetch is a lightweight company news tracker that helps credit analysts monitor company-specific developments from public RSS feeds.
+Fetch tracks company news across industries as well as general thematic news, bringing updates from multiple RSS sources into a single feed. It helps your team monitor what matters without digging through countless news sites every day.
 
-Create custom watchlists, organize companies by industry, select your preferred news sources, and retrieve relevant headlines in seconds.
+The name comes from man’s best friend. Dogs have long been valued for retrieving, delivering, and carrying messages when people needed information moved from one place to another. Fetch does the same for news. It goes out, finds what matters, and brings it back for you.
 
-Think of it as your digital news pigeon. It fetches. You analyse.
+A loyal retriever for the information age.
+
+Special thanks to my beta testers (you know who you are) for keeping me well fed with suggestions :)
 
 ---
 
