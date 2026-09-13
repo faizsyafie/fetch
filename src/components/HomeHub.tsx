@@ -67,6 +67,8 @@ export function HomeHub({
 
   const welcomeMessage = WELCOME_MESSAGES[messageIndex];
 
+  const dark = isDarkTheme(theme);
+
   function modeCard({
     mode,
     emoji,
@@ -74,6 +76,8 @@ export function HomeHub({
     tagline,
     description,
     ctaLabel,
+    illustrationSrc,
+    illustrationSide,
   }: {
     mode: "news" | "companies";
     emoji: string;
@@ -81,49 +85,66 @@ export function HomeHub({
     tagline: string;
     description: string;
     ctaLabel: string;
+    // Each drawing is already cropped tight against its subject on one
+    // side (no padding) — that's the side we push past the card's edge
+    // (negative inset, clipped by the card's own overflow-hidden) so only
+    // the intact head/front half ever shows, never the cut edge.
+    illustrationSrc: string;
+    illustrationSide: "left" | "right";
   }) {
     const isActive = mode === activeMode;
     return (
       <div
         onClick={() => onPreviewMode(mode)}
-        className={`flex cursor-pointer flex-col rounded-xl border-2 p-5 shadow-sm transition-colors ${
+        className={`relative flex cursor-pointer flex-col overflow-hidden rounded-xl border-2 p-5 shadow-sm transition-colors ${
           isActive
             ? `${accentPreset.border} bg-white dark:bg-brand-900`
             : "border-brand-200 bg-white hover:border-brand-300 dark:border-brand-700 dark:bg-brand-900 dark:hover:border-brand-600"
         }`}
       >
-        <div
-          className={`mb-4 flex h-11 w-11 items-center justify-center rounded-full text-xl transition-colors ${
-            isActive
-              ? `text-white ${accentPreset.solid}`
-              : "bg-brand-100 dark:bg-brand-800"
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={illustrationSrc}
+          alt=""
+          aria-hidden="true"
+          className={`pointer-events-none absolute bottom-0 h-44 w-auto select-none opacity-[0.22] dark:opacity-[0.18] ${
+            illustrationSide === "right" ? "-right-8" : "-left-8"
           }`}
-        >
-          {emoji}
+        />
+        <div className="relative z-10 flex flex-1 flex-col">
+          <div
+            className={`mb-4 flex h-11 w-11 items-center justify-center rounded-full text-xl transition-colors ${
+              isActive
+                ? `text-white ${accentPreset.solid}`
+                : "bg-brand-100 dark:bg-brand-800"
+            }`}
+          >
+            {emoji}
+          </div>
+          <h2 className="text-lg font-bold text-brand-900 dark:text-white">
+            {title}
+          </h2>
+          <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            {tagline}
+          </p>
+          <p className="mb-5 flex-1 text-sm leading-relaxed text-brand-600 dark:text-brand-300">
+            {description}
+          </p>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectMode(mode);
+            }}
+            className={`w-full rounded-lg py-2 text-sm font-semibold transition-colors ${
+              isActive
+                ? `text-white ${accentPreset.solid} ${accentPreset.solidHover}`
+                : "border border-brand-300 text-brand-700 hover:bg-brand-100 dark:border-brand-600 dark:text-brand-200 dark:hover:bg-brand-800"
+            }`}
+          >
+            {ctaLabel}
+          </button>
         </div>
-        <h2 className="text-lg font-bold text-brand-900 dark:text-white">
-          {title}
-        </h2>
-        <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
-          {tagline}
-        </p>
-        <p className="mb-5 flex-1 text-sm leading-relaxed text-brand-600 dark:text-brand-300">
-          {description}
-        </p>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelectMode(mode);
-          }}
-          className={`w-full rounded-lg py-2 text-sm font-semibold transition-colors ${
-            isActive
-              ? `text-white ${accentPreset.solid} ${accentPreset.solidHover}`
-              : "border border-brand-300 text-brand-700 hover:bg-brand-100 dark:border-brand-600 dark:text-brand-200 dark:hover:bg-brand-800"
-          }`}
-        >
-          {ctaLabel}
-        </button>
       </div>
     );
   }
@@ -161,6 +182,8 @@ export function HomeHub({
             description:
               "A curated stream of headlines from World, Markets, Tech and whatever else you let off the leash — best for a quick sniff around at what's new.",
             ctaLabel: "Head to The Yard 🐕",
+            illustrationSrc: dark ? "/home-dog-yard-dark.png" : "/home-dog-yard-light.png",
+            illustrationSide: "right",
           })}
           {modeCard({
             mode: "companies",
@@ -170,6 +193,8 @@ export function HomeHub({
             description:
               "Track the companies in your pack, organized by industry. Tick a few and fetch just those, or leave the leash off to grab a whole industry at once.",
             ctaLabel: "Check on the Pack 🐾",
+            illustrationSrc: dark ? "/home-dog-packwatch-dark.png" : "/home-dog-packwatch-light.png",
+            illustrationSide: "left",
           })}
         </div>
 
