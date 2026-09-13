@@ -13,6 +13,11 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
   const [name, setName] = useState("");
   const [existingProfiles, setExistingProfiles] = useState<string[]>([]);
   const [loadError, setLoadError] = useState(false);
+  // Distinguishes "still fetching" from "fetched, zero profiles" — without
+  // this, the existing-profiles section just pops in whenever the request
+  // happens to resolve, with no warning; a skeleton in its place makes that
+  // wait visible instead of feeling like a random delay.
+  const [profilesLoading, setProfilesLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,6 +28,9 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
       })
       .catch(() => {
         if (!cancelled) setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setProfilesLoading(false);
       });
     return () => {
       cancelled = true;
@@ -63,24 +71,39 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
           </button>
         </form>
 
-        {existingProfiles.length > 0 && (
+        {profilesLoading ? (
           <div className="mt-4">
-            <p className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
-              Or pick an existing profile
-            </p>
+            <div className="mb-1.5 h-2.5 w-40 animate-pulse rounded bg-brand-100 dark:bg-brand-700" />
             <div className="flex flex-wrap gap-1.5">
-              {existingProfiles.map((profile) => (
-                <button
-                  key={profile}
-                  type="button"
-                  onClick={() => onPick(profile)}
-                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-200 dark:hover:bg-brand-700"
-                >
-                  {profile}
-                </button>
+              {[68, 52, 76, 44, 60].map((width, i) => (
+                <div
+                  key={i}
+                  style={{ width }}
+                  className="h-6 animate-pulse rounded-full bg-brand-100 dark:bg-brand-700"
+                />
               ))}
             </div>
           </div>
+        ) : (
+          existingProfiles.length > 0 && (
+            <div className="animate-dropdown mt-4">
+              <p className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+                Or pick an existing profile
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {existingProfiles.map((profile) => (
+                  <button
+                    key={profile}
+                    type="button"
+                    onClick={() => onPick(profile)}
+                    className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-200 dark:hover:bg-brand-700"
+                  >
+                    {profile}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
         )}
 
         {loadError && (
