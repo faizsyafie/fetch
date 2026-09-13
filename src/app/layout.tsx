@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "fetch | Daily RSS Company Monitor",
   description:
-    "Monitor Bloomberg, Reuters, The Edge Singapore and custom RSS feeds for companies across Consumer, Energy, IT and Communications.",
+    "A loyal retriever for the information age.",
   icons: {
-    icon: "/banner-icon-dog.png",
+    icon: "/full-logo-dog-light-new.png",
   },
 };
 
