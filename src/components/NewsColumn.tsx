@@ -68,13 +68,13 @@ export function NewsColumn({
     >
       <div className="flex items-center justify-between border-b border-brand-200 px-3 py-2.5 dark:border-brand-800">
         <div className="flex items-center gap-1.5 text-sm font-bold text-brand-900 dark:text-white">
-          <span className="cursor-grab text-[10px] text-brand-300 active:cursor-grabbing dark:text-brand-600">
+          <span className="cursor-grab text-[0.625rem] text-brand-300 active:cursor-grabbing dark:text-brand-600">
             ⠿
           </span>
           <span aria-hidden="true">{topic.emoji}</span>
           {topic.label}
         </div>
-        <span className="text-[11px] tabular-nums text-brand-400 dark:text-brand-500">
+        <span className="text-[0.6875rem] tabular-nums text-brand-400 dark:text-brand-500">
           {articles.length}
         </span>
       </div>

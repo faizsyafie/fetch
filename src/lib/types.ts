@@ -44,6 +44,18 @@ export interface NewsSource {
   isDefault?: boolean;
 }
 
+// One customizable feed within a single General-page topic column (see
+// NEWS_TOPICS in newsTopics.ts) — the per-topic counterpart to NewsSource,
+// minus `domain`/`enabled` since a topic column is matched by feed URL
+// directly rather than a domain filter, and removing a row is how you turn
+// it off (no separate enable toggle, same as NewsSource's in practice).
+export interface NewsTopicSourceState {
+  id: string;
+  name: string;
+  feedUrl: string;
+  isDefault?: boolean;
+}
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -109,11 +121,21 @@ export interface UiSettings {
   sidebarWidth: number;
   sidebarCollapsed: boolean;
   density: Density;
-  tutorialSeen: boolean;
+  /** Which of the four spotlight tours (Home + each of the three modes)
+   *  has already auto-played once. Each only auto-opens the first time its
+   *  own page is ever visited, never again after — see page.tsx's
+   *  mode-change effect and modeGuide.ts. Keyed loosely by string (AppMode)
+   *  rather than importing that type here, to avoid a cross-layer import
+   *  cycle between lib/types and components/Sidebar. */
+  toursSeen: Partial<Record<string, boolean>>;
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;
   newsTopicOrder: NewsTopicId[];
+  /** Max articles fetched per General-page topic column — see
+   *  NEWS_ARTICLE_LIMIT_OPTIONS in defaults.ts for the selectable values
+   *  and MAX_ARTICLES_PER_TOPIC in rss.ts for the server-side hard cap. */
+  newsArticleLimit: number;
 }
 
 export interface TopicArticle {
@@ -166,4 +188,8 @@ export interface AppPreferences {
   linkCategories: string[];
   linkCategoryColors: Record<string, AccentColor>;
   activeLinkCategory: string;
+  /** Per-topic feed customizations for The Yard — a topic missing here (the
+   *  common case) just uses NEWS_TOPICS' built-in defaults untouched; see
+   *  resolveTopicSources in newsTopics.ts. */
+  topicSources: Partial<Record<NewsTopicId, NewsTopicSourceState[]>>;
 }

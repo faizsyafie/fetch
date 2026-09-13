@@ -17,6 +17,13 @@ interface SidebarSubListProps {
    *  only, never editable. */
   trailingItem?: SidebarListItem;
   activeKey: string;
+  /** Whether this list's own nav section (Buried Bones / Pack Watch) is
+   *  the one currently being viewed. Both sub-lists can be expanded at
+   *  once, each remembering its own activeKey — without this, the
+   *  inactive one's remembered selection would show the same solid
+   *  accent highlight as the row actually on screen, reading as two
+   *  active selections at once. */
+  isModeActive: boolean;
   accent: AccentColor;
   addPlaceholder: string;
   onSelect: (key: string) => void;
@@ -42,6 +49,7 @@ export function SidebarSubList({
   items,
   trailingItem,
   activeKey,
+  isModeActive,
   accent,
   addPlaceholder,
   onSelect,
@@ -102,9 +110,11 @@ export function SidebarSubList({
 
   function renderRow(item: SidebarListItem, editable: boolean) {
     const isActive = item.key === activeKey;
-    const baseClass = `flex min-w-0 flex-1 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-left text-[12px] font-medium transition-colors ${
+    const baseClass = `flex min-w-0 flex-1 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-left text-[0.75rem] font-medium transition-colors ${
       isActive
-        ? `${accentPreset.solid} text-white shadow-sm`
+        ? isModeActive
+          ? `${accentPreset.solid} text-white shadow-sm`
+          : "bg-brand-200 text-brand-700 dark:bg-brand-700 dark:text-brand-200"
         : "text-brand-600 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-800"
     }`;
 
@@ -165,7 +175,7 @@ export function SidebarSubList({
           onClick={() => onSelect(item.key)}
           className={baseClass}
         >
-          {onSetEmoji || onSetColor ? (
+          {editable && (onSetEmoji || onSetColor) ? (
             <span
               role="button"
               tabIndex={0}
@@ -201,7 +211,13 @@ export function SidebarSubList({
           <span
             className={`shrink-0 tabular-nums transition-opacity ${
               editable ? "group-hover:opacity-0" : ""
-            } ${isActive ? "text-white/80" : "text-brand-400 dark:text-brand-500"}`}
+            } ${
+              isActive
+                ? isModeActive
+                  ? "text-white/80"
+                  : "text-brand-500 dark:text-brand-400"
+                : "text-brand-400 dark:text-brand-500"
+            }`}
           >
             {item.count}
           </span>
@@ -216,7 +232,7 @@ export function SidebarSubList({
               }}
               aria-label={`Rename ${item.label}`}
               title="Rename"
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
+              className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.5625rem] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✏
             </button>
@@ -228,7 +244,7 @@ export function SidebarSubList({
               }}
               aria-label={`Delete ${item.label}`}
               title="Delete"
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
+              className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.5625rem] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✕
             </button>
@@ -278,7 +294,7 @@ export function SidebarSubList({
           onClick={() => setAdding(true)}
           aria-label="Add"
           title="Add"
-          className="flex w-full items-center justify-center rounded-md border border-dashed border-brand-300 px-2 py-1 text-[12px] font-medium text-brand-500 transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-800"
+          className="flex w-full items-center justify-center rounded-md border border-dashed border-brand-300 px-2 py-1 text-[0.75rem] font-medium text-brand-500 transition-colors hover:border-brand-400 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-800"
         >
           +
         </button>

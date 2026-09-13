@@ -42,7 +42,7 @@ export function BoneButton({ onClick, disabled, accent, children }: BoneButtonPr
     >
       <Lobe side="left" colorClass={colorClass} />
       <span
-        className={`relative z-10 flex h-4 items-center whitespace-nowrap rounded-sm px-4 text-[11px] font-semibold text-white ${colorClass}`}
+        className={`relative z-10 flex h-4 items-center whitespace-nowrap rounded-sm px-4 text-[0.6875rem] font-semibold text-white ${colorClass}`}
       >
         {children}
       </span>

@@ -4,10 +4,13 @@ import { useRef, useState } from "react";
 import { ACCENT_PRESETS, COLLAPSED_SIDEBAR_WIDTH } from "@/lib/defaults";
 import type { AccentColor, NewsSource, SidebarListItem, TimeFrameDays } from "@/lib/types";
 import { Logo } from "@/components/Logo";
+import { SidebarFlyout } from "@/components/SidebarFlyout";
 import { SidebarSubList } from "@/components/SidebarSubList";
 import type { Theme } from "@/hooks/useTheme";
 
-export type AppMode = "companies" | "news" | "saved";
+// "home" is the post-login landing hub (HomeHub) — reachable by clicking
+// the logo, but not a persistent nav row like the other three.
+export type AppMode = "companies" | "news" | "saved" | "home";
 
 interface SidebarProps {
   theme: Theme;
@@ -28,6 +31,9 @@ interface SidebarProps {
   // General page
   themesOpen: boolean;
   onToggleThemesPanel: () => void;
+  topicSourcesOpen: boolean;
+  onToggleTopicSourcesPanel: () => void;
+  onOpenDebugLog: () => void;
 
   // Companies sub-list ("subfolder" under the Companies nav item) — same
   // pinned/reorderable/add shape the old horizontal TabBar used.
@@ -76,6 +82,9 @@ export function Sidebar({
   onToggleCollapsed,
   themesOpen,
   onToggleThemesPanel,
+  topicSourcesOpen,
+  onToggleTopicSourcesPanel,
+  onOpenDebugLog,
   companiesListExpanded,
   onToggleCompaniesListExpanded,
   activeIndustry,
@@ -101,9 +110,27 @@ export function Sidebar({
   onSetLinkCategoryColor,
 }: SidebarProps) {
   const [sourcesListExpanded, setSourcesListExpanded] = useState(false);
+  // Click-triggered "jump to list" flyout for switching Buried Bones
+  // categories or Pack Watch industries while collapsed, without needing
+  // to re-expand the sidebar first — see SidebarFlyout.
+  const [openFlyout, setOpenFlyout] = useState<"saved" | "companies" | null>(
+    null
+  );
+  const [flyoutAnchor, setFlyoutAnchor] = useState<{ top: number; left: number } | null>(
+    null
+  );
   const resizeState = useRef<{ startX: number; startWidth: number } | null>(
     null
   );
+
+  // Reset during render (same pattern page.tsx uses for its own
+  // mode-tracked state) rather than in an effect, so expanding the sidebar
+  // never leaves a stale flyout that reopens on the very next collapse.
+  const [collapsedTrackedFor, setCollapsedTrackedFor] = useState(collapsed);
+  if (collapsed !== collapsedTrackedFor) {
+    setCollapsedTrackedFor(collapsed);
+    if (!collapsed) setOpenFlyout(null);
+  }
 
   function handleResizeMouseDown(e: React.MouseEvent) {
     e.preventDefault();
@@ -135,6 +162,7 @@ export function Sidebar({
     onClick,
     expanded,
     onToggleExpanded,
+    flyoutKey,
   }: {
     isActive: boolean;
     label: string;
@@ -147,12 +175,21 @@ export function Sidebar({
     onClick: () => void;
     expanded?: boolean;
     onToggleExpanded?: () => void;
+    // When set, clicking this row while collapsed also opens a flyout menu
+    // (see SidebarFlyout) for jumping straight to one of its sub-items.
+    flyoutKey?: "saved" | "companies";
   }) {
     if (collapsed) {
       return (
         <button
           type="button"
-          onClick={onClick}
+          onClick={(e) => {
+            onClick();
+            if (!flyoutKey) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            setFlyoutAnchor({ top: rect.top, left: rect.right + 8 });
+            setOpenFlyout((prev) => (prev === flyoutKey ? null : flyoutKey));
+          }}
           title={`${label} — ${subtitle}`}
           className={`mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
             isActive
@@ -177,7 +214,7 @@ export function Sidebar({
           data-tour={dataTour}
           onClick={onClick}
           title={subtitle}
-          className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap py-2 pl-3 pr-1 text-left text-[13px] font-semibold transition-colors ${
+          className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap py-2 pl-3 pr-1 text-left text-[0.8125rem] font-semibold transition-colors ${
             isActive
               ? "text-brand-900 dark:text-white"
               : "text-brand-500 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-200"
@@ -195,7 +232,7 @@ export function Sidebar({
             }}
             aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
             aria-expanded={expanded}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[10px] text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[0.625rem] text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
             <span
               aria-hidden="true"
@@ -226,13 +263,13 @@ export function Sidebar({
 
       <div
         data-tour="sidebar-header"
-        className={`flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800/80`}
+        className={`flex h-14 items-center justify-between border-b border-brand-200 px-4 dark:border-brand-800/80`}
       >
         <button
           type="button"
-          onClick={() => onSelectMode("news")}
+          onClick={() => onSelectMode("home")}
           title="fetch"
-          aria-label="Go to The Yard (General News)"
+          aria-label="Go home"
           className="rounded-md transition-opacity hover:opacity-80"
         >
           <Logo theme={theme} compact={collapsed} />
@@ -271,9 +308,11 @@ export function Sidebar({
           label: "Buried Bones",
           subtitle: "Saved Articles and Notes",
           emoji: "🔖",
+          dataTour: "nav-saved",
           onClick: () => onSelectMode("saved"),
           expanded: savedListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleSavedListExpanded,
+          flyoutKey: "saved",
         })}
         {!collapsed && (
           <div
@@ -287,6 +326,7 @@ export function Sidebar({
                 items={categoryItems}
                 trailingItem={uncategorizedItem}
                 activeKey={activeLinkCategory}
+                isModeActive={mode === "saved"}
                 accent={accent}
                 addPlaceholder="New category…"
                 onSelect={onSelectLinkCategory}
@@ -307,7 +347,7 @@ export function Sidebar({
           label: "The Yard",
           subtitle: "General News",
           emoji: "📰",
-          dataTour: "mode-toggle",
+          dataTour: "nav-news",
           onClick: () => onSelectMode("news"),
         })}
         {renderNavRow({
@@ -315,9 +355,11 @@ export function Sidebar({
           label: "Pack Watch",
           subtitle: "Company News",
           emoji: "🏢",
+          dataTour: "nav-companies",
           onClick: () => onSelectMode("companies"),
           expanded: companiesListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleCompaniesListExpanded,
+          flyoutKey: "companies",
         })}
         {!collapsed && (
           <div
@@ -330,6 +372,7 @@ export function Sidebar({
                 pinnedItems={industryPinnedItems}
                 items={industryItems}
                 activeKey={activeIndustry}
+                isModeActive={mode === "companies"}
                 accent={accent}
                 addPlaceholder="New industry…"
                 onSelect={onSelectIndustry}
@@ -382,7 +425,7 @@ export function Sidebar({
             </>
           ) : (
             <>
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              <p className="mb-1.5 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                 Manage
               </p>
               <button
@@ -412,7 +455,7 @@ export function Sidebar({
                 type="button"
                 onClick={() => setSourcesListExpanded((v) => !v)}
                 aria-expanded={sourcesListExpanded}
-                className="mb-1.5 mt-3 flex w-full items-center justify-between text-[10px] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+                className="mb-1.5 mt-3 flex w-full items-center justify-between text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
               >
                 <span>Sources ({enabledSources.length})</span>
                 <span
@@ -422,25 +465,37 @@ export function Sidebar({
                   ▾
                 </span>
               </button>
-              {sourcesListExpanded && (
-                <div className="space-y-1">
-                  {enabledSources.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center gap-1.5 text-[11px] text-brand-500 dark:text-brand-400"
-                    >
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                      <span className="truncate">{s.name}</span>
-                    </div>
-                  ))}
+              <div
+                className="grid transition-[grid-template-rows] duration-200 ease-out"
+                style={{ gridTemplateRows: sourcesListExpanded ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden">
+                  <div className="space-y-1">
+                    {enabledSources.map((s) => (
+                      <div
+                        key={s.id}
+                        className="flex items-center gap-1.5 text-[0.6875rem] text-brand-500 dark:text-brand-400"
+                      >
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                        <span className="truncate">{s.name}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-              <div className="mt-2 flex items-center justify-between text-[10px] text-brand-400 dark:text-brand-600">
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[0.625rem] text-brand-400 dark:text-brand-600">
                 <span>
                   Last {days} day{days !== 1 ? "s" : ""}
                 </span>
                 {lastUpdatedLabel && <span>{lastUpdatedLabel}</span>}
               </div>
+              <button
+                type="button"
+                onClick={onOpenDebugLog}
+                className="mt-2 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+              >
+                Debug Log
+              </button>
             </>
           )}
         </div>
@@ -454,27 +509,41 @@ export function Sidebar({
           }`}
         >
           {collapsed ? (
-            <button
-              type="button"
-              onClick={onToggleThemesPanel}
-              title="Edit Themes"
-              className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
-                themesOpen
-                  ? accentPreset.softBg
-                  : "hover:bg-brand-100 dark:hover:bg-brand-800"
-              }`}
-            >
-              ✏️
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onToggleThemesPanel}
+                title="Edit Themes"
+                className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
+                  themesOpen
+                    ? accentPreset.softBg
+                    : "hover:bg-brand-100 dark:hover:bg-brand-800"
+                }`}
+              >
+                ✏️
+              </button>
+              <button
+                type="button"
+                onClick={onToggleTopicSourcesPanel}
+                title="Edit Sources"
+                className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
+                  topicSourcesOpen
+                    ? "bg-emerald-100 dark:bg-emerald-500/15"
+                    : "hover:bg-brand-100 dark:hover:bg-brand-800"
+                }`}
+              >
+                🔗
+              </button>
+            </>
           ) : (
             <>
-              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              <p className="mb-1.5 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                 Manage
               </p>
               <button
                 type="button"
                 onClick={onToggleThemesPanel}
-                className={`w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
+                className={`mb-1.5 w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
                   themesOpen
                     ? `${accentPreset.softBg} ${accentPreset.text}`
                     : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
@@ -482,9 +551,59 @@ export function Sidebar({
               >
                 ✏️ Edit Themes
               </button>
+              <button
+                type="button"
+                onClick={onToggleTopicSourcesPanel}
+                className={`w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
+                  topicSourcesOpen
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                    : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
+                }`}
+              >
+                🔗 Edit Sources
+              </button>
+              <button
+                type="button"
+                onClick={onOpenDebugLog}
+                className="mt-2 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+              >
+                Debug Log
+              </button>
             </>
           )}
         </div>
+      )}
+
+      {collapsed && openFlyout === "saved" && flyoutAnchor && (
+        <SidebarFlyout
+          title="Buried Bones"
+          anchor={flyoutAnchor}
+          pinnedItems={categoryPinnedItems}
+          items={categoryItems}
+          trailingItem={uncategorizedItem}
+          activeKey={activeLinkCategory}
+          accent={accent}
+          onSelect={(key) => {
+            onSelectLinkCategory(key);
+            setOpenFlyout(null);
+          }}
+          onClose={() => setOpenFlyout(null)}
+        />
+      )}
+      {collapsed && openFlyout === "companies" && flyoutAnchor && (
+        <SidebarFlyout
+          title="Pack Watch"
+          anchor={flyoutAnchor}
+          pinnedItems={industryPinnedItems}
+          items={industryItems}
+          activeKey={activeIndustry}
+          accent={accent}
+          onSelect={(key) => {
+            onSelectIndustry(key);
+            setOpenFlyout(null);
+          }}
+          onClose={() => setOpenFlyout(null)}
+        />
       )}
     </aside>
   );

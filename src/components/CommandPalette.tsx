@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ACCENT_PRESETS, DEFAULT_INDUSTRY_EMOJI } from "@/lib/defaults";
 import type { AccentColor, Company, Industry } from "@/lib/types";
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
 
 interface CommandPaletteProps {
+  open: boolean;
   companies: Company[];
   industries: Industry[];
   industryEmojis: Record<Industry, string>;
@@ -23,6 +25,7 @@ interface Result {
 }
 
 export function CommandPalette({
+  open,
   companies,
   industries,
   industryEmojis,
@@ -32,14 +35,29 @@ export function CommandPalette({
   onClose,
 }: CommandPaletteProps) {
   const accentPreset = ACCENT_PRESETS[accent];
+  const { mounted, closing } = useAnimatedModal(open);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [queryAtLastReset, setQueryAtLastReset] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // The component now stays mounted (invisible) across opens instead of
+  // remounting fresh each time — see useAnimatedModal — so reset its
+  // search state and refocus whenever it transitions to open, the same
+  // way a fresh mount used to.
+  const [openTrackedFor, setOpenTrackedFor] = useState(open);
+  if (open !== openTrackedFor) {
+    setOpenTrackedFor(open);
+    if (open) {
+      setQuery("");
+      setActiveIndex(0);
+      setQueryAtLastReset("");
+    }
+  }
+
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (open) inputRef.current?.focus();
+  }, [open]);
 
   // Re-highlight the first result whenever the query changes, without a
   // dedicated effect (see https://react.dev/learn/you-might-not-need-an-effect).
@@ -71,6 +89,8 @@ export function CommandPalette({
     return [...companyResults, ...industryResults].slice(0, 20);
   }, [query, companies, industries, industryEmojis]);
 
+  if (!mounted) return null;
+
   function handleSelect(result: Result) {
     if (result.type === "industry") {
       onSelectIndustry(result.label);
@@ -99,11 +119,11 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-brand-950/40 pt-[12vh]"
+      className={`fixed inset-0 z-50 flex items-start justify-center bg-brand-950/40 pt-[12vh] ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className={`w-full max-w-lg overflow-hidden rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 border-b border-brand-200 px-3 py-2.5 dark:border-brand-800">
@@ -116,7 +136,7 @@ export function CommandPalette({
             placeholder="Jump to a company or industry…"
             className="w-full bg-transparent text-sm text-brand-900 outline-none placeholder:text-brand-400 dark:text-white dark:placeholder:text-brand-600"
           />
-          <kbd className="rounded border border-brand-200 px-1.5 py-0.5 text-[10px] text-brand-400 dark:border-brand-700 dark:text-brand-500">
+          <kbd className="rounded border border-brand-200 px-1.5 py-0.5 text-[0.625rem] text-brand-400 dark:border-brand-700 dark:text-brand-500">
             Esc
           </kbd>
         </div>
@@ -143,7 +163,7 @@ export function CommandPalette({
                 {result.label}
               </span>
               {result.sublabel && (
-                <span className="shrink-0 text-[11px] text-brand-400 dark:text-brand-500">
+                <span className="shrink-0 text-[0.6875rem] text-brand-400 dark:text-brand-500">
                   {result.sublabel}
                 </span>
               )}

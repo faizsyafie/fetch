@@ -11,12 +11,15 @@ import {
   isReservedIndustryName,
   isReservedLinkCategoryName,
 } from "@/lib/defaults";
+import { defaultTopicSourceState, findNewsTopic } from "@/lib/newsTopics";
+import { logDebug } from "@/lib/debugLog";
 import type {
   AccentColor,
   AppPreferences,
   Company,
   Industry,
   NewsSource,
+  NewsTopicId,
   SavedLink,
   TimeFrameDays,
 } from "@/lib/types";
@@ -32,6 +35,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   linkCategories: [],
   linkCategoryColors: {},
   activeLinkCategory: ALL_LINKS_CATEGORY,
+  topicSources: {},
 };
 
 // One-time migration for accounts saved before the default source list
@@ -68,6 +72,7 @@ function normalizePreferences(
     linkCategories: parsed.linkCategories ?? [],
     linkCategoryColors: parsed.linkCategoryColors ?? {},
     activeLinkCategory: parsed.activeLinkCategory ?? ALL_LINKS_CATEGORY,
+    topicSources: parsed.topicSources ?? {},
   };
 }
 
@@ -106,6 +111,7 @@ export function usePreferences(profileName: string | null) {
       })
       .catch(() => {
         if (cancelled) return;
+        logDebug(`Failed to load preferences for profile "${profileName}".`);
         skipNextSave.current = true;
         setPreferences(DEFAULT_PREFERENCES);
         setSyncError(true);
@@ -134,7 +140,10 @@ export function usePreferences(profileName: string | null) {
           if (!res.ok) throw new Error("Failed to save.");
           setSyncError(false);
         })
-        .catch(() => setSyncError(true));
+        .catch(() => {
+          logDebug(`Failed to save preferences for profile "${profileName}".`);
+          setSyncError(true);
+        });
     }, SAVE_DEBOUNCE_MS);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -367,6 +376,63 @@ export function usePreferences(profileName: string | null) {
     setPreferences((prev) => ({ ...prev, sources: DEFAULT_SOURCES }));
   }, []);
 
+  // The Yard's per-topic counterpart to add/removeSource above. A topic's
+  // array is only ever materialized (copied out of NEWS_TOPICS' hardcoded
+  // defaults) the first time it's touched — see resolveTopicSources.
+  const addTopicSource = useCallback(
+    (topicId: NewsTopicId, name: string, feedUrl: string) => {
+      const trimmedName = name.trim();
+      const trimmedFeedUrl = feedUrl.trim();
+      if (!trimmedName || !trimmedFeedUrl) return;
+      const topic = findNewsTopic(topicId);
+      if (!topic) return;
+      setPreferences((prev) => {
+        const current = prev.topicSources[topicId] ?? defaultTopicSourceState(topic);
+        if (current.some((s) => s.feedUrl === trimmedFeedUrl)) return prev;
+        const source = {
+          id: `topic-source-${Date.now()}`,
+          name: trimmedName,
+          feedUrl: trimmedFeedUrl,
+        };
+        return {
+          ...prev,
+          topicSources: {
+            ...prev.topicSources,
+            [topicId]: [...current, source],
+          },
+        };
+      });
+    },
+    []
+  );
+
+  const removeTopicSource = useCallback(
+    (topicId: NewsTopicId, sourceId: string) => {
+      const topic = findNewsTopic(topicId);
+      if (!topic) return;
+      setPreferences((prev) => {
+        const current = prev.topicSources[topicId] ?? defaultTopicSourceState(topic);
+        return {
+          ...prev,
+          topicSources: {
+            ...prev.topicSources,
+            [topicId]: current.filter((s) => s.id !== sourceId),
+          },
+        };
+      });
+    },
+    []
+  );
+
+  const resetTopicSources = useCallback((topicId: NewsTopicId) => {
+    setPreferences((prev) => ({
+      ...prev,
+      topicSources: Object.fromEntries(
+        Object.entries(prev.topicSources).filter(([id]) => id !== topicId)
+      ),
+    }));
+  }, []);
+
   const loadSampleCompanies = useCallback(() => {
     setPreferences((prev) => ({ ...prev, companies: SAMPLE_COMPANIES }));
   }, []);
@@ -543,6 +609,9 @@ export function usePreferences(profileName: string | null) {
     removeSource,
     updateSource,
     resetSources,
+    addTopicSource,
+    removeTopicSource,
+    resetTopicSources,
     loadSampleCompanies,
     saveLink,
     findLinkByUrl,

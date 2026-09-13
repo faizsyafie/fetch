@@ -1,12 +1,20 @@
 "use client";
 
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
+
 interface AboutModalProps {
+  open: boolean;
   onClose: () => void;
 }
 
-export function AboutModal({ onClose }: AboutModalProps) {
+export function AboutModal({ open, onClose }: AboutModalProps) {
+  const { mounted, closing } = useAnimatedModal(open);
+  if (!mounted) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-brand-50 px-4 py-16 text-center dark:bg-brand-900">
+    <div
+      className={`fixed inset-0 z-50 flex flex-col overflow-y-auto bg-brand-50 px-4 py-16 text-center dark:bg-brand-900 ${closing ? "animate-modal-fullscreen-out" : "animate-modal-fullscreen"}`}
+    >
       <button
         type="button"
         onClick={onClose}
@@ -19,13 +27,13 @@ export function AboutModal({ onClose }: AboutModalProps) {
       <div className="m-auto flex w-full flex-col items-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/full-logo-dog-light.png"
+          src="/full-logo-dog-light-new.png"
           alt="fetch — Daily RSS"
           className="block h-24 w-auto object-contain dark:hidden sm:h-32"
         />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/full-logo-dog-dark.png"
+          src="/full-logo-dog-dark-new.png"
           alt="fetch — Daily RSS"
           className="hidden h-24 w-auto object-contain dark:block sm:h-32"
         />
@@ -55,7 +63,7 @@ export function AboutModal({ onClose }: AboutModalProps) {
         </p>
 
         <div className="mt-8 w-full max-w-xs rounded-lg border border-brand-200 bg-white p-5 text-left shadow-sm dark:border-brand-700 dark:bg-brand-800">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
+          <p className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
             Contact
           </p>
           <a

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY } from "@/lib/defaults";
+import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY, isReservedLinkCategoryName } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
+
+const NEW_CATEGORY_OPTION = "__new_category__";
 
 interface SaveLinkModalProps {
   /** Prefilled + read-only when saving a known article; editable when the
@@ -13,6 +15,10 @@ interface SaveLinkModalProps {
   defaultCategory: string;
   accent: AccentColor;
   onSave: (input: { url: string; title: string; notes: string; category: string }) => void;
+  /** Lets "+ New list…" in the category dropdown create one on the spot,
+   *  rather than forcing Uncategorized now and a trip to Buried Bones's
+   *  Edit Categories later just to move it. */
+  onAddCategory: (name: string) => void;
   onClose: () => void;
 }
 
@@ -23,6 +29,7 @@ export function SaveLinkModal({
   defaultCategory,
   accent,
   onSave,
+  onAddCategory,
   onClose,
 }: SaveLinkModalProps) {
   const accentPreset = ACCENT_PRESETS[accent];
@@ -33,6 +40,34 @@ export function SaveLinkModal({
   const [notes, setNotes] = useState("");
   const [category, setCategory] = useState(defaultCategory);
   const [fetchingTitle, setFetchingTitle] = useState(false);
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  function confirmNewCategory() {
+    const trimmed = newCategoryName.trim();
+    const existing = categories.find(
+      (c) => c.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (existing) {
+      // Already have a list by that name — just switch to it rather than
+      // silently no-op'ing on what looks like a legitimate pick.
+      setCategory(existing);
+    } else if (trimmed && !isReservedLinkCategoryName(trimmed)) {
+      onAddCategory(trimmed);
+      setCategory(trimmed);
+    }
+    setAddingCategory(false);
+    setNewCategoryName("");
+  }
+  // This modal is unmounted by the parent as soon as its data goes away
+  // (unlike the boolean-driven modals, see useAnimatedModal), so instead
+  // of that hook, X/Cancel/backdrop just play the exit animation locally
+  // before calling the real onClose a tick later.
+  const [closing, setClosing] = useState(false);
+  function handleClose() {
+    setClosing(true);
+    setTimeout(onClose, 160);
+  }
 
   // Only arbitrary manually-pasted URLs need an auto-fetched title — a
   // known article already carries its own title from the RSS feed.
@@ -68,13 +103,13 @@ export function SaveLinkModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
-      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
+      onClick={handleClose}
     >
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">
@@ -82,7 +117,7 @@ export function SaveLinkModal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close"
             className="rounded px-1.5 py-0.5 text-sm text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
@@ -97,7 +132,7 @@ export function SaveLinkModal({
             </p>
           ) : (
             <div>
-              <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+              <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                 URL
               </label>
               <input
@@ -114,7 +149,7 @@ export function SaveLinkModal({
           )}
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Title {fetchingTitle && <span className="normal-case">(fetching…)</span>}
             </label>
             <input
@@ -130,25 +165,72 @@ export function SaveLinkModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Category
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className={`w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900 outline-none focus:${accentPreset.border} dark:border-brand-700 dark:bg-brand-950 dark:text-white`}
-            >
-              <option value={UNCATEGORIZED_CATEGORY}>{UNCATEGORIZED_CATEGORY}</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            {addingCategory ? (
+              <div className="flex items-center gap-1.5">
+                <input
+                  autoFocus
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      confirmNewCategory();
+                    }
+                    if (e.key === "Escape") {
+                      setAddingCategory(false);
+                      setNewCategoryName("");
+                    }
+                  }}
+                  placeholder="New list name…"
+                  className={`w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900 outline-none focus:${accentPreset.border} dark:border-brand-700 dark:bg-brand-950 dark:text-white`}
+                />
+                <button
+                  type="button"
+                  onClick={confirmNewCategory}
+                  className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold text-white ${accentPreset.solid} ${accentPreset.solidHover}`}
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddingCategory(false);
+                    setNewCategoryName("");
+                  }}
+                  aria-label="Cancel new list"
+                  className="shrink-0 rounded-lg px-2 py-2 text-sm text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-800"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <select
+                value={category}
+                onChange={(e) => {
+                  if (e.target.value === NEW_CATEGORY_OPTION) {
+                    setAddingCategory(true);
+                    return;
+                  }
+                  setCategory(e.target.value);
+                }}
+                className={`w-full rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900 outline-none focus:${accentPreset.border} dark:border-brand-700 dark:bg-brand-950 dark:text-white`}
+              >
+                <option value={UNCATEGORIZED_CATEGORY}>{UNCATEGORIZED_CATEGORY}</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+                <option value={NEW_CATEGORY_OPTION}>+ New list…</option>
+              </select>
+            )}
           </div>
 
           <div>
-            <label className="mb-1 block text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <label className="mb-1 block text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Notes
             </label>
             <textarea
@@ -164,7 +246,7 @@ export function SaveLinkModal({
         <div className="flex justify-end gap-2 border-t border-brand-200 px-4 py-3 dark:border-brand-800">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-800"
           >
             Cancel

@@ -111,7 +111,7 @@ export function NewsBoard({
           )}
         </div>
       )}
-      <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto p-4">
+      <div data-tour="news-columns" className="flex min-h-0 flex-1 gap-4 overflow-x-auto p-4">
         {columns.map((topic) => (
           <NewsColumn
             key={topic.id}

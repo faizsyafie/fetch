@@ -344,7 +344,7 @@ export function SpotlightTour({ steps, accent, onClose }: SpotlightTourProps) {
         )}
 
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
+          <span className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-500">
             Step {stepIndex + 1} of {steps.length}
           </span>
           <button

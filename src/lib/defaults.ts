@@ -169,6 +169,13 @@ export const NEWS_TIME_FRAME_OPTIONS: { label: string; value: NewsTimeFrame }[] 
   { label: "14d", value: 14 },
 ];
 
+// Selectable "articles per topic" caps for the General page (Edit Themes
+// panel) — the server clamps to the same range regardless (see
+// MAX_ARTICLES_PER_TOPIC in rss.ts), so this list and that clamp must stay
+// in sync.
+export const NEWS_ARTICLE_LIMIT_OPTIONS = [30, 50, 75, 100] as const;
+export const DEFAULT_NEWS_ARTICLE_LIMIT = 30;
+
 export const DEFAULT_SOURCES: NewsSource[] = [
   {
     id: "bloomberg",
@@ -250,6 +257,7 @@ export const THEME_STORAGE_KEY = "credit-news-analyst-theme";
 export const UI_STORAGE_KEY = "credit-news-analyst-ui";
 export const SEEN_ARTICLES_STORAGE_KEY = "credit-news-analyst-seen-articles";
 export const PROFILE_STORAGE_KEY = "credit-news-analyst-profile";
+export const DEBUG_LOG_STORAGE_KEY = "credit-news-analyst-debug-log";
 
 export const DEFAULT_SIDEBAR_WIDTH = 224;
 export const MIN_SIDEBAR_WIDTH = 180;

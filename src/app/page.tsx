@@ -9,6 +9,8 @@ import { EditThemesModal } from "@/components/EditThemesModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
+import { SpotlightTour } from "@/components/SpotlightTour";
+import { HomeHub } from "@/components/HomeHub";
 import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
 import { SaveLinkModal } from "@/components/SaveLinkModal";
@@ -16,7 +18,9 @@ import { SavedView } from "@/components/SavedView";
 import { Sidebar, type AppMode } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesModal } from "@/components/SourcesModal";
-import { SpotlightTour } from "@/components/SpotlightTour";
+import { TopicSourcesModal } from "@/components/TopicSourcesModal";
+import { DebugLogModal } from "@/components/DebugLogModal";
+import { logDebug } from "@/lib/debugLog";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -42,8 +46,10 @@ import {
   EMPTY_NEWS_ARTICLES,
   EMPTY_NEWS_ERRORS,
   NEWS_TOPICS,
+  findNewsTopic,
+  resolveTopicSources,
 } from "@/lib/newsTopics";
-import { TOUR_STEPS } from "@/lib/tourSteps";
+import { HOME_TOUR_STEPS, MODE_DETAILED_STEPS } from "@/lib/modeGuide";
 import type {
   Company,
   FetchNewsResponse,
@@ -108,6 +114,9 @@ function DashboardForProfile({
     addSource,
     removeSource,
     resetSources,
+    addTopicSource,
+    removeTopicSource,
+    resetTopicSources,
     saveLink,
     findLinkByUrl,
     updateLink,
@@ -120,18 +129,19 @@ function DashboardForProfile({
     reorderLinkCategories,
     setLinkCategoryColor,
   } = usePreferences(profileName);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const {
     settings: uiSettings,
     hydrated: uiHydrated,
     setSidebarWidth,
     toggleSidebarCollapsed,
     setDensity,
-    markTutorialSeen,
+    markTourSeen,
     setAccent,
     setFontFamily,
     setFontScale,
     setNewsTopicOrder,
+    setNewsArticleLimit,
   } = useUiSettings();
   const { hydrated: seenHydrated, markSeen, isSeen } = useSeenArticles();
 
@@ -141,6 +151,8 @@ function DashboardForProfile({
   const [savedListExpanded, setSavedListExpanded] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
+  const [topicSourcesOpen, setTopicSourcesOpen] = useState(false);
+  const [debugLogOpen, setDebugLogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
@@ -151,13 +163,17 @@ function DashboardForProfile({
   const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  // Lands on General (news) right after picking a profile — there's no
-  // separate welcome screen anymore.
-  const [mode, setMode] = useState<AppMode>("news");
+  // Lands on the Home hub right after picking a profile, where the user
+  // picks a mode themselves — there's no separate welcome screen anymore.
+  const [mode, setMode] = useState<AppMode>("home");
+  // Which of Home's two big cards is highlighted as "active" — tracks
+  // whichever of the two the user most recently visited, defaulting to The
+  // Yard, rather than always favoring one over the other.
+  const [homeActiveMode, setHomeActiveMode] = useState<"news" | "companies">("news");
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
   const [saveLinkModal, setSaveLinkModal] = useState<{
     url?: string;
@@ -173,6 +189,7 @@ function DashboardForProfile({
   const selectMode = useCallback(
     (next: AppMode) => {
       setMode(next);
+      if (next === "news" || next === "companies") setHomeActiveMode(next);
       setSearchQuery("");
       setSelected(new Set());
       setFocusedIndex(null);
@@ -197,24 +214,28 @@ function DashboardForProfile({
     setSavedListExpanded(mode === "saved");
   }
 
-  // The tutorial walks through Companies-mode UI first, so always land there
-  // before opening it — regardless of which mode (or screen) it was opened
-  // from — and force its sidebar sub-list open (the mode-change effect above
-  // only fires when mode actually changes, so this also covers reopening
-  // the tutorial from within Companies itself after manually collapsing it).
-  const openTutorial = useCallback(() => {
-    setMode("companies");
-    setCompaniesListExpanded(true);
-    setTutorialOpen(true);
-  }, [setMode]);
+  // What the ❓ (or Home's "Take the tour" button) opens depends on where
+  // it's clicked from: Home gets the brief multi-mode spotlight tour, any
+  // other page gets just its own longer explanation — see modeGuide.ts.
+  const openHelp = useCallback(() => setHelpOpen(true), []);
+  const helpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
 
-  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[]) => {
+  const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
     try {
+      const topicSources = Object.fromEntries(
+        topics.map((id) => {
+          const topic = findNewsTopic(id);
+          const sources = topic
+            ? resolveTopicSources(topic, preferences.topicSources)
+            : [];
+          return [id, sources.map((s) => ({ name: s.name, feedUrl: s.feedUrl }))];
+        })
+      );
       const response = await fetch("/api/topic-news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ days, topics }),
+        body: JSON.stringify({ days, topics, limit, topicSources }),
       });
       if (!response.ok) throw new Error("Failed to fetch news.");
       const data = await response.json();
@@ -229,6 +250,7 @@ function DashboardForProfile({
       setNewsArticlesByTopic(nextArticles);
       setNewsErrorsByTopic(nextErrors);
     } catch {
+      logDebug("The Yard: failed to fetch news board.");
       setNewsErrorsByTopic(
         Object.fromEntries(
           NEWS_TOPICS.map((topic) => [topic.id, ["Failed to fetch news."]])
@@ -237,14 +259,14 @@ function DashboardForProfile({
     } finally {
       setNewsLoading(false);
     }
-  }, []);
+  }, [preferences.topicSources]);
 
   const setNewsDays = useCallback(
     (days: NewsTimeFrame) => {
       setNewsDaysState(days);
-      void fetchNewsBoard(days, uiSettings.newsTopicOrder);
+      void fetchNewsBoard(days, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit);
     },
-    [fetchNewsBoard, uiSettings.newsTopicOrder]
+    [fetchNewsBoard, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit]
   );
 
   // Refresh as soon as the board is switched into — i.e. every time the
@@ -252,7 +274,7 @@ function DashboardForProfile({
   useEffect(() => {
     if (mode === "news") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder);
+      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
@@ -265,9 +287,20 @@ function DashboardForProfile({
         ? [...uiSettings.newsTopicOrder, id]
         : uiSettings.newsTopicOrder.filter((t) => t !== id);
       setNewsTopicOrder(next);
-      void fetchNewsBoard(newsDays, next);
+      void fetchNewsBoard(newsDays, next, uiSettings.newsArticleLimit);
     },
-    [uiSettings.newsTopicOrder, setNewsTopicOrder, fetchNewsBoard, newsDays]
+    [uiSettings.newsTopicOrder, uiSettings.newsArticleLimit, setNewsTopicOrder, fetchNewsBoard, newsDays]
+  );
+
+  // Same idea as handleToggleTopic — changing the per-column cap should
+  // repopulate the board right away rather than waiting for a manual
+  // refresh, so raising it actually shows the extra articles immediately.
+  const handleSetArticleLimit = useCallback(
+    (limit: number) => {
+      setNewsArticleLimit(limit);
+      void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, limit);
+    },
+    [setNewsArticleLimit, fetchNewsBoard, newsDays, uiSettings.newsTopicOrder]
   );
 
   const expandedRef = useRef<Set<string>>(new Set());
@@ -277,18 +310,24 @@ function DashboardForProfile({
 
   const hydrated = prefsHydrated && uiHydrated && seenHydrated;
 
+  // Each of the four spotlight tours (Home + each mode) auto-plays exactly
+  // once — the very first time its own page is visited — then never again.
+  // Runs on every mode change (including the initial mount, landing on
+  // Home) rather than just once, so switching into a mode for the first
+  // time triggers its own tour even if Home's has already been seen.
+  // Reads the store's synchronous getter directly rather than `uiSettings`:
+  // this can run before useSyncExternalStore's post-hydration snapshot
+  // correction, so the reactive value may still be the transient SSR
+  // default here — keeping the check out of the render body also avoids
+  // opening the tour during the SSR pass itself.
   useEffect(() => {
-    // A one-time, client-only check of persisted state after mount — keeping
-    // this out of the render body avoids opening the modal in the SSR pass
-    // (whose default "not seen" wouldn't match a returning visitor's client
-    // storage) and the resulting hydration mismatch. Read the store's
-    // synchronous getter directly rather than `uiSettings`: this effect can
-    // run before useSyncExternalStore's post-hydration snapshot correction,
-    // so the reactive value may still be the transient SSR default here.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!readUiSettings().tutorialSeen) openTutorial();
+    if (!readUiSettings().toursSeen?.[mode]) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setHelpOpen(true);
+      markTourSeen(mode);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mode]);
 
   const isVirtualIndustry =
     preferences.activeIndustry === ALL_INDUSTRY ||
@@ -502,6 +541,7 @@ function DashboardForProfile({
           markSeen(data.articles.map((a) => a.id));
         }
       } catch {
+        logDebug(`Pack Watch: failed to fetch news for ${company.name}.`);
         setNewsCache((prev) => ({ ...prev, [company.id]: "error" }));
       } finally {
         setLoadingSet((prev) => {
@@ -628,6 +668,7 @@ function DashboardForProfile({
   const handleSelectIndustry = useCallback(
     (industry: string) => {
       setMode("companies");
+      setHomeActiveMode("companies");
       setActiveIndustry(industry);
       setSearchQuery("");
       setSelected(new Set());
@@ -684,7 +725,7 @@ function DashboardForProfile({
       }
       if (e.key === "Escape") {
         setCommandPaletteOpen(false);
-        setTutorialOpen(false);
+        setHelpOpen(false);
         setCustomizeOpen(false);
         setSourcesOpen(false);
         setFeedbackOpen(false);
@@ -734,6 +775,18 @@ function DashboardForProfile({
       ?.scrollIntoView({ block: "nearest" });
   }, [focusedIndex, visibleCompanies]);
 
+  // Scales the actual root font-size (rem-based, so every Tailwind
+  // text-*/spacing utility responds through normal document reflow)
+  // rather than the old `zoom` hack, which scaled the whole rendered
+  // subtree as a single bitmap-like unit — breaking `position: fixed`
+  // modals (every one of them uses `inset-0`, which zoom miscomputes
+  // against its own scaled box instead of the real viewport) and the
+  // h-screen root itself, which is exactly what caused the reported
+  // blank gaps and off-screen controls at non-default sizes.
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${FONT_SCALE_PRESETS[uiSettings.fontScale].value * 100}%`;
+  }, [uiSettings.fontScale]);
+
   if (!hydrated) {
     return <SkeletonLoader />;
   }
@@ -744,8 +797,6 @@ function DashboardForProfile({
   const fontStyle: React.CSSProperties = {
     fontFamily: FONT_FAMILY_PRESETS[uiSettings.fontFamily].stack,
   };
-  (fontStyle as Record<string, string | number>).zoom =
-    FONT_SCALE_PRESETS[uiSettings.fontScale].value;
 
   return (
     <div style={fontStyle} className="flex h-screen overflow-hidden">
@@ -767,6 +818,9 @@ function DashboardForProfile({
         onToggleCollapsed={toggleSidebarCollapsed}
         themesOpen={themesOpen}
         onToggleThemesPanel={() => setThemesOpen((v) => !v)}
+        topicSourcesOpen={topicSourcesOpen}
+        onToggleTopicSourcesPanel={() => setTopicSourcesOpen((v) => !v)}
+        onOpenDebugLog={() => setDebugLogOpen(true)}
         companiesListExpanded={companiesListExpanded}
         onToggleCompaniesListExpanded={() => setCompaniesListExpanded((v) => !v)}
         activeIndustry={preferences.activeIndustry}
@@ -813,14 +867,17 @@ function DashboardForProfile({
           onSetDays={setDays}
           onAddCompany={handleAddCompanyTag}
           onRemoveCompany={removeCompany}
-          onOpenTutorial={openTutorial}
+          onOpenHelp={openHelp}
           onOpenSettings={() => setCustomizeOpen(true)}
           newsDays={newsDays}
           onSetNewsDays={setNewsDays}
           newsLoading={newsLoading}
-          onRefreshNews={() => void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder)}
+          onRefreshNews={() =>
+            void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit)
+          }
           selectedCount={selected.size}
           totalCount={companiesInIndustry.length}
+          expandedCount={expanded.size}
           batchRunning={batchRunning}
           loadingCount={loadingSet.size}
           onClearSelection={clearSelection}
@@ -828,7 +885,20 @@ function DashboardForProfile({
           onFetchCompanies={fetchSmart}
         />
 
-        {mode === "news" ? (
+        {mode === "home" ? (
+          <HomeHub
+            theme={theme}
+            profileName={profileName}
+            accent={uiSettings.accent}
+            activeMode={homeActiveMode}
+            sourcesCount={preferences.sources.filter((s) => s.enabled).length}
+            companiesCount={preferences.companies.length}
+            savedCount={preferences.links.length}
+            onSelectMode={selectMode}
+            onPreviewMode={setHomeActiveMode}
+            onOpenTour={openHelp}
+          />
+        ) : mode === "news" ? (
           <NewsBoard
             articlesByTopic={visibleNewsArticlesByTopic}
             errorsByTopic={newsErrorsByTopic}
@@ -849,6 +919,7 @@ function DashboardForProfile({
             links={visibleLinks}
             linkCategories={preferences.linkCategories}
             accent={uiSettings.accent}
+            searchQuery={searchQuery}
             onAddLink={() => setSaveLinkModal({})}
             onSelectLink={setSelectedLinkId}
             selectedId={selectedLinkId}
@@ -900,64 +971,70 @@ function DashboardForProfile({
         </div>
       </div>
 
-      {commandPaletteOpen && (
-        <CommandPalette
-          companies={preferences.companies}
-          industries={preferences.industries}
-          industryEmojis={preferences.industryEmojis}
-          accent={uiSettings.accent}
-          onSelectCompany={openCompany}
-          onSelectIndustry={handleSelectIndustry}
-          onClose={() => setCommandPaletteOpen(false)}
-        />
-      )}
+      <CommandPalette
+        open={commandPaletteOpen}
+        companies={preferences.companies}
+        industries={preferences.industries}
+        industryEmojis={preferences.industryEmojis}
+        accent={uiSettings.accent}
+        onSelectCompany={openCompany}
+        onSelectIndustry={handleSelectIndustry}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
 
-      {tutorialOpen && (
+      {helpOpen && (
         <SpotlightTour
-          steps={TOUR_STEPS}
+          steps={helpSteps}
           accent={uiSettings.accent}
-          onClose={() => {
-            setTutorialOpen(false);
-            markTutorialSeen();
-          }}
+          onClose={() => setHelpOpen(false)}
         />
       )}
 
-      {customizeOpen && (
-        <CustomizePanel
-          theme={theme}
-          accent={uiSettings.accent}
-          fontFamily={uiSettings.fontFamily}
-          fontScale={uiSettings.fontScale}
-          density={uiSettings.density}
-          onToggleTheme={toggleTheme}
-          onSetAccent={setAccent}
-          onSetFontFamily={setFontFamily}
-          onSetFontScale={setFontScale}
-          onSetDensity={setDensity}
-          onClose={() => setCustomizeOpen(false)}
-        />
-      )}
+      <CustomizePanel
+        open={customizeOpen}
+        theme={theme}
+        accent={uiSettings.accent}
+        fontFamily={uiSettings.fontFamily}
+        fontScale={uiSettings.fontScale}
+        density={uiSettings.density}
+        onSetTheme={setTheme}
+        onSetAccent={setAccent}
+        onSetFontFamily={setFontFamily}
+        onSetFontScale={setFontScale}
+        onSetDensity={setDensity}
+        onClose={() => setCustomizeOpen(false)}
+      />
 
-      {feedbackOpen && (
-        <FeedbackModal
-          accent={uiSettings.accent}
-          onClose={() => setFeedbackOpen(false)}
-        />
-      )}
+      <FeedbackModal
+        open={feedbackOpen}
+        accent={uiSettings.accent}
+        onClose={() => setFeedbackOpen(false)}
+      />
 
-      {aboutOpen && (
-        <AboutModal onClose={() => setAboutOpen(false)} />
-      )}
+      <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
 
-      {themesOpen && (
-        <EditThemesModal
-          enabledTopics={uiSettings.newsTopicOrder}
-          accent={uiSettings.accent}
-          onToggle={handleToggleTopic}
-          onClose={() => setThemesOpen(false)}
-        />
-      )}
+      <EditThemesModal
+        open={themesOpen}
+        enabledTopics={uiSettings.newsTopicOrder}
+        articleLimit={uiSettings.newsArticleLimit}
+        accent={uiSettings.accent}
+        onToggle={handleToggleTopic}
+        onSetArticleLimit={handleSetArticleLimit}
+        onClose={() => setThemesOpen(false)}
+      />
+
+      <TopicSourcesModal
+        open={topicSourcesOpen}
+        enabledTopics={uiSettings.newsTopicOrder}
+        topicSources={preferences.topicSources}
+        accent={uiSettings.accent}
+        onAdd={addTopicSource}
+        onRemove={removeTopicSource}
+        onResetDefaults={resetTopicSources}
+        onClose={() => setTopicSourcesOpen(false)}
+      />
+
+      <DebugLogModal open={debugLogOpen} onClose={() => setDebugLogOpen(false)} />
 
       {saveLinkModal && (
         <SaveLinkModal
@@ -967,21 +1044,21 @@ function DashboardForProfile({
           defaultCategory={defaultSaveCategory}
           accent={uiSettings.accent}
           onSave={handleSaveLinkSubmit}
+          onAddCategory={addLinkCategory}
           onClose={() => setSaveLinkModal(null)}
         />
       )}
 
-      {sourcesOpen && (
-        <SourcesModal
-          sources={preferences.sources}
-          accent={uiSettings.accent}
-          onAdd={addSource}
-          onRemove={removeSource}
-          onResetDefaults={resetSources}
-          onClearCache={clearCache}
-          onClose={() => setSourcesOpen(false)}
-        />
-      )}
+      <SourcesModal
+        open={sourcesOpen}
+        sources={preferences.sources}
+        accent={uiSettings.accent}
+        onAdd={addSource}
+        onRemove={removeSource}
+        onResetDefaults={resetSources}
+        onClearCache={clearCache}
+        onClose={() => setSourcesOpen(false)}
+      />
     </div>
   );
 }

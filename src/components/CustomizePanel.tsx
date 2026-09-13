@@ -7,14 +7,24 @@ import {
 } from "@/lib/defaults";
 import type { AccentColor, Density, FontFamily, FontScale } from "@/lib/types";
 import type { Theme } from "@/hooks/useTheme";
+import { useAnimatedModal } from "@/hooks/useAnimatedModal";
+
+const THEME_OPTIONS: { key: Theme; label: string }[] = [
+  { key: "light", label: "🥛 Cream" },
+  { key: "dark", label: "⚫ Coal" },
+  { key: "coral", label: "🪸 Coral" },
+  { key: "midnight", label: "🔵 Navy" },
+  { key: "sage", label: "🌿 Sage" },
+];
 
 interface CustomizePanelProps {
+  open: boolean;
   theme: Theme;
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;
   density: Density;
-  onToggleTheme: () => void;
+  onSetTheme: (theme: Theme) => void;
   onSetAccent: (accent: AccentColor) => void;
   onSetFontFamily: (fontFamily: FontFamily) => void;
   onSetFontScale: (fontScale: FontScale) => void;
@@ -23,25 +33,29 @@ interface CustomizePanelProps {
 }
 
 export function CustomizePanel({
+  open,
   theme,
   accent,
   fontFamily,
   fontScale,
   density,
-  onToggleTheme,
+  onSetTheme,
   onSetAccent,
   onSetFontFamily,
   onSetFontScale,
   onSetDensity,
   onClose,
 }: CustomizePanelProps) {
+  const { mounted, closing } = useAnimatedModal(open);
+  if (!mounted) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-950/50 p-4 ${closing ? "animate-modal-backdrop-out" : "animate-modal-backdrop"}`}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900"
+        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
@@ -60,22 +74,15 @@ export function CustomizePanel({
 
         <div className="space-y-5 px-4 py-4">
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Theme
             </p>
             <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  { key: "light" as Theme, label: "☀️ Light" },
-                  { key: "dark" as Theme, label: "🌙 Dark" },
-                ] as const
-              ).map(({ key, label }) => (
+              {THEME_OPTIONS.map(({ key, label }) => (
                 <button
                   key={key}
                   type="button"
-                  onClick={() => {
-                    if (key !== theme) onToggleTheme();
-                  }}
+                  onClick={() => onSetTheme(key)}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
                     theme === key
                       ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
@@ -89,7 +96,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Accent color
             </p>
             <div className="flex flex-wrap gap-2">
@@ -117,7 +124,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Row spacing
             </p>
             <div className="flex flex-wrap gap-2">
@@ -149,14 +156,14 @@ export function CustomizePanel({
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[10px] text-brand-400 dark:text-brand-600">
+            <p className="mt-2 text-[0.625rem] text-brand-400 dark:text-brand-600">
               Compact packs more companies on screen with smaller rows;
               Comfortable gives each one more room to breathe.
             </p>
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Font
             </p>
             <div className="flex flex-wrap gap-2">
@@ -181,7 +188,7 @@ export function CustomizePanel({
           </section>
 
           <section>
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Font size
             </p>
             <div className="flex flex-wrap gap-2">
@@ -200,9 +207,9 @@ export function CustomizePanel({
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-[10px] text-brand-400 dark:text-brand-600">
-              Font size is applied as an overall page zoom, so it may render
-              slightly differently across browsers.
+            <p className="mt-2 text-[0.625rem] text-brand-400 dark:text-brand-600">
+              Scales text and spacing throughout the app — layout reflows
+              normally, so nothing gets cut off at larger sizes.
             </p>
           </section>
         </div>
