@@ -10,10 +10,10 @@ import type { Theme } from "@/hooks/useTheme";
 import { useAnimatedModal } from "@/hooks/useAnimatedModal";
 
 const THEME_OPTIONS: { key: Theme; label: string }[] = [
-  { key: "light", label: "☀️ Cream" },
-  { key: "dark", label: "🌙 Charcoal" },
-  { key: "coral", label: "🌸 Coral" },
-  { key: "midnight", label: "🌌 Midnight" },
+  { key: "light", label: "🥛 Cream" },
+  { key: "dark", label: "⚫ Coal" },
+  { key: "coral", label: "🪸 Coral" },
+  { key: "midnight", label: "🔵 Navy" },
   { key: "sage", label: "🌿 Sage" },
 ];
 
