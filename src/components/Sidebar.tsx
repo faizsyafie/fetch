@@ -324,6 +324,7 @@ export function Sidebar({
                 items={categoryItems}
                 trailingItem={uncategorizedItem}
                 activeKey={activeLinkCategory}
+                isModeActive={mode === "saved"}
                 accent={accent}
                 addPlaceholder="New category…"
                 onSelect={onSelectLinkCategory}
@@ -369,6 +370,7 @@ export function Sidebar({
                 pinnedItems={industryPinnedItems}
                 items={industryItems}
                 activeKey={activeIndustry}
+                isModeActive={mode === "companies"}
                 accent={accent}
                 addPlaceholder="New industry…"
                 onSelect={onSelectIndustry}

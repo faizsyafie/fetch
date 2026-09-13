@@ -17,6 +17,13 @@ interface SidebarSubListProps {
    *  only, never editable. */
   trailingItem?: SidebarListItem;
   activeKey: string;
+  /** Whether this list's own nav section (Buried Bones / Pack Watch) is
+   *  the one currently being viewed. Both sub-lists can be expanded at
+   *  once, each remembering its own activeKey — without this, the
+   *  inactive one's remembered selection would show the same solid
+   *  accent highlight as the row actually on screen, reading as two
+   *  active selections at once. */
+  isModeActive: boolean;
   accent: AccentColor;
   addPlaceholder: string;
   onSelect: (key: string) => void;
@@ -42,6 +49,7 @@ export function SidebarSubList({
   items,
   trailingItem,
   activeKey,
+  isModeActive,
   accent,
   addPlaceholder,
   onSelect,
@@ -104,7 +112,9 @@ export function SidebarSubList({
     const isActive = item.key === activeKey;
     const baseClass = `flex min-w-0 flex-1 items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-left text-[0.75rem] font-medium transition-colors ${
       isActive
-        ? `${accentPreset.solid} text-white shadow-sm`
+        ? isModeActive
+          ? `${accentPreset.solid} text-white shadow-sm`
+          : "bg-brand-200 text-brand-700 dark:bg-brand-700 dark:text-brand-200"
         : "text-brand-600 hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-800"
     }`;
 
@@ -201,7 +211,13 @@ export function SidebarSubList({
           <span
             className={`shrink-0 tabular-nums transition-opacity ${
               editable ? "group-hover:opacity-0" : ""
-            } ${isActive ? "text-white/80" : "text-brand-400 dark:text-brand-500"}`}
+            } ${
+              isActive
+                ? isModeActive
+                  ? "text-white/80"
+                  : "text-brand-500 dark:text-brand-400"
+                : "text-brand-400 dark:text-brand-500"
+            }`}
           >
             {item.count}
           </span>
