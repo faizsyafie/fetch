@@ -9,6 +9,13 @@ export type GuidedMode = Exclude<AppMode, "home">;
 // "go there" button — clicking the highlighted nav item just takes you.
 export const HOME_TOUR_STEPS: TourStep[] = [
   {
+    id: "welcome",
+    selector: null,
+    title: "🐾 Welcome to fetch",
+    description:
+      "Fetch is your news retriever — it tracks companies you care about, keeps a general news board, and lets you bury links for later. This quick tour covers the basics in under a minute. Ready? Let's go.",
+  },
+  {
     id: "nav-news",
     selector: '[data-tour="nav-news"]',
     title: "📰 The Yard",
