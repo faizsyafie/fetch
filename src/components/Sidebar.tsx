@@ -33,6 +33,7 @@ interface SidebarProps {
   onToggleThemesPanel: () => void;
   topicSourcesOpen: boolean;
   onToggleTopicSourcesPanel: () => void;
+  onOpenDebugLog: () => void;
 
   // Companies sub-list ("subfolder" under the Companies nav item) — same
   // pinned/reorderable/add shape the old horizontal TabBar used.
@@ -83,6 +84,7 @@ export function Sidebar({
   onToggleThemesPanel,
   topicSourcesOpen,
   onToggleTopicSourcesPanel,
+  onOpenDebugLog,
   companiesListExpanded,
   onToggleCompaniesListExpanded,
   activeIndustry,
@@ -487,6 +489,13 @@ export function Sidebar({
                 </span>
                 {lastUpdatedLabel && <span>{lastUpdatedLabel}</span>}
               </div>
+              <button
+                type="button"
+                onClick={onOpenDebugLog}
+                className="mt-2 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+              >
+                Debug Log
+              </button>
             </>
           )}
         </div>
@@ -552,6 +561,13 @@ export function Sidebar({
                 }`}
               >
                 🔗 Edit Sources
+              </button>
+              <button
+                type="button"
+                onClick={onOpenDebugLog}
+                className="mt-2 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+              >
+                Debug Log
               </button>
             </>
           )}

@@ -19,6 +19,8 @@ import { Sidebar, type AppMode } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesModal } from "@/components/SourcesModal";
 import { TopicSourcesModal } from "@/components/TopicSourcesModal";
+import { DebugLogModal } from "@/components/DebugLogModal";
+import { logDebug } from "@/lib/debugLog";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -150,6 +152,7 @@ function DashboardForProfile({
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
   const [topicSourcesOpen, setTopicSourcesOpen] = useState(false);
+  const [debugLogOpen, setDebugLogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
@@ -247,6 +250,7 @@ function DashboardForProfile({
       setNewsArticlesByTopic(nextArticles);
       setNewsErrorsByTopic(nextErrors);
     } catch {
+      logDebug("The Yard: failed to fetch news board.");
       setNewsErrorsByTopic(
         Object.fromEntries(
           NEWS_TOPICS.map((topic) => [topic.id, ["Failed to fetch news."]])
@@ -537,6 +541,7 @@ function DashboardForProfile({
           markSeen(data.articles.map((a) => a.id));
         }
       } catch {
+        logDebug(`Pack Watch: failed to fetch news for ${company.name}.`);
         setNewsCache((prev) => ({ ...prev, [company.id]: "error" }));
       } finally {
         setLoadingSet((prev) => {
@@ -815,6 +820,7 @@ function DashboardForProfile({
         onToggleThemesPanel={() => setThemesOpen((v) => !v)}
         topicSourcesOpen={topicSourcesOpen}
         onToggleTopicSourcesPanel={() => setTopicSourcesOpen((v) => !v)}
+        onOpenDebugLog={() => setDebugLogOpen(true)}
         companiesListExpanded={companiesListExpanded}
         onToggleCompaniesListExpanded={() => setCompaniesListExpanded((v) => !v)}
         activeIndustry={preferences.activeIndustry}
@@ -1027,6 +1033,8 @@ function DashboardForProfile({
         onResetDefaults={resetTopicSources}
         onClose={() => setTopicSourcesOpen(false)}
       />
+
+      <DebugLogModal open={debugLogOpen} onClose={() => setDebugLogOpen(false)} />
 
       {saveLinkModal && (
         <SaveLinkModal

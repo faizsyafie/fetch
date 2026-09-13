@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import type { AccentColor } from "@/lib/types";
 import { useAnimatedModal } from "@/hooks/useAnimatedModal";
+import { logDebug } from "@/lib/debugLog";
 
 interface FeedbackModalProps {
   open: boolean;
@@ -59,8 +60,10 @@ export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
       }
       setStatus("sent");
     } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to send feedback.";
+      logDebug(`Feedback: send failed — ${message}`);
       setStatus("error");
-      setErrorText(err instanceof Error ? err.message : "Failed to send feedback.");
+      setErrorText(message);
     }
   }
 

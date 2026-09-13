@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { useTheme } from "@/hooks/useTheme";
+import { logDebug } from "@/lib/debugLog";
 
 interface ProfilePickerProps {
   onPick: (name: string) => void;
@@ -27,7 +28,10 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
         if (!cancelled) setExistingProfiles(data.profiles);
       })
       .catch(() => {
-        if (!cancelled) setLoadError(true);
+        if (!cancelled) {
+          logDebug("Failed to load the list of existing profiles.");
+          setLoadError(true);
+        }
       })
       .finally(() => {
         if (!cancelled) setProfilesLoading(false);

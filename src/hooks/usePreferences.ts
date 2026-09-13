@@ -12,6 +12,7 @@ import {
   isReservedLinkCategoryName,
 } from "@/lib/defaults";
 import { defaultTopicSourceState, findNewsTopic } from "@/lib/newsTopics";
+import { logDebug } from "@/lib/debugLog";
 import type {
   AccentColor,
   AppPreferences,
@@ -110,6 +111,7 @@ export function usePreferences(profileName: string | null) {
       })
       .catch(() => {
         if (cancelled) return;
+        logDebug(`Failed to load preferences for profile "${profileName}".`);
         skipNextSave.current = true;
         setPreferences(DEFAULT_PREFERENCES);
         setSyncError(true);
@@ -138,7 +140,10 @@ export function usePreferences(profileName: string | null) {
           if (!res.ok) throw new Error("Failed to save.");
           setSyncError(false);
         })
-        .catch(() => setSyncError(true));
+        .catch(() => {
+          logDebug(`Failed to save preferences for profile "${profileName}".`);
+          setSyncError(true);
+        });
     }, SAVE_DEBOUNCE_MS);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
