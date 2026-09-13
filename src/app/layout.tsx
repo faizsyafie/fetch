@@ -13,12 +13,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://fetchforme.vercel.app";
+const ogTitle = "fetch | Daily RSS Company Monitor";
+const ogDescription = "A loyal retriever for the information age.";
+
 export const metadata: Metadata = {
-  title: "fetch | Daily RSS Company Monitor",
-  description:
-    "A loyal retriever for the information age.",
+  metadataBase: new URL(siteUrl),
+  title: ogTitle,
+  description: ogDescription,
   icons: {
-    icon: "/full-logo-dog-light-new.png",
+    icon: "/full-logo-dog-dark-new.png",
+  },
+  openGraph: {
+    title: ogTitle,
+    description: ogDescription,
+    url: siteUrl,
+    siteName: "fetch",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "fetch — Daily RSS",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: ogTitle,
+    description: ogDescription,
+    images: ["/og-image.png"],
   },
 };
 
