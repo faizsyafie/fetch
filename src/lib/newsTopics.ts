@@ -1,4 +1,4 @@
-import type { NewsTopicId, TopicArticle } from "./types";
+import type { NewsTopicId, NewsTopicSourceState, TopicArticle } from "./types";
 
 export interface NewsTopicSource {
   name: string;
@@ -375,3 +375,31 @@ export const DEFAULT_NEWS_TOPIC_ORDER: NewsTopicId[] = [
   "tech",
   "tradeGeopolitics",
 ];
+
+export function findNewsTopic(id: NewsTopicId): NewsTopic | undefined {
+  return NEWS_TOPICS.find((t) => t.id === id);
+}
+
+// Turns a topic's hardcoded default feeds into the same editable shape a
+// user's own customizations take, so the two are indistinguishable once
+// materialized (see resolveTopicSources) — a stable id derived from the
+// name (rather than array index) survives the array being reordered or
+// partially edited.
+export function defaultTopicSourceState(topic: NewsTopic): NewsTopicSourceState[] {
+  return topic.sources.map((source) => ({
+    id: `default-${source.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    name: source.name,
+    feedUrl: source.feedUrl,
+    isDefault: true,
+  }));
+}
+
+// A topic the user hasn't customized has no entry in AppPreferences.topicSources
+// at all — this is what lets NEWS_TOPICS stay the single source of truth for
+// everyone who hasn't touched a given column's feeds.
+export function resolveTopicSources(
+  topic: NewsTopic,
+  overrides: Partial<Record<NewsTopicId, NewsTopicSourceState[]>>
+): NewsTopicSourceState[] {
+  return overrides[topic.id] ?? defaultTopicSourceState(topic);
+}

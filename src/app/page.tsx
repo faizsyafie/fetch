@@ -18,6 +18,7 @@ import { SavedView } from "@/components/SavedView";
 import { Sidebar, type AppMode } from "@/components/Sidebar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesModal } from "@/components/SourcesModal";
+import { TopicSourcesModal } from "@/components/TopicSourcesModal";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -43,6 +44,8 @@ import {
   EMPTY_NEWS_ARTICLES,
   EMPTY_NEWS_ERRORS,
   NEWS_TOPICS,
+  findNewsTopic,
+  resolveTopicSources,
 } from "@/lib/newsTopics";
 import { HOME_TOUR_STEPS, MODE_DETAILED_STEPS } from "@/lib/modeGuide";
 import type {
@@ -109,6 +112,9 @@ function DashboardForProfile({
     addSource,
     removeSource,
     resetSources,
+    addTopicSource,
+    removeTopicSource,
+    resetTopicSources,
     saveLink,
     findLinkByUrl,
     updateLink,
@@ -143,6 +149,7 @@ function DashboardForProfile({
   const [savedListExpanded, setSavedListExpanded] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [themesOpen, setThemesOpen] = useState(false);
+  const [topicSourcesOpen, setTopicSourcesOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
@@ -213,10 +220,19 @@ function DashboardForProfile({
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
     try {
+      const topicSources = Object.fromEntries(
+        topics.map((id) => {
+          const topic = findNewsTopic(id);
+          const sources = topic
+            ? resolveTopicSources(topic, preferences.topicSources)
+            : [];
+          return [id, sources.map((s) => ({ name: s.name, feedUrl: s.feedUrl }))];
+        })
+      );
       const response = await fetch("/api/topic-news", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ days, topics, limit }),
+        body: JSON.stringify({ days, topics, limit, topicSources }),
       });
       if (!response.ok) throw new Error("Failed to fetch news.");
       const data = await response.json();
@@ -239,7 +255,7 @@ function DashboardForProfile({
     } finally {
       setNewsLoading(false);
     }
-  }, []);
+  }, [preferences.topicSources]);
 
   const setNewsDays = useCallback(
     (days: NewsTimeFrame) => {
@@ -787,6 +803,8 @@ function DashboardForProfile({
         onToggleCollapsed={toggleSidebarCollapsed}
         themesOpen={themesOpen}
         onToggleThemesPanel={() => setThemesOpen((v) => !v)}
+        topicSourcesOpen={topicSourcesOpen}
+        onToggleTopicSourcesPanel={() => setTopicSourcesOpen((v) => !v)}
         companiesListExpanded={companiesListExpanded}
         onToggleCompaniesListExpanded={() => setCompaniesListExpanded((v) => !v)}
         activeIndustry={preferences.activeIndustry}
@@ -987,6 +1005,17 @@ function DashboardForProfile({
         onToggle={handleToggleTopic}
         onSetArticleLimit={handleSetArticleLimit}
         onClose={() => setThemesOpen(false)}
+      />
+
+      <TopicSourcesModal
+        open={topicSourcesOpen}
+        enabledTopics={uiSettings.newsTopicOrder}
+        topicSources={preferences.topicSources}
+        accent={uiSettings.accent}
+        onAdd={addTopicSource}
+        onRemove={removeTopicSource}
+        onResetDefaults={resetTopicSources}
+        onClose={() => setTopicSourcesOpen(false)}
       />
 
       {saveLinkModal && (

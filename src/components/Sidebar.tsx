@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { ACCENT_PRESETS, COLLAPSED_SIDEBAR_WIDTH } from "@/lib/defaults";
 import type { AccentColor, NewsSource, SidebarListItem, TimeFrameDays } from "@/lib/types";
 import { Logo } from "@/components/Logo";
+import { SidebarFlyout } from "@/components/SidebarFlyout";
 import { SidebarSubList } from "@/components/SidebarSubList";
 import type { Theme } from "@/hooks/useTheme";
 
@@ -30,6 +31,8 @@ interface SidebarProps {
   // General page
   themesOpen: boolean;
   onToggleThemesPanel: () => void;
+  topicSourcesOpen: boolean;
+  onToggleTopicSourcesPanel: () => void;
 
   // Companies sub-list ("subfolder" under the Companies nav item) — same
   // pinned/reorderable/add shape the old horizontal TabBar used.
@@ -78,6 +81,8 @@ export function Sidebar({
   onToggleCollapsed,
   themesOpen,
   onToggleThemesPanel,
+  topicSourcesOpen,
+  onToggleTopicSourcesPanel,
   companiesListExpanded,
   onToggleCompaniesListExpanded,
   activeIndustry,
@@ -103,9 +108,27 @@ export function Sidebar({
   onSetLinkCategoryColor,
 }: SidebarProps) {
   const [sourcesListExpanded, setSourcesListExpanded] = useState(false);
+  // Click-triggered "jump to list" flyout for switching Buried Bones
+  // categories or Pack Watch industries while collapsed, without needing
+  // to re-expand the sidebar first — see SidebarFlyout.
+  const [openFlyout, setOpenFlyout] = useState<"saved" | "companies" | null>(
+    null
+  );
+  const [flyoutAnchor, setFlyoutAnchor] = useState<{ top: number; left: number } | null>(
+    null
+  );
   const resizeState = useRef<{ startX: number; startWidth: number } | null>(
     null
   );
+
+  // Reset during render (same pattern page.tsx uses for its own
+  // mode-tracked state) rather than in an effect, so expanding the sidebar
+  // never leaves a stale flyout that reopens on the very next collapse.
+  const [collapsedTrackedFor, setCollapsedTrackedFor] = useState(collapsed);
+  if (collapsed !== collapsedTrackedFor) {
+    setCollapsedTrackedFor(collapsed);
+    if (!collapsed) setOpenFlyout(null);
+  }
 
   function handleResizeMouseDown(e: React.MouseEvent) {
     e.preventDefault();
@@ -137,6 +160,7 @@ export function Sidebar({
     onClick,
     expanded,
     onToggleExpanded,
+    flyoutKey,
   }: {
     isActive: boolean;
     label: string;
@@ -149,12 +173,21 @@ export function Sidebar({
     onClick: () => void;
     expanded?: boolean;
     onToggleExpanded?: () => void;
+    // When set, clicking this row while collapsed also opens a flyout menu
+    // (see SidebarFlyout) for jumping straight to one of its sub-items.
+    flyoutKey?: "saved" | "companies";
   }) {
     if (collapsed) {
       return (
         <button
           type="button"
-          onClick={onClick}
+          onClick={(e) => {
+            onClick();
+            if (!flyoutKey) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            setFlyoutAnchor({ top: rect.top, left: rect.right + 8 });
+            setOpenFlyout((prev) => (prev === flyoutKey ? null : flyoutKey));
+          }}
           title={`${label} — ${subtitle}`}
           className={`mx-auto my-0.5 flex h-9 w-9 items-center justify-center rounded-md border-l-2 text-base transition-colors ${
             isActive
@@ -277,6 +310,7 @@ export function Sidebar({
           onClick: () => onSelectMode("saved"),
           expanded: savedListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleSavedListExpanded,
+          flyoutKey: "saved",
         })}
         {!collapsed && (
           <div
@@ -322,6 +356,7 @@ export function Sidebar({
           onClick: () => onSelectMode("companies"),
           expanded: companiesListExpanded,
           onToggleExpanded: collapsed ? undefined : onToggleCompaniesListExpanded,
+          flyoutKey: "companies",
         })}
         {!collapsed && (
           <div
@@ -463,18 +498,32 @@ export function Sidebar({
           }`}
         >
           {collapsed ? (
-            <button
-              type="button"
-              onClick={onToggleThemesPanel}
-              title="Edit Themes"
-              className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
-                themesOpen
-                  ? accentPreset.softBg
-                  : "hover:bg-brand-100 dark:hover:bg-brand-800"
-              }`}
-            >
-              ✏️
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onToggleThemesPanel}
+                title="Edit Themes"
+                className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
+                  themesOpen
+                    ? accentPreset.softBg
+                    : "hover:bg-brand-100 dark:hover:bg-brand-800"
+                }`}
+              >
+                ✏️
+              </button>
+              <button
+                type="button"
+                onClick={onToggleTopicSourcesPanel}
+                title="Edit Sources"
+                className={`flex h-7 w-7 items-center justify-center rounded text-sm ${
+                  topicSourcesOpen
+                    ? "bg-emerald-100 dark:bg-emerald-500/15"
+                    : "hover:bg-brand-100 dark:hover:bg-brand-800"
+                }`}
+              >
+                🔗
+              </button>
+            </>
           ) : (
             <>
               <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
@@ -483,7 +532,7 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={onToggleThemesPanel}
-                className={`w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
+                className={`mb-1.5 w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
                   themesOpen
                     ? `${accentPreset.softBg} ${accentPreset.text}`
                     : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
@@ -491,9 +540,52 @@ export function Sidebar({
               >
                 ✏️ Edit Themes
               </button>
+              <button
+                type="button"
+                onClick={onToggleTopicSourcesPanel}
+                className={`w-full rounded-md px-2 py-1.5 text-left text-xs font-semibold transition-colors ${
+                  topicSourcesOpen
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                    : "bg-brand-100 text-brand-500 hover:bg-brand-200 dark:bg-brand-800/60 dark:text-brand-400 dark:hover:bg-brand-800"
+                }`}
+              >
+                🔗 Edit Sources
+              </button>
             </>
           )}
         </div>
+      )}
+
+      {collapsed && openFlyout === "saved" && flyoutAnchor && (
+        <SidebarFlyout
+          title="Buried Bones"
+          anchor={flyoutAnchor}
+          pinnedItems={categoryPinnedItems}
+          items={categoryItems}
+          trailingItem={uncategorizedItem}
+          activeKey={activeLinkCategory}
+          accent={accent}
+          onSelect={(key) => {
+            onSelectLinkCategory(key);
+            setOpenFlyout(null);
+          }}
+          onClose={() => setOpenFlyout(null)}
+        />
+      )}
+      {collapsed && openFlyout === "companies" && flyoutAnchor && (
+        <SidebarFlyout
+          title="Pack Watch"
+          anchor={flyoutAnchor}
+          pinnedItems={industryPinnedItems}
+          items={industryItems}
+          activeKey={activeIndustry}
+          accent={accent}
+          onSelect={(key) => {
+            onSelectIndustry(key);
+            setOpenFlyout(null);
+          }}
+          onClose={() => setOpenFlyout(null)}
+        />
       )}
     </aside>
   );

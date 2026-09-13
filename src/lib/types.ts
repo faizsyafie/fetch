@@ -44,6 +44,18 @@ export interface NewsSource {
   isDefault?: boolean;
 }
 
+// One customizable feed within a single General-page topic column (see
+// NEWS_TOPICS in newsTopics.ts) — the per-topic counterpart to NewsSource,
+// minus `domain`/`enabled` since a topic column is matched by feed URL
+// directly rather than a domain filter, and removing a row is how you turn
+// it off (no separate enable toggle, same as NewsSource's in practice).
+export interface NewsTopicSourceState {
+  id: string;
+  name: string;
+  feedUrl: string;
+  isDefault?: boolean;
+}
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -176,4 +188,8 @@ export interface AppPreferences {
   linkCategories: string[];
   linkCategoryColors: Record<string, AccentColor>;
   activeLinkCategory: string;
+  /** Per-topic feed customizations for The Yard — a topic missing here (the
+   *  common case) just uses NEWS_TOPICS' built-in defaults untouched; see
+   *  resolveTopicSources in newsTopics.ts. */
+  topicSources: Partial<Record<NewsTopicId, NewsTopicSourceState[]>>;
 }

@@ -284,7 +284,8 @@ async function fetchTopicSourceArticles(
 export async function fetchTopicNews(
   topics: NewsTopic[],
   timeFrame: NewsTimeFrame,
-  limit: number = DEFAULT_ARTICLES_PER_TOPIC
+  limit: number = DEFAULT_ARTICLES_PER_TOPIC,
+  sourceOverrides?: Partial<Record<string, NewsTopic["sources"]>>
 ): Promise<Record<string, { articles: TopicArticle[]; errors: string[] }>> {
   const boundary = timeFrame === "now" ? null : subDays(new Date(), timeFrame);
   const isInRange = (pubDate: Date) =>
@@ -293,8 +294,9 @@ export async function fetchTopicNews(
 
   const entries = await Promise.all(
     topics.map(async (topic) => {
+      const sources = sourceOverrides?.[topic.id] ?? topic.sources;
       const results = await Promise.all(
-        topic.sources.map((source) =>
+        sources.map((source) =>
           fetchTopicSourceArticles(topic, source, isInRange)
         )
       );
