@@ -130,7 +130,7 @@ function DashboardForProfile({
     reorderLinkCategories,
     setLinkCategoryColor,
   } = usePreferences(profileName);
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, customColor, setCustomColor } = useTheme();
   const {
     settings: uiSettings,
     hydrated: uiHydrated,
@@ -1005,11 +1005,13 @@ function DashboardForProfile({
       <CustomizePanel
         open={customizeOpen}
         theme={theme}
+        customColor={customColor}
         accent={uiSettings.accent}
         fontFamily={uiSettings.fontFamily}
         fontScale={uiSettings.fontScale}
         density={uiSettings.density}
         onSetTheme={setTheme}
+        onSetCustomColor={setCustomColor}
         onSetAccent={setAccent}
         onSetFontFamily={setFontFamily}
         onSetFontScale={setFontScale}

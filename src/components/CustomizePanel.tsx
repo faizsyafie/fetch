@@ -20,11 +20,13 @@ const THEME_OPTIONS: { key: Theme; label: string }[] = [
 interface CustomizePanelProps {
   open: boolean;
   theme: Theme;
+  customColor: string;
   accent: AccentColor;
   fontFamily: FontFamily;
   fontScale: FontScale;
   density: Density;
   onSetTheme: (theme: Theme) => void;
+  onSetCustomColor: (hex: string) => void;
   onSetAccent: (accent: AccentColor) => void;
   onSetFontFamily: (fontFamily: FontFamily) => void;
   onSetFontScale: (fontScale: FontScale) => void;
@@ -35,11 +37,13 @@ interface CustomizePanelProps {
 export function CustomizePanel({
   open,
   theme,
+  customColor,
   accent,
   fontFamily,
   fontScale,
   density,
   onSetTheme,
+  onSetCustomColor,
   onSetAccent,
   onSetFontFamily,
   onSetFontScale,
@@ -92,7 +96,35 @@ export function CustomizePanel({
                   {label}
                 </button>
               ))}
+              <label
+                title="Pick a custom background color — every other color follows from it"
+                className={`relative flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  theme === "custom"
+                    ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
+                    : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10"
+                  style={{ backgroundColor: customColor }}
+                />
+                🎨 Custom
+                <input
+                  type="color"
+                  value={customColor}
+                  onChange={(e) => onSetCustomColor(e.target.value)}
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  aria-label="Pick a custom background color"
+                />
+              </label>
             </div>
+            {theme === "custom" && (
+              <p className="mt-2 text-[0.625rem] text-brand-400 dark:text-brand-600">
+                Every other color — surfaces, borders, text — is generated
+                from this one automatically.
+              </p>
+            )}
           </section>
 
           <section>

@@ -254,6 +254,9 @@ export const SAMPLE_COMPANIES: Company[] = [
 
 export const STORAGE_KEY = "credit-news-analyst-preferences";
 export const THEME_STORAGE_KEY = "credit-news-analyst-theme";
+export const CUSTOM_THEME_COLOR_STORAGE_KEY =
+  "credit-news-analyst-custom-theme-color";
+export const DEFAULT_CUSTOM_THEME_COLOR = "#fcf9f2";
 export const UI_STORAGE_KEY = "credit-news-analyst-ui";
 export const SEEN_ARTICLES_STORAGE_KEY = "credit-news-analyst-seen-articles";
 export const PROFILE_STORAGE_KEY = "credit-news-analyst-profile";
