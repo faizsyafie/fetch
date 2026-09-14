@@ -8,7 +8,18 @@ import {
 } from "@/lib/defaults";
 import { generateThemeFromColor, isColorDark, type RampStep } from "@/lib/colorRamp";
 
-export type Theme = "light" | "dark" | "coral" | "midnight" | "sage" | "custom";
+// "image" is "custom" with a photo behind it instead of a flat color — the
+// ramp is still generated from a color (the photo's extracted dominant
+// color rather than a hand-picked one), so it reuses the same storage key
+// and ramp machinery as "custom" throughout this file.
+export type Theme =
+  | "light"
+  | "dark"
+  | "coral"
+  | "midnight"
+  | "sage"
+  | "custom"
+  | "image";
 
 const VALID_THEMES: Theme[] = [
   "light",
@@ -17,16 +28,17 @@ const VALID_THEMES: Theme[] = [
   "midnight",
   "sage",
   "custom",
+  "image",
 ];
 
 // "dark" and "midnight" are both dark-leaning (deserve the .dark class and
 // the dark dog-logo assets); "light", "coral" and "sage" are light-leaning.
-// "custom" has no fixed leaning — it reads the user's own picked color
-// straight out of localStorage (readCustomColor below reads the same key),
-// which keeps every existing isDarkTheme(theme) call site working
-// unchanged instead of having to thread a new prop everywhere.
+// "custom"/"image" have no fixed leaning — they read the user's own (or
+// photo-derived) color straight out of localStorage (readCustomColor below
+// reads the same key), which keeps every existing isDarkTheme(theme) call
+// site working unchanged instead of having to thread a new prop everywhere.
 export function isDarkTheme(theme: Theme): boolean {
-  if (theme === "custom") {
+  if (theme === "custom" || theme === "image") {
     if (typeof window === "undefined") return false;
     try {
       const stored = localStorage.getItem(CUSTOM_THEME_COLOR_STORAGE_KEY);
@@ -115,7 +127,7 @@ export function useTheme() {
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute("data-theme", theme);
-    if (theme === "custom") {
+    if (theme === "custom" || theme === "image") {
       applyCustomRamp(root, customColor);
     } else {
       clearCustomRamp(root);
@@ -130,10 +142,14 @@ export function useTheme() {
     window.dispatchEvent(new Event(THEME_EVENT));
   }, []);
 
-  const setCustomColor = useCallback((hex: string) => {
+  // targetTheme defaults to "custom" (a hand-picked flat color); the
+  // background-image upload flow passes "image" instead so the ramp
+  // updates to the photo's dominant color without losing the "show the
+  // photo" theme it just set.
+  const setCustomColor = useCallback((hex: string, targetTheme: Theme = "custom") => {
     try {
       localStorage.setItem(CUSTOM_THEME_COLOR_STORAGE_KEY, hex);
-      localStorage.setItem(THEME_STORAGE_KEY, "custom");
+      localStorage.setItem(THEME_STORAGE_KEY, targetTheme);
     } catch {}
     window.dispatchEvent(new Event(THEME_EVENT));
   }, []);

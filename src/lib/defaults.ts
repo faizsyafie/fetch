@@ -400,6 +400,18 @@ export const FONT_FAMILY_PRESETS: Record<
     label: "Monospace",
     stack: "var(--font-geist-mono), ui-monospace, 'SF Mono', monospace",
   },
+  inter: {
+    label: "Inter",
+    stack: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
+  },
+  nunito: {
+    label: "Nunito",
+    stack: "var(--font-nunito), ui-sans-serif, system-ui, sans-serif",
+  },
+  lora: {
+    label: "Lora",
+    stack: "var(--font-lora), Georgia, Cambria, serif",
+  },
 };
 
 export const FONT_SCALE_PRESETS: Record<

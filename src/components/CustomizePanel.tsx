@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import {
   ACCENT_PRESETS,
   FONT_FAMILY_PRESETS,
@@ -8,6 +9,7 @@ import {
 import type { AccentColor, Density, FontFamily, FontScale } from "@/lib/types";
 import type { Theme } from "@/hooks/useTheme";
 import { useAnimatedModal } from "@/hooks/useAnimatedModal";
+import { useBackgroundImage } from "@/hooks/useBackgroundImage";
 
 const THEME_OPTIONS: { key: Theme; label: string }[] = [
   { key: "light", label: "🥛 Cream" },
@@ -26,7 +28,7 @@ interface CustomizePanelProps {
   fontScale: FontScale;
   density: Density;
   onSetTheme: (theme: Theme) => void;
-  onSetCustomColor: (hex: string) => void;
+  onSetCustomColor: (hex: string, targetTheme?: Theme) => void;
   onSetAccent: (accent: AccentColor) => void;
   onSetFontFamily: (fontFamily: FontFamily) => void;
   onSetFontScale: (fontScale: FontScale) => void;
@@ -51,7 +53,34 @@ export function CustomizePanel({
   onClose,
 }: CustomizePanelProps) {
   const { mounted, closing } = useAnimatedModal(open);
+  const { url: bgImageUrl, setImage, clearImage } = useBackgroundImage();
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   if (!mounted) return null;
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPhotoError(null);
+    setPhotoBusy(true);
+    try {
+      const { dominantColor } = await setImage(file);
+      onSetCustomColor(dominantColor, "image");
+    } catch (err) {
+      setPhotoError(
+        err instanceof Error ? err.message : "Couldn't process that image."
+      );
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
+
+  async function handleRemovePhoto() {
+    await clearImage();
+    if (theme === "image") onSetTheme("light");
+  }
 
   return (
     <div
@@ -118,11 +147,65 @@ export function CustomizePanel({
                   aria-label="Pick a custom background color"
                 />
               </label>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={photoBusy}
+                title="Upload a photo — its most common color becomes the base for every other color"
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                  theme === "image"
+                    ? "border-brand-900 bg-brand-100 text-brand-900 dark:border-white dark:bg-brand-800 dark:text-white"
+                    : "border-brand-200 text-brand-600 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-800"
+                }`}
+              >
+                {bgImageUrl && (
+                  <span
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-black/10"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={bgImageUrl} alt="" className="h-full w-full object-cover" />
+                  </span>
+                )}
+                {photoBusy ? "Processing…" : "🖼️ Photo"}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="hidden"
+                aria-label="Upload a background photo"
+              />
+
+              {bgImageUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  className="text-xs font-medium text-brand-400 underline-offset-2 hover:text-brand-600 hover:underline dark:text-brand-600 dark:hover:text-brand-300"
+                >
+                  Remove photo
+                </button>
+              )}
             </div>
+            {photoError && (
+              <p className="mt-2 text-[0.625rem] font-medium text-red-600 dark:text-red-400">
+                ⚠️ {photoError}
+              </p>
+            )}
             {theme === "custom" && (
               <p className="mt-2 text-[0.625rem] text-brand-400 dark:text-brand-600">
                 Every other color — surfaces, borders, text — is generated
                 from this one automatically.
+              </p>
+            )}
+            {theme === "image" && (
+              <p className="mt-2 text-[0.625rem] text-brand-400 dark:text-brand-600">
+                Your photo shows behind the app; every other color is
+                generated from its most common color. The photo stays on
+                this device only — it doesn&rsquo;t sync to other devices or
+                teammates.
               </p>
             )}
           </section>

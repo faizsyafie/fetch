@@ -91,7 +91,13 @@ export type AccentColor =
   | "rose"
   | "amber";
 
-export type FontFamily = "system" | "serif" | "mono";
+export type FontFamily =
+  | "system"
+  | "serif"
+  | "mono"
+  | "inter"
+  | "nunito"
+  | "lora";
 
 export type FontScale = "sm" | "md" | "lg";
 

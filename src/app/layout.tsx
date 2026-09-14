@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Poppins } from "next/font/google";
+import { Geist_Mono, Inter, Lora, Nunito, Poppins } from "next/font/google";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -11,6 +11,28 @@ const poppins = Poppins({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Extra font options for the Settings panel (see FONT_FAMILY_PRESETS in
+// lib/defaults.ts) — a neutral sans, a rounded/playful sans, and an
+// editorial serif, each loaded at a couple of weights to keep bundle size
+// down rather than pulling the whole family.
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+});
+
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const siteUrl = "https://fetchforme.vercel.app";
@@ -56,7 +78,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${poppins.variable} ${geistMono.variable} ${inter.variable} ${nunito.variable} ${lora.variable} h-full antialiased`}
     >
       <head>
         <script
@@ -70,11 +92,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function(){try{
   var t=localStorage.getItem("credit-news-analyst-theme");
-  var valid=["light","dark","coral","midnight","sage","custom"];
+  var valid=["light","dark","coral","midnight","sage","custom","image"];
   if(valid.indexOf(t)===-1){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}
   var root=document.documentElement;
   root.setAttribute("data-theme",t);
-  if(t==="custom"){
+  if(t==="custom"||t==="image"){
     var hex=localStorage.getItem("credit-news-analyst-custom-theme-color")||"#fcf9f2";
     var m=/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex)||[];
     var r=parseInt(m[1]||"fc",16)/255,g=parseInt(m[2]||"f9",16)/255,b=parseInt(m[3]||"f2",16)/255;

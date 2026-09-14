@@ -9,6 +9,7 @@ import { EditThemesModal } from "@/components/EditThemesModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
+import { BackgroundImageLayer } from "@/components/BackgroundImageLayer";
 import { SpotlightTour } from "@/components/SpotlightTour";
 import { HomeHub } from "@/components/HomeHub";
 import { NewsBoard } from "@/components/NewsBoard";
@@ -856,6 +857,7 @@ function DashboardForProfile({
       />
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
+        <BackgroundImageLayer theme={theme} />
         <DogWatermark theme={theme} />
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
