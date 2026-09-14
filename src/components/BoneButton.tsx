@@ -19,10 +19,10 @@ function Lobe({ side, colorClass }: { side: "left" | "right"; colorClass: string
   return (
     <span
       aria-hidden="true"
-      className={`absolute top-1/2 flex -translate-y-1/2 flex-col ${side === "left" ? "-left-3" : "-right-3"}`}
+      className={`absolute top-1/2 flex -translate-y-1/2 flex-col ${side === "left" ? "-left-3.5" : "-right-3.5"}`}
     >
-      <span className={`h-5 w-5 rounded-full ${colorClass}`} />
-      <span className={`-mt-2 h-5 w-5 rounded-full ${colorClass}`} />
+      <span className={`h-6 w-6 rounded-full ${colorClass}`} />
+      <span className={`-mt-2.5 h-6 w-6 rounded-full ${colorClass}`} />
     </span>
   );
 }
@@ -36,13 +36,13 @@ export function BoneButton({ onClick, disabled, accent, children }: BoneButtonPr
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`relative inline-flex h-8 items-center ${
+      className={`relative inline-flex h-9 items-center ${
         disabled ? "cursor-not-allowed" : "hover:animate-bone-jump"
       }`}
     >
       <Lobe side="left" colorClass={colorClass} />
       <span
-        className={`relative z-10 flex h-4 items-center whitespace-nowrap rounded-sm px-4 text-[0.6875rem] font-semibold text-white ${colorClass}`}
+        className={`relative z-10 flex h-5 items-center whitespace-nowrap rounded-sm px-4 text-xs font-semibold text-white ${colorClass}`}
       >
         {children}
       </span>

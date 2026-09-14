@@ -351,19 +351,19 @@ function DashboardForProfile({
 
   const visibleCompanies = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      return sortWithPinned(
-        preferences.companies.filter(
-          (c) =>
-            c.name.toLowerCase().includes(q) ||
-            c.industry.toLowerCase().includes(q) ||
-            (c.ticker?.toLowerCase().includes(q) ?? false) ||
-            (c.notes?.toLowerCase().includes(q) ?? false)
+    const base = q
+      ? sortWithPinned(
+          preferences.companies.filter(
+            (c) =>
+              c.name.toLowerCase().includes(q) ||
+              c.industry.toLowerCase().includes(q) ||
+              (c.ticker?.toLowerCase().includes(q) ?? false) ||
+              (c.notes?.toLowerCase().includes(q) ?? false)
+          )
         )
-      );
-    }
-    return companiesInIndustry;
-  }, [searchQuery, preferences.companies, companiesInIndustry]);
+      : companiesInIndustry;
+    return starredOnly ? base.filter((c) => c.starred) : base;
+  }, [searchQuery, preferences.companies, companiesInIndustry, starredOnly]);
 
   // "Search the whole page" for News mode: filter each column's articles by
   // title, summary or source rather than restricting to company names.

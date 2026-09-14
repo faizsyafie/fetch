@@ -112,7 +112,7 @@ export function BulkAddCompaniesModal({
               if (duplicateNames) setDuplicateNames(null);
             }}
             placeholder={
-              "Exxon Mobil Corporation\nFirst Abu Dhabi Bank PJSC\nFonterra Co-operative Group Limited\nFranklin Resources, Inc.\nGeberit AG\nGeneral Electric Company"
+              "Shiba Holdings KK\nLabrador Ltd.\nFoxhound Capital PLC\nDachshund AG\nArtois Hound SNC\nBichon Frisé SAS"
             }
             rows={10}
             className={`w-full resize-none rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 font-mono text-xs text-brand-900 outline-none focus:${accentPreset.border} dark:border-brand-700 dark:bg-brand-950 dark:text-white`}

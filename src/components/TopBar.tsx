@@ -210,9 +210,7 @@ export function TopBar({
                     ? `Fetching… (${loadingCount})`
                     : selectedCount > 0
                       ? `Fetch! (${selectedCount})`
-                      : starredOnly
-                        ? "Fetch! (starred)"
-                        : "Fetch!"}
+                      : "Fetch!"}
                 </BoneButton>
               </div>
               <CompanySelectionActions
