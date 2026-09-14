@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ACCENT_PRESETS,
   ALL_INDUSTRY,
@@ -112,6 +112,13 @@ export function TopBar({
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
   const [bulkAddOpen, setBulkAddOpen] = useState(false);
+  const [duplicateNotice, setDuplicateNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!duplicateNotice) return;
+    const timer = setTimeout(() => setDuplicateNotice(null), 2500);
+    return () => clearTimeout(timer);
+  }, [duplicateNotice]);
   // Committed only on Enter (see the input below) — a local draft that only
   // resets to match `searchQuery` when something ELSE clears it externally
   // (switching pages, etc.), adjusted during render rather than in an
@@ -135,7 +142,15 @@ export function TopBar({
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     const value = tagInput.trim();
-    if (value) onAddCompany(value);
+    if (!value) return;
+    const isDuplicate = companiesInIndustry.some(
+      (c) => c.name.toLowerCase() === value.toLowerCase()
+    );
+    if (isDuplicate) {
+      setDuplicateNotice("This name has already been put in this list.");
+      return;
+    }
+    onAddCompany(value);
     setTagInput("");
   }
 
@@ -317,13 +332,23 @@ export function TopBar({
                     </button>
                   </span>
                 ))}
-                <input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKey}
-                  placeholder="+ Add company"
-                  className={`w-28 bg-transparent text-xs outline-none ${palette.badgeText}`}
-                />
+                <div className="relative">
+                  <input
+                    value={tagInput}
+                    onChange={(e) => {
+                      setTagInput(e.target.value);
+                      if (duplicateNotice) setDuplicateNotice(null);
+                    }}
+                    onKeyDown={handleTagKey}
+                    placeholder="+ Add company"
+                    className={`w-28 bg-transparent text-xs outline-none ${palette.badgeText}`}
+                  />
+                  {duplicateNotice && (
+                    <div className="animate-dropdown absolute left-0 top-full z-10 mt-1.5 w-max max-w-[14rem] rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-[0.6875rem] font-medium text-red-600 shadow-lg dark:border-red-500/30 dark:bg-brand-800 dark:text-red-400">
+                      ⚠️ {duplicateNotice}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -333,6 +358,7 @@ export function TopBar({
       <BulkAddCompaniesModal
         open={bulkAddOpen}
         industry={activeIndustry}
+        existingNames={companiesInIndustry.map((c) => c.name)}
         accent={accent}
         onClose={() => setBulkAddOpen(false)}
         onAdd={onAddCompanies}

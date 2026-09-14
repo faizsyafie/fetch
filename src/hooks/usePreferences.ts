@@ -150,13 +150,19 @@ export function usePreferences(profileName: string | null) {
     };
   }, [preferences, hydrated, profileName]);
 
+  // Dedupe is scoped to the target industry, not global — the same company
+  // name is allowed to appear in multiple industries/lists (e.g. "CIMB" in
+  // both Financials and a custom Banking list), just not twice in the same
+  // one.
   const addCompany = useCallback((name: string, industry: Industry) => {
     const trimmed = name.trim();
     if (!trimmed) return;
     setPreferences((prev) => {
       if (
         prev.companies.some(
-          (c) => c.name.toLowerCase() === trimmed.toLowerCase()
+          (c) =>
+            c.industry === industry &&
+            c.name.toLowerCase() === trimmed.toLowerCase()
         )
       ) {
         return prev;
@@ -173,13 +179,18 @@ export function usePreferences(profileName: string | null) {
   // Bulk counterpart to addCompany, for pasting a whole list at once.
   // Index-suffixed IDs (rather than addCompany's bare Date.now()) avoid
   // collisions when many companies are added within the same millisecond.
-  // Dedupes case-insensitively against both existing companies and other
-  // lines in the same paste.
+  // Dedupes case-insensitively against both existing companies in the same
+  // industry and other lines in the same paste (see addCompany above for
+  // why dedupe is industry-scoped rather than global).
   const addCompanies = useCallback((names: string[], industry: Industry) => {
     const trimmed = names.map((n) => n.trim()).filter(Boolean);
     if (trimmed.length === 0) return;
     setPreferences((prev) => {
-      const seen = new Set(prev.companies.map((c) => c.name.toLowerCase()));
+      const seen = new Set(
+        prev.companies
+          .filter((c) => c.industry === industry)
+          .map((c) => c.name.toLowerCase())
+      );
       const now = Date.now();
       const added: Company[] = [];
       trimmed.forEach((name, i) => {
