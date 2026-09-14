@@ -99,6 +99,7 @@ function DashboardForProfile({
     preferences,
     hydrated: prefsHydrated,
     addCompany,
+    addCompanies,
     removeCompany,
     togglePinCompany,
     toggleStarCompany,
@@ -154,6 +155,7 @@ function DashboardForProfile({
   const [topicSourcesOpen, setTopicSourcesOpen] = useState(false);
   const [debugLogOpen, setDebugLogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [starredOnly, setStarredOnly] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
     {}
@@ -655,9 +657,11 @@ function DashboardForProfile({
     const toFetch =
       selected.size > 0
         ? preferences.companies.filter((c) => selected.has(c.id))
-        : companiesInIndustry;
+        : starredOnly
+          ? companiesInIndustry.filter((c) => c.starred)
+          : companiesInIndustry;
     void runBatchFetch(toFetch);
-  }, [selected, preferences.companies, companiesInIndustry, runBatchFetch]);
+  }, [selected, preferences.companies, companiesInIndustry, starredOnly, runBatchFetch]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
@@ -693,6 +697,11 @@ function DashboardForProfile({
   const handleAddCompanyTag = useCallback(
     (name: string) => addCompany(name, preferences.activeIndustry),
     [addCompany, preferences.activeIndustry]
+  );
+
+  const handleBulkAddCompanies = useCallback(
+    (names: string[]) => addCompanies(names, preferences.activeIndustry),
+    [addCompanies, preferences.activeIndustry]
   );
 
   const clearCache = useCallback(() => setNewsCache({}), []);
@@ -866,6 +875,7 @@ function DashboardForProfile({
           onSearch={handleSearch}
           onSetDays={setDays}
           onAddCompany={handleAddCompanyTag}
+          onAddCompanies={handleBulkAddCompanies}
           onRemoveCompany={removeCompany}
           onOpenHelp={openHelp}
           onOpenSettings={() => setCustomizeOpen(true)}
@@ -883,6 +893,8 @@ function DashboardForProfile({
           onClearSelection={clearSelection}
           onCollapseAll={collapseAll}
           onFetchCompanies={fetchSmart}
+          starredOnly={starredOnly}
+          onToggleStarredOnly={() => setStarredOnly((v) => !v)}
         />
 
         {mode === "home" ? (

@@ -21,6 +21,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { BoneButton } from "@/components/BoneButton";
 import { CompanySelectionActions } from "@/components/CompanySelectionActions";
 import { TimeFramePills } from "@/components/TimeFramePills";
+import { BulkAddCompaniesModal } from "@/components/BulkAddCompaniesModal";
 
 // TimeFramePills wants a flat {label, value}[] shape; TIME_FRAME_OPTIONS
 // uses `days` instead of `value` for its own (non-UI) clarity elsewhere.
@@ -45,6 +46,7 @@ interface TopBarProps {
   onSearch: (value: string) => void;
   onSetDays: (days: TimeFrameDays) => void;
   onAddCompany: (name: string) => void;
+  onAddCompanies: (names: string[]) => void;
   onRemoveCompany: (id: string) => void;
   onOpenHelp: () => void;
   onOpenSettings: () => void;
@@ -67,6 +69,10 @@ interface TopBarProps {
   onClearSelection: () => void;
   onCollapseAll: () => void;
   onFetchCompanies: () => void;
+  // When on, Fetch! (with nothing manually selected) only fetches starred
+  // companies in the active industry instead of the whole industry.
+  starredOnly: boolean;
+  onToggleStarredOnly: () => void;
 }
 
 export function TopBar({
@@ -85,6 +91,7 @@ export function TopBar({
   onSearch,
   onSetDays,
   onAddCompany,
+  onAddCompanies,
   onRemoveCompany,
   onOpenHelp,
   onOpenSettings,
@@ -100,8 +107,11 @@ export function TopBar({
   onClearSelection,
   onCollapseAll,
   onFetchCompanies,
+  starredOnly,
+  onToggleStarredOnly,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
+  const [bulkAddOpen, setBulkAddOpen] = useState(false);
   // Committed only on Enter (see the input below) — a local draft that only
   // resets to match `searchQuery` when something ELSE clears it externally
   // (switching pages, etc.), adjusted during render rather than in an
@@ -158,6 +168,23 @@ export function TopBar({
                 accent={accent}
                 onChange={onSetDays}
               />
+              <button
+                type="button"
+                onClick={onToggleStarredOnly}
+                title={
+                  starredOnly
+                    ? "Fetching starred companies only — click to fetch the whole industry"
+                    : "Fetch starred companies only"
+                }
+                aria-pressed={starredOnly}
+                className={`flex shrink-0 items-center justify-center rounded-lg border px-2.5 py-1.5 text-sm transition-all ${
+                  starredOnly
+                    ? "border-amber-300 bg-amber-50 drop-shadow-[0_0_5px_rgba(251,191,36,0.65)] dark:border-amber-400/40 dark:bg-amber-400/10"
+                    : "border-brand-200 bg-brand-50 opacity-40 grayscale hover:opacity-70 dark:border-brand-700 dark:bg-brand-800"
+                }`}
+              >
+                <span aria-hidden="true">⭐</span>
+              </button>
               <div data-tour="topbar-fetch">
                 <BoneButton
                   onClick={onFetchCompanies}
@@ -168,7 +195,9 @@ export function TopBar({
                     ? `Fetching… (${loadingCount})`
                     : selectedCount > 0
                       ? `Fetch! (${selectedCount})`
-                      : "Fetch!"}
+                      : starredOnly
+                        ? "Fetch! (starred)"
+                        : "Fetch!"}
                 </BoneButton>
               </div>
               <CompanySelectionActions
@@ -259,8 +288,17 @@ export function TopBar({
             <div
               className={`rounded-lg border px-3 py-2 mx-5 mb-3 mt-2 ${palette.badgeBg} border-current/10`}
             >
-              <div className={`mb-1.5 text-[0.6875rem] font-bold ${palette.badgeText}`}>
-                Editing: {activeIndustry}
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className={`text-[0.6875rem] font-bold ${palette.badgeText}`}>
+                  Editing: {activeIndustry}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setBulkAddOpen(true)}
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold opacity-70 transition-opacity hover:opacity-100 ${palette.badgeBg} ${palette.badgeText}`}
+                >
+                  📋 Paste list
+                </button>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 {companiesInIndustry.map((company) => (
@@ -291,6 +329,14 @@ export function TopBar({
           </div>
         </div>
       )}
+
+      <BulkAddCompaniesModal
+        open={bulkAddOpen}
+        industry={activeIndustry}
+        accent={accent}
+        onClose={() => setBulkAddOpen(false)}
+        onAdd={onAddCompanies}
+      />
     </div>
   );
 }

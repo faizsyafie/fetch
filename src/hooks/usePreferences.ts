@@ -170,6 +170,29 @@ export function usePreferences(profileName: string | null) {
     });
   }, []);
 
+  // Bulk counterpart to addCompany, for pasting a whole list at once.
+  // Index-suffixed IDs (rather than addCompany's bare Date.now()) avoid
+  // collisions when many companies are added within the same millisecond.
+  // Dedupes case-insensitively against both existing companies and other
+  // lines in the same paste.
+  const addCompanies = useCallback((names: string[], industry: Industry) => {
+    const trimmed = names.map((n) => n.trim()).filter(Boolean);
+    if (trimmed.length === 0) return;
+    setPreferences((prev) => {
+      const seen = new Set(prev.companies.map((c) => c.name.toLowerCase()));
+      const now = Date.now();
+      const added: Company[] = [];
+      trimmed.forEach((name, i) => {
+        const key = name.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        added.push({ id: `custom-${now}-${i}`, name, industry });
+      });
+      if (added.length === 0) return prev;
+      return { ...prev, companies: [...prev.companies, ...added] };
+    });
+  }, []);
+
   const removeCompany = useCallback((id: string) => {
     setPreferences((prev) => ({
       ...prev,
@@ -592,6 +615,7 @@ export function usePreferences(profileName: string | null) {
     hydrated,
     syncError,
     addCompany,
+    addCompanies,
     removeCompany,
     togglePinCompany,
     toggleStarCompany,
