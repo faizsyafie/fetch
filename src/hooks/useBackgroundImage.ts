@@ -7,6 +7,7 @@ import {
   saveBackgroundImage,
 } from "@/lib/backgroundImageStore";
 import { getDominantColor } from "@/lib/dominantColor";
+import { logDebug } from "@/lib/debugLog";
 
 const BG_IMAGE_EVENT = "credit-news-analyst-bg-image-change";
 // The photo renders heavily blurred behind the app (see
@@ -38,38 +39,44 @@ export function useBackgroundImage() {
   // before quality gets bad enough to matter under the blur this renders
   // with.
   const setImage = useCallback(async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      throw new Error("Please choose an image file.");
-    }
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
-    const w = Math.max(1, Math.round(bitmap.width * scale));
-    const h = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Your browser doesn't support image processing.");
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close();
+    try {
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Please choose an image file.");
+      }
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+      const w = Math.max(1, Math.round(bitmap.width * scale));
+      const h = Math.max(1, Math.round(bitmap.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Your browser doesn't support image processing.");
+      ctx.drawImage(bitmap, 0, 0, w, h);
+      bitmap.close();
 
-    const dominantColor = getDominantColor(ctx.getImageData(0, 0, w, h));
+      const dominantColor = getDominantColor(ctx.getImageData(0, 0, w, h));
 
-    let quality = 0.8;
-    let dataUrl = canvas.toDataURL("image/jpeg", quality);
-    while (dataUrl.length > MAX_STORED_CHARS && quality > 0.4) {
-      quality -= 0.15;
-      dataUrl = canvas.toDataURL("image/jpeg", quality);
-    }
-    if (dataUrl.length > MAX_STORED_CHARS) {
-      throw new Error(
-        "That image is too large even after compressing — try a smaller photo."
-      );
-    }
+      let quality = 0.8;
+      let dataUrl = canvas.toDataURL("image/jpeg", quality);
+      while (dataUrl.length > MAX_STORED_CHARS && quality > 0.4) {
+        quality -= 0.15;
+        dataUrl = canvas.toDataURL("image/jpeg", quality);
+      }
+      if (dataUrl.length > MAX_STORED_CHARS) {
+        throw new Error(
+          `That image is too large even after compressing (${Math.round(dataUrl.length / 1024)}KB) — try a smaller photo.`
+        );
+      }
 
-    saveBackgroundImage(dataUrl);
-    window.dispatchEvent(new Event(BG_IMAGE_EVENT));
-    return { dominantColor };
+      saveBackgroundImage(dataUrl);
+      window.dispatchEvent(new Event(BG_IMAGE_EVENT));
+      return { dominantColor };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      logDebug(`Background image upload failed: ${message}`);
+      throw err instanceof Error ? err : new Error(message);
+    }
   }, []);
 
   const clearImage = useCallback(() => {
