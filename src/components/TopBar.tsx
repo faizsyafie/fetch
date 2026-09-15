@@ -191,6 +191,7 @@ export function TopBar({
               />
               <button
                 type="button"
+                data-tour="topbar-star-toggle"
                 onClick={onToggleStarredOnly}
                 title={
                   starredOnly
@@ -232,6 +233,7 @@ export function TopBar({
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
+                data-tour="topbar-star-toggle"
                 onClick={onTogglePinnedOnly}
                 title={
                   pinnedOnly
@@ -334,6 +336,7 @@ export function TopBar({
                 </span>
                 <button
                   type="button"
+                  data-tour="topbar-paste-list"
                   onClick={() => setBulkAddOpen(true)}
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold opacity-70 transition-opacity hover:opacity-100 ${palette.badgeBg} ${palette.badgeText}`}
                 >

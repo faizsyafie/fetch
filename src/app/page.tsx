@@ -10,7 +10,7 @@ import { FeedbackModal } from "@/components/FeedbackModal";
 import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
 import { BackgroundImageLayer } from "@/components/BackgroundImageLayer";
-import { SpotlightTour } from "@/components/SpotlightTour";
+import { SpotlightTour, type TourStep } from "@/components/SpotlightTour";
 import { HomeHub } from "@/components/HomeHub";
 import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
@@ -222,7 +222,16 @@ function DashboardForProfile({
   // it's clicked from: Home gets the brief multi-mode spotlight tour, any
   // other page gets just its own longer explanation — see modeGuide.ts.
   const openHelp = useCallback(() => setHelpOpen(true), []);
-  const helpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
+  // modeGuide.ts's step data is static and can't hold real callbacks, so a
+  // step that needs one (e.g. expanding the normally-collapsed "Editing"
+  // box before its paste-list button can be spotlighted) just names it —
+  // resolved to the actual setter here.
+  const rawHelpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
+  const helpSteps: TourStep[] = rawHelpSteps.map((step) => ({
+    ...step,
+    onEnter:
+      step.onEnterId === "enableEditMode" ? () => setEditMode(true) : undefined,
+  }));
 
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
