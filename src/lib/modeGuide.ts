@@ -3,11 +3,22 @@ import type { AppMode } from "@/components/Sidebar";
 
 export type GuidedMode = Exclude<AppMode, "home">;
 
+// modeGuide.ts is static data with no access to page.tsx's state setters, so
+// a step that needs to trigger a side effect (like expanding the normally-
+// collapsed "Editing" box before it can be spotlighted) names the effect by
+// id here; page.tsx maps each id to the real onEnter callback when it builds
+// the steps it actually hands to SpotlightTour.
+export type TourStepOnEnterId = "enableEditMode";
+
+export type TourStepData = Omit<TourStep, "onEnter"> & {
+  onEnterId?: TourStepOnEnterId;
+};
+
 // Home's own tour: jumps between all three modes, spotlighting each one's
 // sidebar row as it goes. The row stays clickable while spotlighted (the
 // dim overlay leaves a real hole over the target), so there's no separate
 // "go there" button — clicking the highlighted nav item just takes you.
-export const HOME_TOUR_STEPS: TourStep[] = [
+export const HOME_TOUR_STEPS: TourStepData[] = [
   {
     id: "welcome",
     selector: null,
@@ -67,7 +78,7 @@ export const HOME_TOUR_STEPS: TourStep[] = [
 
 // Each mode's own ❓ — a short spotlight tour of just that page's own
 // sections, rather than restarting the whole cross-mode tour.
-export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStep[]> = {
+export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStepData[]> = {
   news: [
     {
       id: "news-columns",
@@ -127,11 +138,29 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStep[]> = {
       placement: "bottom",
     },
     {
+      id: "companies-starred",
+      selector: '[data-tour="topbar-star-toggle"]',
+      title: "⭐ Starred only",
+      description:
+        "Toggle this on and Fetch! (with nothing ticked) grabs only your starred companies in this industry instead of the whole thing. Off fetches the whole industry, same as before.",
+      placement: "bottom",
+    },
+    {
       id: "companies-manage",
       selector: '[data-tour="sidebar-manage"]',
       title: "✏️ Manage",
-      description: "Edit Lists manages your company roster; Edit Sources manages the RSS feeds each search checks.",
+      description:
+        "Edit Lists reveals an editing box up top for the current industry — Edit Sources manages the RSS feeds each search checks.",
       placement: "right",
+    },
+    {
+      id: "companies-paste",
+      selector: '[data-tour="topbar-paste-list"]',
+      title: "📋 Paste list",
+      description:
+        "Add companies one at a time here, or click Paste list to drop in a whole list at once — one name per line, Excel-paste-friendly.",
+      placement: "bottom",
+      onEnterId: "enableEditMode",
     },
   ],
   saved: [
@@ -158,6 +187,14 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStep[]> = {
       description:
         "Select a saved link to read it inline when possible (with a fallback to the original site if it blocks extraction) and jot down notes. Pin your favorites to keep them at the top.",
       placement: "right",
+    },
+    {
+      id: "saved-starred",
+      selector: '[data-tour="topbar-star-toggle"]',
+      title: "⭐ Pinned only",
+      description:
+        "Toggle this on to show just your pinned links in the current category. Off shows everything again.",
+      placement: "bottom",
     },
   ],
 };

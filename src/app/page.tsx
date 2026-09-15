@@ -10,7 +10,7 @@ import { FeedbackModal } from "@/components/FeedbackModal";
 import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
 import { BackgroundImageLayer } from "@/components/BackgroundImageLayer";
-import { SpotlightTour } from "@/components/SpotlightTour";
+import { SpotlightTour, type TourStep } from "@/components/SpotlightTour";
 import { HomeHub } from "@/components/HomeHub";
 import { NewsBoard } from "@/components/NewsBoard";
 import { ProfilePicker } from "@/components/ProfilePicker";
@@ -157,6 +157,7 @@ function DashboardForProfile({
   const [debugLogOpen, setDebugLogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [starredOnly, setStarredOnly] = useState(false);
+  const [pinnedOnly, setPinnedOnly] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
     {}
@@ -221,7 +222,16 @@ function DashboardForProfile({
   // it's clicked from: Home gets the brief multi-mode spotlight tour, any
   // other page gets just its own longer explanation — see modeGuide.ts.
   const openHelp = useCallback(() => setHelpOpen(true), []);
-  const helpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
+  // modeGuide.ts's step data is static and can't hold real callbacks, so a
+  // step that needs one (e.g. expanding the normally-collapsed "Editing"
+  // box before its paste-list button can be spotlighted) just names it —
+  // resolved to the actual setter here.
+  const rawHelpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
+  const helpSteps: TourStep[] = rawHelpSteps.map((step) => ({
+    ...step,
+    onEnter:
+      step.onEnterId === "enableEditMode" ? () => setEditMode(true) : undefined,
+  }));
 
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
     setNewsLoading(true);
@@ -398,6 +408,9 @@ function DashboardForProfile({
     } else if (activeLinkCategory !== ALL_LINKS_CATEGORY) {
       base = base.filter((l) => l.category === activeLinkCategory);
     }
+    if (pinnedOnly) {
+      base = base.filter((l) => l.pinned);
+    }
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       base = base.filter(
@@ -407,8 +420,11 @@ function DashboardForProfile({
           l.notes.toLowerCase().includes(q)
       );
     }
-    return base;
-  }, [preferences, searchQuery]);
+    // Pinned favorites float to the top, matching the tour's "Pin your
+    // favorites to keep them at the top" — a stable sort (guaranteed by
+    // the spec since ES2019) leaves everything else in its existing order.
+    return [...base].sort((a, b) => Number(b.pinned) - Number(a.pinned));
+  }, [preferences, searchQuery, pinnedOnly]);
 
   const isLinkSaved = useCallback(
     (url: string) => preferences.links.some((l) => l.url === url),
@@ -897,6 +913,8 @@ function DashboardForProfile({
           onFetchCompanies={fetchSmart}
           starredOnly={starredOnly}
           onToggleStarredOnly={() => setStarredOnly((v) => !v)}
+          pinnedOnly={pinnedOnly}
+          onTogglePinnedOnly={() => setPinnedOnly((v) => !v)}
         />
 
         {mode === "home" ? (

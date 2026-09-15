@@ -25,6 +25,12 @@ export interface TourStep {
   description: string;
   /** Preferred side for the tooltip; the engine flips it if there's no room. */
   placement?: "top" | "bottom" | "left" | "right";
+  /** Runs once when this step becomes active — e.g. flipping on edit mode
+   *  so a normally-collapsed target (like the paste-list button) actually
+   *  has height to spotlight. The element must already exist in the DOM
+   *  (even at zero height) for the selector to find it; this only needs to
+   *  reveal it, not create it. */
+  onEnter?: () => void;
 }
 
 interface SpotlightTourProps {
@@ -90,6 +96,7 @@ export function SpotlightTour({ steps, accent, onClose }: SpotlightTourProps) {
   // Locate this step's target, scroll it into view, and track its position
   // for the duration of the scroll animation so the spotlight follows along.
   useEffect(() => {
+    step.onEnter?.();
     const el = step.selector ? document.querySelector(step.selector) : null;
     if (!el) {
       // Centered intro/outro step (or a defensive fallback if a selector

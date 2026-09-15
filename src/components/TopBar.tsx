@@ -73,6 +73,10 @@ interface TopBarProps {
   // companies in the active industry instead of the whole industry.
   starredOnly: boolean;
   onToggleStarredOnly: () => void;
+  // Buried Bones' equivalent — when on, only pinned links show in the
+  // current category instead of the whole thing.
+  pinnedOnly: boolean;
+  onTogglePinnedOnly: () => void;
 }
 
 export function TopBar({
@@ -109,6 +113,8 @@ export function TopBar({
   onFetchCompanies,
   starredOnly,
   onToggleStarredOnly,
+  pinnedOnly,
+  onTogglePinnedOnly,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
   const [bulkAddOpen, setBulkAddOpen] = useState(false);
@@ -185,6 +191,7 @@ export function TopBar({
               />
               <button
                 type="button"
+                data-tour="topbar-star-toggle"
                 onClick={onToggleStarredOnly}
                 title={
                   starredOnly
@@ -220,6 +227,28 @@ export function TopBar({
                 onClear={onClearSelection}
                 onCollapse={onCollapseAll}
               />
+            </div>
+          )}
+          {isSaved && (
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                data-tour="topbar-star-toggle"
+                onClick={onTogglePinnedOnly}
+                title={
+                  pinnedOnly
+                    ? "Showing pinned links only — click to show all"
+                    : "Show pinned links only"
+                }
+                aria-pressed={pinnedOnly}
+                className={`flex shrink-0 items-center justify-center rounded-lg border px-2.5 py-1.5 text-sm transition-all ${
+                  pinnedOnly
+                    ? "border-amber-300 bg-amber-50 drop-shadow-[0_0_5px_rgba(251,191,36,0.65)] dark:border-amber-400/40 dark:bg-amber-400/10"
+                    : "border-brand-200 bg-brand-50 opacity-40 grayscale hover:opacity-70 dark:border-brand-700 dark:bg-brand-800"
+                }`}
+              >
+                <span aria-hidden="true">⭐</span>
+              </button>
             </div>
           )}
         </div>
@@ -307,6 +336,7 @@ export function TopBar({
                 </span>
                 <button
                   type="button"
+                  data-tour="topbar-paste-list"
                   onClick={() => setBulkAddOpen(true)}
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold opacity-70 transition-opacity hover:opacity-100 ${palette.badgeBg} ${palette.badgeText}`}
                 >
