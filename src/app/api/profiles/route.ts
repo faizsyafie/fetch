@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
-import { listProfileNames } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
+import { listProfileNamesForTeam } from "@/lib/db";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const teamId = request.headers.get("x-team-id");
+  if (!teamId) {
+    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
   try {
-    const profiles = await listProfileNames();
+    const profiles = await listProfileNamesForTeam(teamId);
     return NextResponse.json({ profiles });
   } catch {
     return NextResponse.json(
