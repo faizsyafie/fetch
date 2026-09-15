@@ -77,8 +77,8 @@ export function CustomizePanel({
     }
   }
 
-  async function handleRemovePhoto() {
-    await clearImage();
+  function handleRemovePhoto() {
+    clearImage();
     if (theme === "image") onSetTheme("light");
   }
 

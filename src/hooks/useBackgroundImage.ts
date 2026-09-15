@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import {
   clearBackgroundImage,
   loadBackgroundImage,
@@ -9,49 +9,34 @@ import {
 import { getDominantColor } from "@/lib/dominantColor";
 
 const BG_IMAGE_EVENT = "credit-news-analyst-bg-image-change";
-// Uploaded photos are downscaled to this longest-edge size before storing —
-// there's no reason to keep a 12MB phone photo at full resolution for a CSS
-// background. Re-encoded as JPEG at 0.85 quality; if it's still over this
-// after that, the photo is rejected rather than silently blowing past
-// IndexedDB's practical size comfort zone.
-const MAX_DIMENSION = 1920;
-const MAX_STORED_BYTES = 3 * 1024 * 1024;
+// The photo renders heavily blurred behind the app (see
+// BackgroundImageLayer) so a modest resolution looks identical to a full-res
+// one once blurred, while keeping the stored data URL comfortably inside
+// localStorage's quota alongside everything else the app keeps there.
+const MAX_DIMENSION = 1280;
+const MAX_STORED_CHARS = 900 * 1024;
+
+function subscribe(callback: () => void) {
+  window.addEventListener(BG_IMAGE_EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(BG_IMAGE_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+function getServerSnapshot(): string | null {
+  return null;
+}
 
 export function useBackgroundImage() {
-  const [url, setUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const urlRef = useRef<string | null>(null);
+  const url = useSyncExternalStore(subscribe, loadBackgroundImage, getServerSnapshot);
 
-  const reload = useCallback(() => {
-    loadBackgroundImage()
-      .then((blob) => {
-        if (urlRef.current) {
-          URL.revokeObjectURL(urlRef.current);
-          urlRef.current = null;
-        }
-        if (blob) {
-          const next = URL.createObjectURL(blob);
-          urlRef.current = next;
-          setUrl(next);
-        } else {
-          setUrl(null);
-        }
-      })
-      .catch(() => setUrl(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    reload();
-    window.addEventListener(BG_IMAGE_EVENT, reload);
-    return () => {
-      window.removeEventListener(BG_IMAGE_EVENT, reload);
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    };
-  }, [reload]);
-
-  // Resizes + re-encodes the upload and extracts its dominant color from
-  // the same decoded canvas in one pass, then persists the resized blob.
+  // Resizes the upload, extracts its dominant color from the same decoded
+  // canvas, then re-encodes it as a JPEG data URL — stepping quality down
+  // if needed rather than rejecting outright, since most photos fit well
+  // before quality gets bad enough to matter under the blur this renders
+  // with.
   const setImage = useCallback(async (file: File) => {
     if (!file.type.startsWith("image/")) {
       throw new Error("Please choose an image file.");
@@ -70,26 +55,27 @@ export function useBackgroundImage() {
 
     const dominantColor = getDominantColor(ctx.getImageData(0, 0, w, h));
 
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("Failed to process the image."))),
-        "image/jpeg",
-        0.85
+    let quality = 0.8;
+    let dataUrl = canvas.toDataURL("image/jpeg", quality);
+    while (dataUrl.length > MAX_STORED_CHARS && quality > 0.4) {
+      quality -= 0.15;
+      dataUrl = canvas.toDataURL("image/jpeg", quality);
+    }
+    if (dataUrl.length > MAX_STORED_CHARS) {
+      throw new Error(
+        "That image is too large even after compressing — try a smaller photo."
       );
-    });
-    if (blob.size > MAX_STORED_BYTES) {
-      throw new Error("That image is too large even after resizing — try a smaller photo.");
     }
 
-    await saveBackgroundImage(blob);
+    saveBackgroundImage(dataUrl);
     window.dispatchEvent(new Event(BG_IMAGE_EVENT));
     return { dominantColor };
   }, []);
 
-  const clearImage = useCallback(async () => {
-    await clearBackgroundImage();
+  const clearImage = useCallback(() => {
+    clearBackgroundImage();
     window.dispatchEvent(new Event(BG_IMAGE_EVENT));
   }, []);
 
-  return { url, loading, setImage, clearImage };
+  return { url, setImage, clearImage };
 }
