@@ -157,6 +157,7 @@ function DashboardForProfile({
   const [debugLogOpen, setDebugLogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [starredOnly, setStarredOnly] = useState(false);
+  const [pinnedOnly, setPinnedOnly] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
     {}
@@ -398,6 +399,9 @@ function DashboardForProfile({
     } else if (activeLinkCategory !== ALL_LINKS_CATEGORY) {
       base = base.filter((l) => l.category === activeLinkCategory);
     }
+    if (pinnedOnly) {
+      base = base.filter((l) => l.pinned);
+    }
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       base = base.filter(
@@ -407,8 +411,11 @@ function DashboardForProfile({
           l.notes.toLowerCase().includes(q)
       );
     }
-    return base;
-  }, [preferences, searchQuery]);
+    // Pinned favorites float to the top, matching the tour's "Pin your
+    // favorites to keep them at the top" — a stable sort (guaranteed by
+    // the spec since ES2019) leaves everything else in its existing order.
+    return [...base].sort((a, b) => Number(b.pinned) - Number(a.pinned));
+  }, [preferences, searchQuery, pinnedOnly]);
 
   const isLinkSaved = useCallback(
     (url: string) => preferences.links.some((l) => l.url === url),
@@ -897,6 +904,8 @@ function DashboardForProfile({
           onFetchCompanies={fetchSmart}
           starredOnly={starredOnly}
           onToggleStarredOnly={() => setStarredOnly((v) => !v)}
+          pinnedOnly={pinnedOnly}
+          onTogglePinnedOnly={() => setPinnedOnly((v) => !v)}
         />
 
         {mode === "home" ? (

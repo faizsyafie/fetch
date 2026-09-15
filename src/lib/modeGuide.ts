@@ -130,7 +130,8 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStep[]> = {
       id: "companies-manage",
       selector: '[data-tour="sidebar-manage"]',
       title: "✏️ Manage",
-      description: "Edit Lists manages your company roster; Edit Sources manages the RSS feeds each search checks.",
+      description:
+        "Edit Lists reveals an editing box up top for the current industry — add companies one at a time, or use 📋 Paste list to drop in a whole list at once (one name per line, Excel-paste-friendly). Edit Sources manages the RSS feeds each search checks.",
       placement: "right",
     },
   ],
@@ -156,7 +157,7 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStep[]> = {
       selector: '[data-tour="saved-links-list"]',
       title: "📖 Dig it back up",
       description:
-        "Select a saved link to read it inline when possible (with a fallback to the original site if it blocks extraction) and jot down notes. Pin your favorites to keep them at the top.",
+        "Select a saved link to read it inline when possible (with a fallback to the original site if it blocks extraction) and jot down notes. Pin your favorites to keep them at the top — or toggle ⭐ up top to show pinned links only.",
       placement: "right",
     },
   ],
