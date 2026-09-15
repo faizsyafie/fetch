@@ -1,28 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ACCESS_COOKIE_NAME, hashAccessCode } from "@/lib/auth";
+import { ACCESS_COOKIE_NAME, hashAccessCode, signTeamCookie } from "@/lib/auth";
+import { findTeamByPassphraseHash } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
-  const expectedCode = process.env.APP_ACCESS_CODE;
-  if (!expectedCode) {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
     return NextResponse.json(
-      { error: "This deployment is missing its APP_ACCESS_CODE." },
+      { error: "This deployment is missing its SESSION_SECRET environment variable." },
       { status: 503 }
     );
   }
 
   const body = await request.json().catch(() => ({}));
   const submitted = typeof body?.code === "string" ? body.code : "";
-
-  if (submitted !== expectedCode) {
-    return NextResponse.json(
-      { error: "Incorrect passphrase." },
-      { status: 401 }
-    );
+  if (!submitted) {
+    return NextResponse.json({ error: "Incorrect passphrase." }, { status: 401 });
   }
 
-  const token = await hashAccessCode(expectedCode);
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(ACCESS_COOKIE_NAME, token, {
+  const hash = await hashAccessCode(submitted);
+  const team = await findTeamByPassphraseHash(hash).catch(() => null);
+  if (!team) {
+    return NextResponse.json({ error: "Incorrect passphrase." }, { status: 401 });
+  }
+
+  const cookieValue = await signTeamCookie(team.id, secret);
+  const response = NextResponse.json({ ok: true, team: team.name });
+  response.cookies.set(ACCESS_COOKIE_NAME, cookieValue, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
