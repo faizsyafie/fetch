@@ -1,29 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashAccessCode } from "@/lib/auth";
-import { deleteTeam, resetTeamPassphrase } from "@/lib/db";
+import { deleteTeam, renameTeam, resetTeamPassphrase } from "@/lib/db";
 
+// Accepts either or both fields in one call — the admin UI sends whichever
+// one the user actually edited (name-only for a rename, passphrase-only
+// for a reset).
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ teamId: string }> }
 ) {
   const { teamId } = await params;
   const body = await request.json().catch(() => ({}));
+  const name = typeof body?.name === "string" ? body.name.trim() : undefined;
   const passphrase =
-    typeof body?.passphrase === "string" ? body.passphrase.trim() : "";
-  if (!passphrase) {
+    typeof body?.passphrase === "string" ? body.passphrase.trim() : undefined;
+
+  if (!name && !passphrase) {
     return NextResponse.json(
-      { error: "A new passphrase is required." },
+      { error: "A new name or passphrase is required." },
       { status: 400 }
     );
   }
 
   try {
-    const passphraseHash = await hashAccessCode(passphrase);
-    await resetTeamPassphrase(teamId, passphraseHash);
+    if (name) {
+      await renameTeam(teamId, name);
+    }
+    if (passphrase) {
+      const passphraseHash = await hashAccessCode(passphrase);
+      await resetTeamPassphrase(teamId, passphraseHash);
+    }
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(
-      { error: "Failed to reset passphrase." },
+      { error: "Failed to update team." },
       { status: 500 }
     );
   }

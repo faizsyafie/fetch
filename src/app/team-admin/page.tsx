@@ -34,6 +34,8 @@ export default function TeamAdminPage() {
   const [moveTarget, setMoveTarget] = useState<Record<string, string>>({});
   const [resettingTeamId, setResettingTeamId] = useState<string | null>(null);
   const [resetValue, setResetValue] = useState("");
+  const [renamingTeamId, setRenamingTeamId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const [newTeamOpen, setNewTeamOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [newTeamPassphrase, setNewTeamPassphrase] = useState("");
@@ -167,6 +169,28 @@ export default function TeamAdminPage() {
     }
   }
 
+  async function handleRenameTeam(teamId: string) {
+    const name = renameValue.trim();
+    if (!name) return;
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/team-admin/teams/${teamId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to rename team.");
+      }
+      setRenamingTeamId(null);
+      setRenameValue("");
+      await loadTeams();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to rename team.");
+    }
+  }
+
   async function handleDeleteTeam(teamId: string) {
     setActionError(null);
     try {
@@ -297,29 +321,71 @@ export default function TeamAdminPage() {
                 className="overflow-hidden rounded-lg border border-brand-200 bg-white dark:border-brand-700 dark:bg-brand-900"
               >
                 <div className="flex items-center justify-between gap-3 px-4 py-3">
-                  <button
-                    type="button"
+                  <div
                     onClick={() => toggleExpanded(team.id)}
-                    className="flex min-w-0 items-center gap-3 text-left"
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"
                   >
                     <span className="text-xs text-brand-400 dark:text-brand-600">
                       {isOpen ? "▾" : "▸"}
                     </span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-bold text-brand-900 dark:text-white">
-                          {team.name}
-                        </span>
-                        <span className="shrink-0 rounded-full bg-brand-100 px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-brand-600 dark:bg-brand-800 dark:text-brand-300">
-                          {team.profiles.length}{" "}
-                          {team.profiles.length === 1 ? "profile" : "profiles"}
-                        </span>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      {renamingTeamId === team.id ? (
+                        <div
+                          className="flex items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            autoFocus
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            className="w-44 rounded-md border border-brand-200 bg-brand-50 px-2 py-1 text-sm font-bold text-brand-900 outline-none dark:border-brand-700 dark:bg-brand-950 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRenameTeam(team.id)}
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-500"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRenamingTeamId(null);
+                              setRenameValue("");
+                            }}
+                            className="text-xs font-medium text-brand-400 hover:text-brand-600"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-bold text-brand-900 dark:text-white">
+                            {team.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRenamingTeamId(team.id);
+                              setRenameValue(team.name);
+                            }}
+                            title="Rename team"
+                            className="shrink-0 text-[0.6875rem] text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-300"
+                          >
+                            ✎
+                          </button>
+                          <span className="shrink-0 rounded-full bg-brand-100 px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-brand-600 dark:bg-brand-800 dark:text-brand-300">
+                            {team.profiles.length}{" "}
+                            {team.profiles.length === 1 ? "profile" : "profiles"}
+                          </span>
+                        </div>
+                      )}
                       <p className="text-[0.6875rem] text-brand-400 dark:text-brand-600">
                         Created {new Date(team.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                  </button>
+                  </div>
                   <div className="flex shrink-0 items-center gap-3">
                     {resettingTeamId === team.id ? (
                       <>
