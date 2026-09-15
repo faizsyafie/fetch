@@ -9,6 +9,7 @@ import { EditThemesModal } from "@/components/EditThemesModal";
 import { FeedbackModal } from "@/components/FeedbackModal";
 import { AboutModal } from "@/components/AboutModal";
 import { DogWatermark } from "@/components/DogWatermark";
+import { BackgroundImageLayer } from "@/components/BackgroundImageLayer";
 import { SpotlightTour } from "@/components/SpotlightTour";
 import { HomeHub } from "@/components/HomeHub";
 import { NewsBoard } from "@/components/NewsBoard";
@@ -99,6 +100,7 @@ function DashboardForProfile({
     preferences,
     hydrated: prefsHydrated,
     addCompany,
+    addCompanies,
     removeCompany,
     togglePinCompany,
     toggleStarCompany,
@@ -129,7 +131,7 @@ function DashboardForProfile({
     reorderLinkCategories,
     setLinkCategoryColor,
   } = usePreferences(profileName);
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, customColor, setCustomColor } = useTheme();
   const {
     settings: uiSettings,
     hydrated: uiHydrated,
@@ -154,6 +156,7 @@ function DashboardForProfile({
   const [topicSourcesOpen, setTopicSourcesOpen] = useState(false);
   const [debugLogOpen, setDebugLogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [starredOnly, setStarredOnly] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [newsCache, setNewsCache] = useState<Record<string, NewsCacheEntry>>(
     {}
@@ -349,19 +352,19 @@ function DashboardForProfile({
 
   const visibleCompanies = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      return sortWithPinned(
-        preferences.companies.filter(
-          (c) =>
-            c.name.toLowerCase().includes(q) ||
-            c.industry.toLowerCase().includes(q) ||
-            (c.ticker?.toLowerCase().includes(q) ?? false) ||
-            (c.notes?.toLowerCase().includes(q) ?? false)
+    const base = q
+      ? sortWithPinned(
+          preferences.companies.filter(
+            (c) =>
+              c.name.toLowerCase().includes(q) ||
+              c.industry.toLowerCase().includes(q) ||
+              (c.ticker?.toLowerCase().includes(q) ?? false) ||
+              (c.notes?.toLowerCase().includes(q) ?? false)
+          )
         )
-      );
-    }
-    return companiesInIndustry;
-  }, [searchQuery, preferences.companies, companiesInIndustry]);
+      : companiesInIndustry;
+    return starredOnly ? base.filter((c) => c.starred) : base;
+  }, [searchQuery, preferences.companies, companiesInIndustry, starredOnly]);
 
   // "Search the whole page" for News mode: filter each column's articles by
   // title, summary or source rather than restricting to company names.
@@ -655,9 +658,11 @@ function DashboardForProfile({
     const toFetch =
       selected.size > 0
         ? preferences.companies.filter((c) => selected.has(c.id))
-        : companiesInIndustry;
+        : starredOnly
+          ? companiesInIndustry.filter((c) => c.starred)
+          : companiesInIndustry;
     void runBatchFetch(toFetch);
-  }, [selected, preferences.companies, companiesInIndustry, runBatchFetch]);
+  }, [selected, preferences.companies, companiesInIndustry, starredOnly, runBatchFetch]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchQuery(value);
@@ -693,6 +698,11 @@ function DashboardForProfile({
   const handleAddCompanyTag = useCallback(
     (name: string) => addCompany(name, preferences.activeIndustry),
     [addCompany, preferences.activeIndustry]
+  );
+
+  const handleBulkAddCompanies = useCallback(
+    (names: string[]) => addCompanies(names, preferences.activeIndustry),
+    [addCompanies, preferences.activeIndustry]
   );
 
   const clearCache = useCallback(() => setNewsCache({}), []);
@@ -847,7 +857,8 @@ function DashboardForProfile({
       />
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
-        <DogWatermark theme={theme} />
+        <BackgroundImageLayer theme={theme} />
+        {theme !== "image" && <DogWatermark theme={theme} />}
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <TopBar
@@ -866,6 +877,7 @@ function DashboardForProfile({
           onSearch={handleSearch}
           onSetDays={setDays}
           onAddCompany={handleAddCompanyTag}
+          onAddCompanies={handleBulkAddCompanies}
           onRemoveCompany={removeCompany}
           onOpenHelp={openHelp}
           onOpenSettings={() => setCustomizeOpen(true)}
@@ -883,6 +895,8 @@ function DashboardForProfile({
           onClearSelection={clearSelection}
           onCollapseAll={collapseAll}
           onFetchCompanies={fetchSmart}
+          starredOnly={starredOnly}
+          onToggleStarredOnly={() => setStarredOnly((v) => !v)}
         />
 
         {mode === "home" ? (
@@ -993,11 +1007,13 @@ function DashboardForProfile({
       <CustomizePanel
         open={customizeOpen}
         theme={theme}
+        customColor={customColor}
         accent={uiSettings.accent}
         fontFamily={uiSettings.fontFamily}
         fontScale={uiSettings.fontScale}
         density={uiSettings.density}
         onSetTheme={setTheme}
+        onSetCustomColor={setCustomColor}
         onSetAccent={setAccent}
         onSetFontFamily={setFontFamily}
         onSetFontScale={setFontScale}
