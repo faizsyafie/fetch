@@ -213,6 +213,14 @@ export async function resetTeamPassphrase(
   ]);
 }
 
+export async function renameTeam(teamId: string, name: string): Promise<void> {
+  await ensureSchema();
+  await getPool().query("UPDATE teams SET name = $1 WHERE id = $2", [
+    name,
+    teamId,
+  ]);
+}
+
 export async function deleteTeam(
   teamId: string
 ): Promise<{ ok: boolean; reason?: string }> {
