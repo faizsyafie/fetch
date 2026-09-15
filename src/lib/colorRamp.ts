@@ -114,32 +114,45 @@ export function isColorDark(hex: string): boolean {
 export function generateThemeFromColor(hex: string): GeneratedTheme {
   const { h, s, l } = hexToHsl(hex);
   const isDark = l < 50;
+
+  // The background anchor is clamped to a safe extreme rather than using
+  // the picked/extracted color's raw lightness verbatim — mirrors how
+  // every hand-tuned theme (Coral, Sage, Midnight) is built: a
+  // light-leaning background sits very light (~90%+) and a dark-leaning
+  // one very dark (~12%-), which is what actually gives every other ramp
+  // step (muted text, borders, links) enough headroom to stay legible.
+  // A photo's dominant color is often only medium-lightness — technically
+  // "light-leaning" by the <50 test above, but nowhere near light enough
+  // to generate readable secondary text on top of it, which is exactly
+  // what produced washed-out timestamps/links/placeholders on a
+  // photo-extracted medium purple.
+  const anchorL = isDark ? Math.min(l, 12) : Math.max(l, 90);
   const ramp = {} as Record<RampStep, string>;
 
   if (!isDark) {
-    // brand-50 = the picked color exactly; ease down to a near-black floor
-    // by brand-950, same shape as Coral/Sage.
+    // brand-50 = the lightness-anchored color; ease down to a near-black
+    // floor by brand-950, same shape as Coral/Sage.
     const floor = 9;
     STEPS.forEach((step, i) => {
       const t = i / (STEPS.length - 1);
       const eased = Math.pow(t, 1.5);
-      const stepL = l - (l - floor) * eased;
+      const stepL = anchorL - (anchorL - floor) * eased;
       ramp[step] = hslToHex(h, s, clamp(stepL, floor, 99));
     });
   } else {
-    // brand-900 = the picked color exactly; ease up to a near-white ceiling
-    // by brand-50, with brand-950 as a darker floor below the background —
-    // same shape as Midnight.
+    // brand-900 = the lightness-anchored color; ease up to a near-white
+    // ceiling by brand-50, with brand-950 as a darker floor below the
+    // background — same shape as Midnight.
     const ceiling = 92;
     const idx900 = STEPS.indexOf("900");
     STEPS.forEach((step, i) => {
       if (step === "950") {
-        ramp[step] = hslToHex(h, s, clamp(l * 0.65, 3, 97));
+        ramp[step] = hslToHex(h, s, clamp(anchorL * 0.65, 3, 97));
         return;
       }
       const t = i / idx900;
       const eased = Math.pow(t, 1.5);
-      const stepL = ceiling - (ceiling - l) * eased;
+      const stepL = ceiling - (ceiling - anchorL) * eased;
       ramp[step] = hslToHex(h, s, clamp(stepL, 3, 97));
     });
   }

@@ -108,6 +108,7 @@ export default function RootLayout({
     }
     l*=100; s*=100;
     var isDark=l<50;
+    var anchorL=isDark?Math.min(l,12):Math.max(l,90);
     function hsl2hex(hh,ss,ll){
       var sN=ss/100,lN=ll/100,c=(1-Math.abs(2*lN-1))*sN,x=c*(1-Math.abs(((hh/60)%2)-1)),mm=lN-c/2,rr,gg,bb;
       if(hh<60){rr=c;gg=x;bb=0;} else if(hh<120){rr=x;gg=c;bb=0;} else if(hh<180){rr=0;gg=c;bb=x;}
@@ -120,14 +121,14 @@ export default function RootLayout({
     if(!isDark){
       var floor=9;
       for(var i=0;i<steps.length;i++){
-        var tt=i/(steps.length-1), eased=Math.pow(tt,1.5), stepL=l-(l-floor)*eased;
+        var tt=i/(steps.length-1), eased=Math.pow(tt,1.5), stepL=anchorL-(anchorL-floor)*eased;
         ramp[steps[i]]=hsl2hex(h,s,Math.min(99,Math.max(floor,stepL)));
       }
     } else {
       var ceiling=92, idx900=9;
       for(var j=0;j<steps.length;j++){
-        if(steps[j]==="950"){ramp[steps[j]]=hsl2hex(h,s,Math.min(97,Math.max(3,l*0.65))); continue;}
-        var t2=j/idx900, eased2=Math.pow(t2,1.5), stepL2=ceiling-(ceiling-l)*eased2;
+        if(steps[j]==="950"){ramp[steps[j]]=hsl2hex(h,s,Math.min(97,Math.max(3,anchorL*0.65))); continue;}
+        var t2=j/idx900, eased2=Math.pow(t2,1.5), stepL2=ceiling-(ceiling-anchorL)*eased2;
         ramp[steps[j]]=hsl2hex(h,s,Math.min(97,Math.max(3,stepL2)));
       }
     }
