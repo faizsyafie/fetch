@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY } from "@/lib/defaults";
 import { highlightMatches } from "@/lib/highlight";
+import { logDebug } from "@/lib/debugLog";
 import type { AccentColor, SavedLink } from "@/lib/types";
 
 interface ArticleData {
@@ -81,13 +82,18 @@ export function SavedView({
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (!res.ok || data.error) {
-          setArticleResult({ id, status: "error", error: data.error || "Couldn't load this article." });
+          const message = data.error || "Couldn't load this article.";
+          logDebug(`Inline reader failed for ${selected.url}: ${message}`);
+          setArticleResult({ id, status: "error", error: message });
           return;
         }
         setArticleResult({ id, status: "loaded", data });
       })
-      .catch(() => {
+      .catch((err) => {
         if (!cancelled) {
+          logDebug(
+            `Inline reader failed for ${selected.url}: ${err instanceof Error ? err.message : "network error"}`
+          );
           setArticleResult({ id, status: "error", error: "Couldn't reach that page." });
         }
       });
