@@ -10,10 +10,10 @@
 // `batchexecute` RPC endpoint (the same one the wrapper page's own JS calls)
 // what it decodes to. This is not a documented, stable API — it's
 // reverse-engineered from the wrapper page's behavior, and Google can change
-// the token format or endpoint without notice. When that happens, every step
-// below is written to fail closed (return null) rather than throw, so a
-// broken decode degrades to the existing "couldn't load" error path instead
-// of crashing the route.
+// the token format or endpoint without notice. Every step below reports
+// exactly where it failed (rather than collapsing to a single generic
+// failure) so a real-world break shows up in the Debug Log as something
+// actionable instead of a mystery.
 
 const BROWSER_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -24,6 +24,10 @@ export function isGoogleNewsArticleUrl(url: URL): boolean {
     (url.pathname.startsWith("/rss/articles/") || url.pathname.startsWith("/articles/"))
   );
 }
+
+export type GoogleNewsResolveResult =
+  | { ok: true; url: string }
+  | { ok: false; reason: string };
 
 interface SignedToken {
   id: string;
@@ -96,28 +100,52 @@ function extractResolvedUrl(rpcText: string): string | null {
   return null;
 }
 
-/** Resolves a Google News wrapper URL to the real publisher URL, or null if
- *  any step of the (unofficial) decode fails. */
-export async function resolveGoogleNewsUrl(
-  wrapperUrl: string,
-  signal: AbortSignal
-): Promise<string | null> {
+// Each network step gets its own short budget rather than sharing one long
+// timeout across all three round trips (wrapper page, RPC call, then the
+// real article fetch still to come after this returns) — a slow wrapper
+// page shouldn't be able to eat the whole request's time budget and leave
+// none for the article fetch that actually matters.
+const STEP_TIMEOUT_MS = 6_000;
+
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), STEP_TIMEOUT_MS);
   try {
-    const page = await fetch(wrapperUrl, {
-      signal,
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/** Resolves a Google News wrapper URL to the real publisher URL. On failure,
+ *  the reason names exactly which step broke — see the (unofficial, and so
+ *  occasionally wrong) protocol notes above each step. */
+export async function resolveGoogleNewsUrl(wrapperUrl: string): Promise<GoogleNewsResolveResult> {
+  let page: Response;
+  try {
+    page = await fetchWithTimeout(wrapperUrl, {
       headers: { "User-Agent": BROWSER_USER_AGENT },
     });
-    if (!page.ok) return null;
-    const html = await page.text();
+  } catch (err) {
+    const timedOut = err instanceof Error && err.name === "AbortError";
+    return { ok: false, reason: timedOut ? "wrapper page timed out" : "wrapper page fetch failed" };
+  }
+  if (!page.ok) {
+    return { ok: false, reason: `wrapper page returned ${page.status}` };
+  }
+  const html = await page.text();
 
-    const token = extractSignedToken(html);
-    if (!token) return null;
+  const token = extractSignedToken(html);
+  if (!token) {
+    return { ok: false, reason: "signed token not found in wrapper page" };
+  }
 
-    const rpc = await fetch(
+  let rpc: Response;
+  try {
+    rpc = await fetchWithTimeout(
       "https://news.google.com/_/DotsSplashUi/data/batchexecute?rpcids=Fbv4je",
       {
         method: "POST",
-        signal,
         headers: {
           "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
           Referer: "https://news.google.com/",
@@ -126,10 +154,17 @@ export async function resolveGoogleNewsUrl(
         body: buildBatchExecuteBody(token),
       }
     );
-    if (!rpc.ok) return null;
-
-    return extractResolvedUrl(await rpc.text());
-  } catch {
-    return null;
+  } catch (err) {
+    const timedOut = err instanceof Error && err.name === "AbortError";
+    return { ok: false, reason: timedOut ? "decode RPC timed out" : "decode RPC fetch failed" };
   }
+  if (!rpc.ok) {
+    return { ok: false, reason: `decode RPC returned ${rpc.status}` };
+  }
+
+  const resolved = extractResolvedUrl(await rpc.text());
+  if (!resolved) {
+    return { ok: false, reason: "couldn't parse a URL out of the decode RPC response" };
+  }
+  return { ok: true, url: resolved };
 }

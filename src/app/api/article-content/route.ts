@@ -14,11 +14,12 @@ import { isGoogleNewsArticleUrl, resolveGoogleNewsUrl } from "@/lib/googleNewsUr
 // crash (see SavedView, which falls back to "open externally").
 export const runtime = "nodejs";
 // A Google News link now costs two extra round trips (resolving the
-// wrapper) before the real article fetch even starts — the platform default
-// wouldn't leave enough room for all three within FETCH_TIMEOUT_MS.
-export const maxDuration = 20;
+// wrapper, each on its own budget — see googleNewsUrl.ts) before the real
+// article fetch below even starts, so the total worst case is higher than
+// a single fetch's own timeout.
+export const maxDuration = 25;
 
-const FETCH_TIMEOUT_MS = 15_000;
+const FETCH_TIMEOUT_MS = 10_000;
 const MAX_HTML_BYTES = 3_000_000;
 // Below this, it's not a real article — a paywall stub, a login wall, a
 // "please enable JavaScript" placeholder, etc.
@@ -75,8 +76,16 @@ export async function POST(request: NextRequest) {
 
   try {
     if (isGoogleNewsArticleUrl(parsed)) {
-      const resolvedUrl = await resolveGoogleNewsUrl(parsed.toString(), controller.signal);
-      const resolvedParsed = resolvedUrl ? parseSafeFetchUrl(resolvedUrl) : null;
+      const resolution = await resolveGoogleNewsUrl(parsed.toString());
+      if (!resolution.ok) {
+        return NextResponse.json(
+          {
+            error: `Couldn't resolve this Google News link (${resolution.reason}) — try opening it in your browser instead.`,
+          },
+          { status: 422 }
+        );
+      }
+      const resolvedParsed = parseSafeFetchUrl(resolution.url);
       if (!resolvedParsed) {
         return NextResponse.json(
           {
