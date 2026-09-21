@@ -97,10 +97,20 @@ export function SavedView({
     let cancelled = false;
     const id = selected.id;
 
+    // The API route can legitimately take a while for a Google News link
+    // (two resolve round-trips before the real fetch even starts, each with
+    // its own budget) — but with no timeout here at all, a stalled or
+    // dropped connection left the spinner running forever instead of ever
+    // showing an error. Bounded slightly above the route's own maxDuration
+    // (25s) so the server gets a chance to answer first.
+    const controller = new AbortController();
+    const clientTimeout = setTimeout(() => controller.abort(), 30_000);
+
     fetch("/api/article-content", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: selected.url }),
+      signal: controller.signal,
     })
       .then(async (res) => {
         // Read as text first rather than res.json() directly — a response
@@ -130,15 +140,24 @@ export function SavedView({
       })
       .catch((err) => {
         if (!cancelled) {
+          const timedOut = err instanceof Error && err.name === "AbortError";
+          const message = timedOut
+            ? "That page took too long to load."
+            : "Couldn't reach that page.";
           logDebug(
-            `Inline reader failed for ${selected.url}: ${err instanceof Error ? err.message : "network error"}`
+            `Inline reader failed for ${selected.url}: ${timedOut ? "client-side timeout after 30s" : err instanceof Error ? err.message : "network error"}`
           );
-          setArticleResult({ id, status: "error", error: "Couldn't reach that page." });
+          setArticleResult({ id, status: "error", error: message });
         }
+      })
+      .finally(() => {
+        clearTimeout(clientTimeout);
       });
 
     return () => {
       cancelled = true;
+      clearTimeout(clientTimeout);
+      controller.abort();
     };
   }, [selected]);
 
