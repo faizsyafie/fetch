@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { JSDOM } from "jsdom";
+import { parseHTML } from "linkedom";
 import { Readability } from "@mozilla/readability";
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 import { parseSafeFetchUrl } from "@/lib/urlSafety";
 import { isGoogleNewsArticleUrl } from "@/lib/googleNewsUrl";
 import { resolveGoogleNewsUrl } from "@/lib/googleNewsResolve";
@@ -206,16 +206,26 @@ export async function POST(request: NextRequest) {
     reader.cancel().catch(() => {});
     const html = decodeHtml(chunks, contentType);
 
-    // Its own try/catch — JSDOM/Readability parsing a real, arbitrary web
-    // page is a distinct failure surface (a malformed or pathological
-    // document, not a network problem) from everything above it, and
-    // collapsing it into the same generic "Couldn't reach that page."
-    // catch below made a parse crash indistinguishable from a fetch failure.
+    // Its own try/catch — parsing a real, arbitrary web page is a distinct
+    // failure surface (a malformed or pathological document, not a network
+    // problem) from everything above it, and collapsing it into the same
+    // generic "Couldn't reach that page." catch below made a parse crash
+    // indistinguishable from a fetch failure.
+    //
+    // Uses linkedom (not jsdom) for parsing: jsdom's own dependency tree
+    // pulls in ESM-only packages (@exodus/bytes, @csstools/css-calc) that
+    // crash with ERR_REQUIRE_ESM the moment jsdom is loaded in Vercel's
+    // deployed Node runtime — ESM interop bugs jsdom doesn't need to trigger
+    // for our purposes, since Readability only needs basic DOM traversal,
+    // not jsdom's full CSSOM engine. Sanitizing is done with sanitize-html
+    // (not DOMPurify) for the same reason DOMPurify normally needs jsdom:
+    // it silently no-ops (returns the dirty HTML unchanged!) against
+    // linkedom, which doesn't implement document.implementation.
     let article: ReturnType<Readability["parse"]>;
     let cleanContent: string;
     try {
-      const dom = new JSDOM(html, { url: parsed.toString() });
-      article = new Readability(dom.window.document).parse();
+      const { document } = parseHTML(html, { location: new URL(parsed.toString()) });
+      article = new Readability(document).parse();
 
       if (!article?.content || (article.textContent ?? "").trim().length < MIN_TEXT_LENGTH) {
         return NextResponse.json(
@@ -227,14 +237,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      cleanContent = DOMPurify.sanitize(article.content, {
-        ALLOWED_TAGS: [
+      cleanContent = sanitizeHtml(article.content, {
+        allowedTags: [
           "p", "br", "strong", "em", "b", "i", "u", "a", "ul", "ol", "li",
           "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "img", "figure",
           "figcaption", "pre", "code", "hr", "span", "div", "table", "thead",
           "tbody", "tr", "th", "td",
         ],
-        ALLOWED_ATTR: ["href", "src", "alt", "title"],
+        allowedAttributes: { "*": ["href", "src", "alt", "title"] },
       });
     } catch (err) {
       return NextResponse.json(
