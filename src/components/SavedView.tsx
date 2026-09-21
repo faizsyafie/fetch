@@ -103,15 +103,30 @@ export function SavedView({
       body: JSON.stringify({ url: selected.url }),
     })
       .then(async (res) => {
-        const data = await res.json().catch(() => ({}));
+        // Read as text first rather than res.json() directly — a response
+        // that isn't valid JSON at all (e.g. a platform-level timeout or
+        // crash returning its own HTML/plaintext error page instead of ours)
+        // would otherwise silently collapse to "{}" with no trace of what
+        // actually came back. The raw body only goes to the Debug Log, never
+        // the on-screen message, since it can be arbitrary HTML.
+        const rawText = await res.text();
+        let data: Partial<ArticleData> & { error?: string } = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          data = {};
+        }
         if (cancelled) return;
         if (!res.ok || data.error) {
-          const message = data.error || "Couldn't load this article.";
-          logDebug(`Inline reader failed for ${selected.url}: ${message}`);
-          setArticleResult({ id, status: "error", error: message });
+          const displayMessage = data.error || "Couldn't load this article.";
+          const logMessage = data.error
+            ? displayMessage
+            : `${displayMessage} (HTTP ${res.status}, non-JSON response: ${rawText.slice(0, 300)})`;
+          logDebug(`Inline reader failed for ${selected.url}: ${logMessage}`);
+          setArticleResult({ id, status: "error", error: displayMessage });
           return;
         }
-        setArticleResult({ id, status: "loaded", data });
+        setArticleResult({ id, status: "loaded", data: data as ArticleData });
       })
       .catch((err) => {
         if (!cancelled) {
