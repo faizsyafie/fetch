@@ -74,7 +74,7 @@ function buildBatchExecuteBody(token: SignedToken): string {
 // alternating length-prefix and JSON-array lines, not one clean JSON blob --
 // scan every line for the one carrying our RPC's result rather than
 // assuming a fixed line position.
-function extractResolvedUrl(rpcText: string): string | null {
+function extractResolvedUrlStructured(rpcText: string): string | null {
   for (const line of rpcText.split("\n")) {
     const trimmed = line.trim();
     if (!trimmed.startsWith("[")) continue;
@@ -90,14 +90,52 @@ function extractResolvedUrl(rpcText: string): string | null {
       if (typeof entry[2] !== "string") continue;
       try {
         const inner = JSON.parse(entry[2]);
-        const url = Array.isArray(inner) ? inner[1] : null;
-        if (typeof url === "string" && /^https?:\/\//.test(url)) return url;
+        // The URL's exact position within `inner` is the one part of this
+        // protocol never confirmed against a real response (this sandbox
+        // can't reach news.google.com) -- check every element rather than
+        // assuming index 1, since that assumption is exactly what's been
+        // wrong before.
+        if (Array.isArray(inner)) {
+          const found = inner.find(
+            (v): v is string => typeof v === "string" && /^https?:\/\//.test(v)
+          );
+          if (found) return found;
+        }
       } catch {
         continue;
       }
     }
   }
   return null;
+}
+
+// Fallback for when the structured parse above finds the right RPC entry
+// but the URL isn't where expected inside it (or isn't inside it at all) --
+// scans the ENTIRE raw response for any URL that isn't Google's own domain.
+// Cruder, but doesn't depend on guessing an exact JSON shape we have no way
+// to verify from this sandbox; a decode RPC response has no legitimate
+// reason to contain a non-Google URL other than the one it resolved to.
+function extractResolvedUrlFallback(rpcText: string): string | null {
+  // Unescape first rather than trying to match escaped slashes throughout —
+  // a JSON-encoded URL escapes every "/", not just the ones right after the
+  // protocol, so matching around them piecemeal truncates the path.
+  const unescaped = rpcText.replace(/\\\//g, "/");
+  const matches = unescaped.match(/https?:\/\/[^\s"\\]+/g) ?? [];
+  for (const candidate of matches) {
+    try {
+      const url = new URL(candidate);
+      if (!/(^|\.)google\.com$/i.test(url.hostname) && !/(^|\.)gstatic\.com$/i.test(url.hostname)) {
+        return candidate;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+function extractResolvedUrl(rpcText: string): string | null {
+  return extractResolvedUrlStructured(rpcText) ?? extractResolvedUrlFallback(rpcText);
 }
 
 // Each step gets its own short budget rather than sharing one long timeout
@@ -173,7 +211,14 @@ export async function resolveGoogleNewsUrl(wrapperUrl: string): Promise<GoogleNe
 
   const resolved = extractResolvedUrl(rpc.text);
   if (!resolved) {
-    return { ok: false, reason: "couldn't parse a URL out of the decode RPC response" };
+    // Neither the structured parse nor the fallback scan found anything --
+    // include a snippet of the actual response so a future failure carries
+    // real ground truth instead of another guess. Safe to surface: this is
+    // Google's own RPC response text, not anything from the user's session.
+    return {
+      ok: false,
+      reason: `couldn't parse a URL out of the decode RPC response (first 500 chars: ${rpc.text.slice(0, 500)})`,
+    };
   }
   return { ok: true, url: resolved };
 }
