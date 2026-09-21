@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, industryPalette } from "@/lib/defaults";
+import { openArticleLink } from "@/lib/resolveLinkClick";
 import type { AccentColor, Company, Density, Industry, NewsArticle } from "@/lib/types";
 
 // Fixed row surface — no longer configurable (see CustomizePanel).
@@ -358,6 +359,24 @@ export function CompanyList({
                             href={article.link}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={(e) => {
+                              // Left-click, no modifier — intercept to
+                              // resolve Google News wrapper links first.
+                              // Middle-click / ctrl/cmd/shift-click fall
+                              // through to the browser's native "open in
+                              // new tab" on the href as-is.
+                              if (
+                                e.button !== 0 ||
+                                e.metaKey ||
+                                e.ctrlKey ||
+                                e.shiftKey ||
+                                e.altKey
+                              ) {
+                                return;
+                              }
+                              e.preventDefault();
+                              openArticleLink(article.link);
+                            }}
                             className={`block transition-colors hover:bg-brand-100 dark:hover:bg-brand-800/60 ${
                               compact ? "px-3 py-1 pr-7" : "px-4 py-2.5 pr-9"
                             } ${isArticleSeen(article.id) ? "opacity-70" : ""}`}
