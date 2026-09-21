@@ -15,6 +15,7 @@
 // for the plain URL-shape check that's safe to import from client code.
 import { chromium as playwrightChromium, type Browser } from "playwright-core";
 import type { GoogleNewsResolveResult } from "@/lib/googleNewsUrl";
+import { shortenErrorDetail } from "@/lib/errorMessage";
 
 const BROWSER_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -72,10 +73,16 @@ export async function resolveGoogleNewsUrl(wrapperUrl: string): Promise<GoogleNe
     return { ok: true, url: finalUrl };
   } catch (err) {
     const timedOut = err instanceof Error && err.name === "TimeoutError";
+    // Playwright errors carry a multi-line "===== logs =====" diagnostic
+    // dump in .message — full detail belongs in Vercel's function logs,
+    // never in the short reason a UI ends up showing next to a saved link.
+    console.error(`[googleNewsResolve] failed for ${wrapperUrl}:`, err);
     const detail = err instanceof Error ? err.message : String(err);
     return {
       ok: false,
-      reason: timedOut ? "headless browser navigation timed out" : `headless browser failed: ${detail}`,
+      reason: timedOut
+        ? "headless browser navigation timed out"
+        : `headless browser failed: ${shortenErrorDetail(detail)}`,
     };
   } finally {
     await browser?.close().catch(() => {});

@@ -138,6 +138,7 @@ function DashboardForProfile({
     hydrated: uiHydrated,
     setSidebarWidth,
     setSavedListWidth,
+    setSavedNotesWidth,
     toggleSidebarCollapsed,
     setDensity,
     markTourSeen,
@@ -1000,6 +1001,8 @@ function DashboardForProfile({
             }}
             listWidth={uiSettings.savedListWidth}
             onResizeListWidth={setSavedListWidth}
+            notesWidth={uiSettings.savedNotesWidth}
+            onResizeNotesWidth={setSavedNotesWidth}
           />
         ) : (
           <>

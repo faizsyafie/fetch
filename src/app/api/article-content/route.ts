@@ -5,6 +5,7 @@ import sanitizeHtml from "sanitize-html";
 import { parseSafeFetchUrl } from "@/lib/urlSafety";
 import { isGoogleNewsArticleUrl } from "@/lib/googleNewsUrl";
 import { resolveGoogleNewsUrl } from "@/lib/googleNewsResolve";
+import { shortenErrorDetail } from "@/lib/errorMessage";
 import {
   getCachedArticleContent,
   setCachedArticleContent,
@@ -130,9 +131,11 @@ export async function POST(request: NextRequest) {
       }
       parsed = resolvedParsed;
     } catch (err) {
+      console.error("[article-content] Google News resolve step failed:", err);
+      const detail = err instanceof Error ? err.message : String(err);
       return NextResponse.json(
         {
-          error: `Couldn't resolve this Google News link (unexpected error: ${err instanceof Error ? err.message : String(err)}) — try opening it in your browser instead.`,
+          error: `Couldn't resolve this Google News link (unexpected error: ${shortenErrorDetail(detail)}) — try opening it in your browser instead.`,
         },
         { status: 502 }
       );
@@ -247,10 +250,10 @@ export async function POST(request: NextRequest) {
         allowedAttributes: { "*": ["href", "src", "alt", "title"] },
       });
     } catch (err) {
+      console.error("[article-content] parse step failed:", err);
+      const detail = err instanceof Error ? err.message : String(err);
       return NextResponse.json(
-        {
-          error: `Couldn't parse this page (${err instanceof Error ? err.message : String(err)}).`,
-        },
+        { error: `Couldn't parse this page (${shortenErrorDetail(detail)}).` },
         { status: 502 }
       );
     }

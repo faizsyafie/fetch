@@ -3,6 +3,7 @@ import { parseSafeFetchUrl } from "@/lib/urlSafety";
 import { isGoogleNewsArticleUrl } from "@/lib/googleNewsUrl";
 import { resolveGoogleNewsUrl } from "@/lib/googleNewsResolve";
 import { getCachedResolution, setCachedResolution } from "@/lib/db";
+import { shortenErrorDetail } from "@/lib/errorMessage";
 
 // Resolves a Google News wrapper link to its real publisher URL at save
 // time, so a bookmark stores (and the inline reader later fetches) the
@@ -55,9 +56,8 @@ export async function POST(request: NextRequest) {
     await setCachedResolution(wrapperUrl, resolution.url).catch(() => {});
     return NextResponse.json({ url: resolution.url });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "unexpected error" },
-      { status: 502 }
-    );
+    console.error(`[resolve-news-link] failed for ${wrapperUrl}:`, err);
+    const detail = err instanceof Error ? err.message : "unexpected error";
+    return NextResponse.json({ error: shortenErrorDetail(detail) }, { status: 502 });
   }
 }

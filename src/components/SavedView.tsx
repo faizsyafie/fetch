@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY } from "@/lib/defaults";
 import { highlightMatches } from "@/lib/highlight";
 import { logDebug } from "@/lib/debugLog";
+import { shortenErrorDetail } from "@/lib/errorMessage";
 import type { AccentColor, SavedLink } from "@/lib/types";
 
 interface ArticleData {
@@ -34,6 +35,10 @@ interface SavedViewProps {
    *  handleResizeMouseDown below), the same interaction as the main sidebar. */
   listWidth: number;
   onResizeListWidth: (width: number) => void;
+  /** Width of the notes/metadata panel, in px — only meaningful once an
+   *  article's loaded inline (see articleLoaded below), also drag-resizable. */
+  notesWidth: number;
+  onResizeNotesWidth: (width: number) => void;
 }
 
 function domainOf(url: string): string {
@@ -57,25 +62,45 @@ export function SavedView({
   onDeleteLink,
   listWidth,
   onResizeListWidth,
+  notesWidth,
+  onResizeNotesWidth,
 }: SavedViewProps) {
   const accentPreset = ACCENT_PRESETS[accent];
   const resizeState = useRef<{ startX: number; startWidth: number } | null>(null);
+  const notesResizeState = useRef<{ startX: number; startWidth: number } | null>(null);
 
-  function handleResizeMouseDown(e: React.MouseEvent) {
+  // Shared by both dividers below — `direction` flips which way dragging
+  // grows the panel: the list column widens when dragged right (+1), the
+  // notes panel (anchored to the right edge) widens when dragged left (-1).
+  function startDrag(
+    e: React.MouseEvent,
+    state: React.RefObject<{ startX: number; startWidth: number } | null>,
+    startWidth: number,
+    direction: 1 | -1,
+    onResize: (width: number) => void
+  ) {
     e.preventDefault();
-    resizeState.current = { startX: e.clientX, startWidth: listWidth };
+    state.current = { startX: e.clientX, startWidth };
     function handleMove(moveEvent: MouseEvent) {
-      if (!resizeState.current) return;
-      const delta = moveEvent.clientX - resizeState.current.startX;
-      onResizeListWidth(resizeState.current.startWidth + delta);
+      if (!state.current) return;
+      const delta = (moveEvent.clientX - state.current.startX) * direction;
+      onResize(state.current.startWidth + delta);
     }
     function handleUp() {
-      resizeState.current = null;
+      state.current = null;
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", handleUp);
     }
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", handleUp);
+  }
+
+  function handleResizeMouseDown(e: React.MouseEvent) {
+    startDrag(e, resizeState, listWidth, 1, onResizeListWidth);
+  }
+
+  function handleNotesResizeMouseDown(e: React.MouseEvent) {
+    startDrag(e, notesResizeState, notesWidth, -1, onResizeNotesWidth);
   }
   const highlightClass = `${accentPreset.softBg} ${accentPreset.text}`;
   const query = searchQuery?.trim() ?? "";
@@ -128,10 +153,17 @@ export function SavedView({
         }
         if (cancelled) return;
         if (!res.ok || data.error) {
-          const displayMessage = data.error || "Couldn't load this article.";
+          // The full, un-shortened error (which can be a long, multi-line
+          // diagnostic dump for some failure types) always goes to the
+          // Debug Log — only a short version ever reaches the on-screen
+          // message shown next to the saved link.
+          const rawMessage = data.error || "Couldn't load this article.";
+          const displayMessage = data.error
+            ? shortenErrorDetail(rawMessage)
+            : "Couldn't load this article.";
           const logMessage = data.error
-            ? displayMessage
-            : `${displayMessage} (HTTP ${res.status}, non-JSON response: ${rawText.slice(0, 300)})`;
+            ? rawMessage
+            : `${rawMessage} (HTTP ${res.status}, non-JSON response: ${rawText.slice(0, 300)})`;
           logDebug(`Inline reader failed for ${selected.url}: ${logMessage}`);
           setArticleResult({ id, status: "error", error: displayMessage });
           return;
@@ -278,10 +310,20 @@ export function SavedView({
           )}
 
           <div
-            className={`flex min-w-0 flex-col overflow-y-auto p-5 ${
-              articleLoaded ? "w-80 shrink-0" : "flex-1"
+            style={articleLoaded ? { width: notesWidth } : undefined}
+            className={`relative flex min-w-0 flex-col overflow-y-auto p-5 ${
+              articleLoaded ? "shrink-0" : "flex-1"
             }`}
           >
+            {articleLoaded && (
+              <div
+                onMouseDown={handleNotesResizeMouseDown}
+                className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize notes panel"
+              />
+            )}
             <div className={articleLoaded ? "w-full" : "mx-auto w-full max-w-xl"}>
               <div className="flex items-start justify-between gap-2">
                 <input

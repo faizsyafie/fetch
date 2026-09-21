@@ -145,6 +145,9 @@ export interface UiSettings {
   /** Width of the saved-links list column in Buried Bones's two-pane view —
    *  drag-resizable the same way the main sidebar is (see SavedView). */
   savedListWidth: number;
+  /** Width of the notes/metadata panel when Buried Bones's inline reader is
+   *  showing an article — also drag-resizable (see SavedView). */
+  savedNotesWidth: number;
 }
 
 export interface TopicArticle {

@@ -4,10 +4,13 @@ import { useCallback, useSyncExternalStore } from "react";
 import {
   DEFAULT_NEWS_ARTICLE_LIMIT,
   DEFAULT_SAVED_LIST_WIDTH,
+  DEFAULT_SAVED_NOTES_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
   MAX_SAVED_LIST_WIDTH,
+  MAX_SAVED_NOTES_WIDTH,
   MAX_SIDEBAR_WIDTH,
   MIN_SAVED_LIST_WIDTH,
+  MIN_SAVED_NOTES_WIDTH,
   MIN_SIDEBAR_WIDTH,
   NEWS_ARTICLE_LIMIT_OPTIONS,
   UI_STORAGE_KEY,
@@ -33,6 +36,7 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   newsTopicOrder: DEFAULT_NEWS_TOPIC_ORDER,
   newsArticleLimit: DEFAULT_NEWS_ARTICLE_LIMIT,
   savedListWidth: DEFAULT_SAVED_LIST_WIDTH,
+  savedNotesWidth: DEFAULT_SAVED_NOTES_WIDTH,
 };
 
 function sanitizeArticleLimit(value: unknown): number {
@@ -67,6 +71,10 @@ function clampWidth(width: number): number {
 
 function clampSavedListWidth(width: number): number {
   return Math.min(MAX_SAVED_LIST_WIDTH, Math.max(MIN_SAVED_LIST_WIDTH, width));
+}
+
+function clampSavedNotesWidth(width: number): number {
+  return Math.min(MAX_SAVED_NOTES_WIDTH, Math.max(MIN_SAVED_NOTES_WIDTH, width));
 }
 
 // Validates a stored order against the full topic catalog (not just the
@@ -120,6 +128,9 @@ function readUiSettings(): UiSettings {
       ),
       savedListWidth: clampSavedListWidth(
         parsed.savedListWidth ?? DEFAULT_UI_SETTINGS.savedListWidth
+      ),
+      savedNotesWidth: clampSavedNotesWidth(
+        parsed.savedNotesWidth ?? DEFAULT_UI_SETTINGS.savedNotesWidth
       ),
       newsTopicOrder: sanitizeTopicOrder(parsed.newsTopicOrder),
       newsArticleLimit: sanitizeArticleLimit(parsed.newsArticleLimit),
@@ -184,6 +195,13 @@ export function useUiSettings() {
     [update]
   );
 
+  const setSavedNotesWidth = useCallback(
+    (width: number) => {
+      update((prev) => ({ ...prev, savedNotesWidth: clampSavedNotesWidth(width) }));
+    },
+    [update]
+  );
+
   const toggleSidebarCollapsed = useCallback(() => {
     update((prev) => ({ ...prev, sidebarCollapsed: !prev.sidebarCollapsed }));
   }, [update]);
@@ -242,6 +260,7 @@ export function useUiSettings() {
     hydrated: true,
     setSidebarWidth,
     setSavedListWidth,
+    setSavedNotesWidth,
     toggleSidebarCollapsed,
     setDensity,
     markTourSeen,
