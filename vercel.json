@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "src/app/api/resolve-news-link/route.ts": {
+      "memory": 1600
+    },
+    "src/app/api/article-content/route.ts": {
+      "memory": 1600
+    }
+  }
+}

@@ -3,7 +3,8 @@ import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import DOMPurify from "isomorphic-dompurify";
 import { parseSafeFetchUrl } from "@/lib/urlSafety";
-import { isGoogleNewsArticleUrl, resolveGoogleNewsUrl } from "@/lib/googleNewsUrl";
+import { isGoogleNewsArticleUrl } from "@/lib/googleNewsUrl";
+import { resolveGoogleNewsUrl } from "@/lib/googleNewsResolve";
 import {
   getCachedArticleContent,
   setCachedArticleContent,
@@ -20,11 +21,13 @@ import {
 // extract, which is expected and surfaced as a plain error rather than a
 // crash (see SavedView, which falls back to "open externally").
 export const runtime = "nodejs";
-// A Google News link now costs two extra round trips (resolving the
-// wrapper, each on its own budget — see googleNewsUrl.ts) before the real
-// article fetch below even starts, so the total worst case is higher than
-// a single fetch's own timeout.
-export const maxDuration = 25;
+// A Google News link (when not already cached — see resolve-news-link's
+// save-time resolution, which usually beats us to it) now costs a headless
+// browser launch + navigation before the real article fetch below even
+// starts — see googleNewsResolve.ts for that budget. Generous headroom for
+// the worst case: cold browser launch + full resolve timeout + the article
+// fetch/parse that follows.
+export const maxDuration = 60;
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_HTML_BYTES = 3_000_000;
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
   if (isGoogleNewsArticleUrl(parsed)) {
     // Its own try/catch, separate from the main fetch's below — resolving
     // the wrapper is a fully separate concern (its own network calls, own
-    // internal timeouts — see googleNewsUrl.ts) from fetching and parsing
+    // internal timeouts — see googleNewsResolve.ts) from fetching and parsing
     // the real article that follows, and mixing their error handling made a
     // crash in one stage indistinguishable from the other in the Debug Log.
     try {
@@ -147,7 +150,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Started here, not before the Google News resolve above — that step has
-  // its own independent timeouts (see googleNewsUrl.ts) and shouldn't eat
+  // its own independent timeouts (see googleNewsResolve.ts) and shouldn't eat
   // into the budget the fetch below needs for its own read.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
