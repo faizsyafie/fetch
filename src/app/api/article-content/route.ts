@@ -3,6 +3,7 @@ import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import DOMPurify from "isomorphic-dompurify";
 import { parseSafeFetchUrl } from "@/lib/urlSafety";
+import { isGoogleNewsArticleUrl, resolveGoogleNewsUrl } from "@/lib/googleNewsUrl";
 
 // Powers the Buried Bones inline reader: fetches a saved link's page
 // server-side and extracts just the article (Readability, same engine
@@ -12,8 +13,12 @@ import { parseSafeFetchUrl } from "@/lib/urlSafety";
 // extract, which is expected and surfaced as a plain error rather than a
 // crash (see SavedView, which falls back to "open externally").
 export const runtime = "nodejs";
+// A Google News link now costs two extra round trips (resolving the
+// wrapper) before the real article fetch even starts — the platform default
+// wouldn't leave enough room for all three within FETCH_TIMEOUT_MS.
+export const maxDuration = 20;
 
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 15_000;
 const MAX_HTML_BYTES = 3_000_000;
 // Below this, it's not a real article — a paywall stub, a login wall, a
 // "please enable JavaScript" placeholder, etc.
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const rawUrl = typeof body?.url === "string" ? body.url : "";
 
-  const parsed = parseSafeFetchUrl(rawUrl);
+  let parsed = parseSafeFetchUrl(rawUrl);
   if (!parsed) {
     return NextResponse.json(
       { error: "That link isn't something we can open inline." },
@@ -69,6 +74,21 @@ export async function POST(request: NextRequest) {
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
+    if (isGoogleNewsArticleUrl(parsed)) {
+      const resolvedUrl = await resolveGoogleNewsUrl(parsed.toString(), controller.signal);
+      const resolvedParsed = resolvedUrl ? parseSafeFetchUrl(resolvedUrl) : null;
+      if (!resolvedParsed) {
+        return NextResponse.json(
+          {
+            error:
+              "Couldn't resolve this Google News link — try opening it in your browser instead.",
+          },
+          { status: 422 }
+        );
+      }
+      parsed = resolvedParsed;
+    }
+
     const response = await fetch(parsed.toString(), {
       signal: controller.signal,
       headers: {
