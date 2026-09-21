@@ -4,6 +4,13 @@ import { Readability } from "@mozilla/readability";
 import DOMPurify from "isomorphic-dompurify";
 import { parseSafeFetchUrl } from "@/lib/urlSafety";
 import { isGoogleNewsArticleUrl, resolveGoogleNewsUrl } from "@/lib/googleNewsUrl";
+import {
+  getCachedArticleContent,
+  setCachedArticleContent,
+  getCachedResolution,
+  setCachedResolution,
+  type CachedArticleContent,
+} from "@/lib/db";
 
 // Powers the Buried Bones inline reader: fetches a saved link's page
 // server-side and extracts just the article (Readability, same engine
@@ -71,6 +78,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Shared, team-independent cache (see resolved_articles in db.ts) — the
+  // same URL, from any team, is the same article. Checked both for the
+  // exact URL requested (covers re-opening the same saved link) and again
+  // below once a Google News wrapper resolves (covers a different wrapper,
+  // or a directly-saved link, already having cached the same real article).
+  const cachedForRequestedUrl = await getCachedArticleContent(parsed.toString()).catch(
+    () => null
+  );
+  if (cachedForRequestedUrl) {
+    return NextResponse.json(cachedForRequestedUrl);
+  }
+
   if (isGoogleNewsArticleUrl(parsed)) {
     // Its own try/catch, separate from the main fetch's below — resolving
     // the wrapper is a fully separate concern (its own network calls, own
@@ -78,16 +97,25 @@ export async function POST(request: NextRequest) {
     // the real article that follows, and mixing their error handling made a
     // crash in one stage indistinguishable from the other in the Debug Log.
     try {
-      const resolution = await resolveGoogleNewsUrl(parsed.toString());
-      if (!resolution.ok) {
-        return NextResponse.json(
-          {
-            error: `Couldn't resolve this Google News link (${resolution.reason}) — try opening it in your browser instead.`,
-          },
-          { status: 422 }
-        );
+      const wrapperUrl = parsed.toString();
+      const cachedResolution = await getCachedResolution(wrapperUrl).catch(() => null);
+      let resolvedUrl: string;
+      if (cachedResolution) {
+        resolvedUrl = cachedResolution;
+      } else {
+        const resolution = await resolveGoogleNewsUrl(wrapperUrl);
+        if (!resolution.ok) {
+          return NextResponse.json(
+            {
+              error: `Couldn't resolve this Google News link (${resolution.reason}) — try opening it in your browser instead.`,
+            },
+            { status: 422 }
+          );
+        }
+        resolvedUrl = resolution.url;
+        await setCachedResolution(wrapperUrl, resolvedUrl).catch(() => {});
       }
-      const resolvedParsed = parseSafeFetchUrl(resolution.url);
+      const resolvedParsed = parseSafeFetchUrl(resolvedUrl);
       if (!resolvedParsed) {
         return NextResponse.json(
           {
@@ -105,6 +133,16 @@ export async function POST(request: NextRequest) {
         },
         { status: 502 }
       );
+    }
+
+    // Re-check the cache now that the wrapper's resolved — a different
+    // Google News link, or a directly-saved one, may have already gotten
+    // this exact real article extracted and cached.
+    const cachedForResolvedUrl = await getCachedArticleContent(parsed.toString()).catch(
+      () => null
+    );
+    if (cachedForResolvedUrl) {
+      return NextResponse.json(cachedForResolvedUrl);
     }
   }
 
@@ -204,12 +242,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
+    const result: CachedArticleContent = {
       title: article.title || null,
       byline: article.byline || null,
       siteName: article.siteName || null,
       content: cleanContent,
-    });
+    };
+    // Cache keyed by the final URL actually fetched (the resolved real URL
+    // for a Google News link, or the URL as saved otherwise) — never blocks
+    // the response on a slow write, and a cache-write failure shouldn't
+    // fail a request that otherwise succeeded.
+    setCachedArticleContent(parsed.toString(), result).catch(() => {});
+    return NextResponse.json(result);
   } catch (err) {
     const timedOut = err instanceof Error && err.name === "AbortError";
     return NextResponse.json(
