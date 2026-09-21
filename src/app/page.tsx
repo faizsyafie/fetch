@@ -136,6 +136,7 @@ function DashboardForProfile({
     settings: uiSettings,
     hydrated: uiHydrated,
     setSidebarWidth,
+    setSavedListWidth,
     toggleSidebarCollapsed,
     setDensity,
     markTourSeen,
@@ -961,6 +962,8 @@ function DashboardForProfile({
               deleteLink(id);
               setSelectedLinkId((prev) => (prev === id ? null : prev));
             }}
+            listWidth={uiSettings.savedListWidth}
+            onResizeListWidth={setSavedListWidth}
           />
         ) : (
           <>

@@ -389,6 +389,21 @@ export function Sidebar({
 
       <div className="flex-1" />
 
+      {mode === "saved" && !collapsed && (
+        <div className="border-t border-brand-200 p-3 dark:border-brand-800/80">
+          <p className="mb-1.5 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
+            Manage
+          </p>
+          <button
+            type="button"
+            onClick={onOpenDebugLog}
+            className="text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 hover:text-brand-600 dark:text-brand-600 dark:hover:text-brand-400"
+          >
+            Debug Log
+          </button>
+        </div>
+      )}
+
       {mode === "companies" && (
         <div
           data-tour="sidebar-manage"

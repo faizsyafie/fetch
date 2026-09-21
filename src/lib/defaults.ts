@@ -267,6 +267,12 @@ export const MIN_SIDEBAR_WIDTH = 180;
 export const MAX_SIDEBAR_WIDTH = 420;
 export const COLLAPSED_SIDEBAR_WIDTH = 56;
 
+// Matches the list column's old fixed max-w-sm (24rem) before it became
+// drag-resizable — see SavedView.
+export const DEFAULT_SAVED_LIST_WIDTH = 384;
+export const MIN_SAVED_LIST_WIDTH = 240;
+export const MAX_SAVED_LIST_WIDTH = 640;
+
 interface AccentPreset {
   label: string;
   swatch: string;

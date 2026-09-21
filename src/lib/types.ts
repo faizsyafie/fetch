@@ -142,6 +142,9 @@ export interface UiSettings {
    *  NEWS_ARTICLE_LIMIT_OPTIONS in defaults.ts for the selectable values
    *  and MAX_ARTICLES_PER_TOPIC in rss.ts for the server-side hard cap. */
   newsArticleLimit: number;
+  /** Width of the saved-links list column in Buried Bones's two-pane view —
+   *  drag-resizable the same way the main sidebar is (see SavedView). */
+  savedListWidth: number;
 }
 
 export interface TopicArticle {

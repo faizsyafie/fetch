@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY } from "@/lib/defaults";
 import { highlightMatches } from "@/lib/highlight";
@@ -30,6 +30,10 @@ interface SavedViewProps {
   ) => void;
   onTogglePinned: (id: string) => void;
   onDeleteLink: (id: string) => void;
+  /** Width of the list column, in px — drag-resizable via the divider (see
+   *  handleResizeMouseDown below), the same interaction as the main sidebar. */
+  listWidth: number;
+  onResizeListWidth: (width: number) => void;
 }
 
 function domainOf(url: string): string {
@@ -51,8 +55,28 @@ export function SavedView({
   onUpdateLink,
   onTogglePinned,
   onDeleteLink,
+  listWidth,
+  onResizeListWidth,
 }: SavedViewProps) {
   const accentPreset = ACCENT_PRESETS[accent];
+  const resizeState = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  function handleResizeMouseDown(e: React.MouseEvent) {
+    e.preventDefault();
+    resizeState.current = { startX: e.clientX, startWidth: listWidth };
+    function handleMove(moveEvent: MouseEvent) {
+      if (!resizeState.current) return;
+      const delta = moveEvent.clientX - resizeState.current.startX;
+      onResizeListWidth(resizeState.current.startWidth + delta);
+    }
+    function handleUp() {
+      resizeState.current = null;
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    }
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+  }
   const highlightClass = `${accentPreset.softBg} ${accentPreset.text}`;
   const query = searchQuery?.trim() ?? "";
   const selected = links.find((l) => l.id === selectedId) ?? null;
@@ -128,7 +152,17 @@ export function SavedView({
 
   return (
     <div className="flex min-h-0 flex-1">
-      <div className="flex w-full max-w-sm shrink-0 flex-col overflow-hidden border-r border-brand-200 dark:border-brand-800">
+      <div
+        style={{ width: listWidth }}
+        className="relative flex shrink-0 flex-col overflow-hidden border-r border-brand-200 dark:border-brand-800"
+      >
+        <div
+          onMouseDown={handleResizeMouseDown}
+          className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize saved links list"
+        />
         <div className="flex items-center justify-between border-b border-brand-200 p-3 dark:border-brand-800">
           <span className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
             {links.length} saved
