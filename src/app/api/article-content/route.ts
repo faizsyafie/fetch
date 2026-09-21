@@ -71,11 +71,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-  try {
-    if (isGoogleNewsArticleUrl(parsed)) {
+  if (isGoogleNewsArticleUrl(parsed)) {
+    // Its own try/catch, separate from the main fetch's below — resolving
+    // the wrapper is a fully separate concern (its own network calls, own
+    // internal timeouts — see googleNewsUrl.ts) from fetching and parsing
+    // the real article that follows, and mixing their error handling made a
+    // crash in one stage indistinguishable from the other in the Debug Log.
+    try {
       const resolution = await resolveGoogleNewsUrl(parsed.toString());
       if (!resolution.ok) {
         return NextResponse.json(
@@ -96,8 +98,23 @@ export async function POST(request: NextRequest) {
         );
       }
       parsed = resolvedParsed;
+    } catch (err) {
+      return NextResponse.json(
+        {
+          error: `Couldn't resolve this Google News link (unexpected error: ${err instanceof Error ? err.message : String(err)}) — try opening it in your browser instead.`,
+        },
+        { status: 502 }
+      );
     }
+  }
 
+  // Started here, not before the Google News resolve above — that step has
+  // its own independent timeouts (see googleNewsUrl.ts) and shouldn't eat
+  // into the budget the fetch below needs for its own read.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
     const response = await fetch(parsed.toString(), {
       signal: controller.signal,
       headers: {
@@ -148,28 +165,44 @@ export async function POST(request: NextRequest) {
     reader.cancel().catch(() => {});
     const html = decodeHtml(chunks, contentType);
 
-    const dom = new JSDOM(html, { url: parsed.toString() });
-    const article = new Readability(dom.window.document).parse();
+    // Its own try/catch — JSDOM/Readability parsing a real, arbitrary web
+    // page is a distinct failure surface (a malformed or pathological
+    // document, not a network problem) from everything above it, and
+    // collapsing it into the same generic "Couldn't reach that page."
+    // catch below made a parse crash indistinguishable from a fetch failure.
+    let article: ReturnType<Readability["parse"]>;
+    let cleanContent: string;
+    try {
+      const dom = new JSDOM(html, { url: parsed.toString() });
+      article = new Readability(dom.window.document).parse();
 
-    if (!article?.content || (article.textContent ?? "").trim().length < MIN_TEXT_LENGTH) {
+      if (!article?.content || (article.textContent ?? "").trim().length < MIN_TEXT_LENGTH) {
+        return NextResponse.json(
+          {
+            error:
+              "Couldn't extract this article — it may be behind a paywall, need JavaScript, or block automated access.",
+          },
+          { status: 422 }
+        );
+      }
+
+      cleanContent = DOMPurify.sanitize(article.content, {
+        ALLOWED_TAGS: [
+          "p", "br", "strong", "em", "b", "i", "u", "a", "ul", "ol", "li",
+          "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "img", "figure",
+          "figcaption", "pre", "code", "hr", "span", "div", "table", "thead",
+          "tbody", "tr", "th", "td",
+        ],
+        ALLOWED_ATTR: ["href", "src", "alt", "title"],
+      });
+    } catch (err) {
       return NextResponse.json(
         {
-          error:
-            "Couldn't extract this article — it may be behind a paywall, need JavaScript, or block automated access.",
+          error: `Couldn't parse this page (${err instanceof Error ? err.message : String(err)}).`,
         },
-        { status: 422 }
+        { status: 502 }
       );
     }
-
-    const cleanContent = DOMPurify.sanitize(article.content, {
-      ALLOWED_TAGS: [
-        "p", "br", "strong", "em", "b", "i", "u", "a", "ul", "ol", "li",
-        "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "img", "figure",
-        "figcaption", "pre", "code", "hr", "span", "div", "table", "thead",
-        "tbody", "tr", "th", "td",
-      ],
-      ALLOWED_ATTR: ["href", "src", "alt", "title"],
-    });
 
     return NextResponse.json({
       title: article.title || null,
