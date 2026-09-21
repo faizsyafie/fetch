@@ -22,6 +22,7 @@ import { SourcesModal } from "@/components/SourcesModal";
 import { TopicSourcesModal } from "@/components/TopicSourcesModal";
 import { DebugLogModal } from "@/components/DebugLogModal";
 import { logDebug } from "@/lib/debugLog";
+import { isGoogleNewsArticleUrl } from "@/lib/googleNewsUrl";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -535,8 +536,43 @@ function DashboardForProfile({
       const id = saveLink(input);
       if (id) setSelectedLinkId(id);
       setSaveLinkModal(null);
+
+      // Google News links point at Google's redirect wrapper, not the real
+      // article — resolving that (and reliably fetching/parsing whatever it
+      // points to) is exactly what the inline reader was crashing on. Doing
+      // it here instead, right after a save, means future reads of this
+      // link go straight to the real URL and never hit that path at all.
+      // Fully best-effort and non-blocking: the save above already
+      // succeeded unconditionally, so a failure here just leaves the link
+      // as its original Google News URL, same as before this existed.
+      let url: URL | null;
+      try {
+        url = new URL(input.url.trim());
+      } catch {
+        url = null;
+      }
+      if (id && url && isGoogleNewsArticleUrl(url)) {
+        fetch("/api/resolve-news-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url.toString() }),
+        })
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && typeof data.url === "string") {
+              updateLink(id, { url: data.url });
+            } else {
+              logDebug(`Couldn't resolve Google News link for saved link: ${data.error || `HTTP ${res.status}`}`);
+            }
+          })
+          .catch((err) => {
+            logDebug(
+              `Couldn't resolve Google News link for saved link: ${err instanceof Error ? err.message : "network error"}`
+            );
+          });
+      }
     },
-    [saveLink]
+    [saveLink, updateLink]
   );
 
   const fetchCompanyNews = useCallback(

@@ -176,6 +176,13 @@ export interface SuggestedSource {
 export interface SavedLink {
   id: string;
   url: string;
+  /** The URL this link was originally saved under (e.g. a Google News
+   *  wrapper link, before it's resolved to the real publisher URL in the
+   *  background) — kept stable so "already saved" matching (the bookmark
+   *  icon on an article card) keeps working after `url` gets patched to
+   *  the resolved address. Falls back to `url` itself for links saved
+   *  before this field existed. */
+  sourceUrl?: string;
   title: string;
   notes: string;
   /** One of AppPreferences.linkCategories, or any other value which is

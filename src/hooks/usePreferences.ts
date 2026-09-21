@@ -478,7 +478,7 @@ export function usePreferences(profileName: string | null) {
       const now = new Date().toISOString();
       let resultId: string | null = null;
       setPreferences((prev) => {
-        const existing = prev.links.find((l) => l.url === url);
+        const existing = prev.links.find((l) => (l.sourceUrl ?? l.url) === url);
         if (existing) {
           resultId = existing.id;
           return prev;
@@ -486,6 +486,7 @@ export function usePreferences(profileName: string | null) {
         const link: SavedLink = {
           id: `link-${Date.now()}`,
           url,
+          sourceUrl: url,
           title: input.title.trim() || url,
           notes: input.notes,
           category: input.category,
@@ -501,13 +502,19 @@ export function usePreferences(profileName: string | null) {
     []
   );
 
+  // Matches against sourceUrl (the URL a link was originally saved under)
+  // rather than url, so the bookmark icon on an article card keeps showing
+  // "already saved" even after a Google News link's url gets patched in the
+  // background to its resolved real address — see resolveSavedLinkIfNeeded
+  // in page.tsx.
   const findLinkByUrl = useCallback(
-    (url: string) => preferences.links.find((l) => l.url === url.trim()) ?? null,
+    (url: string) =>
+      preferences.links.find((l) => (l.sourceUrl ?? l.url) === url.trim()) ?? null,
     [preferences.links]
   );
 
   const updateLink = useCallback(
-    (id: string, updates: Partial<Pick<SavedLink, "title" | "notes" | "category">>) => {
+    (id: string, updates: Partial<Pick<SavedLink, "title" | "notes" | "category" | "url">>) => {
       setPreferences((prev) => ({
         ...prev,
         links: prev.links.map((l) =>
