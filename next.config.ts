@@ -7,11 +7,20 @@ const nextConfig: NextConfig = {
   // not a static require()/import Next's file tracer can see statically —
   // so Vercel's deployed function was missing them entirely and crashing
   // on first use with "Cannot find module '.../playwright-core/browsers.json'".
-  // Force the whole package into the trace for the two routes that use it,
-  // rather than chasing individual missing files one deploy at a time.
+  // @sparticuz/chromium hits the same gap for its own bin/*.br binaries
+  // (the bundled Chromium build itself) — same "input directory ... does
+  // not exist" crash, same fix. Force both whole packages into the trace
+  // for the two routes that use them, rather than chasing individual
+  // missing files one deploy at a time.
   outputFileTracingIncludes: {
-    "/api/resolve-news-link": ["./node_modules/playwright-core/**/*"],
-    "/api/article-content": ["./node_modules/playwright-core/**/*"],
+    "/api/resolve-news-link": [
+      "./node_modules/playwright-core/**/*",
+      "./node_modules/@sparticuz/chromium/**/*",
+    ],
+    "/api/article-content": [
+      "./node_modules/playwright-core/**/*",
+      "./node_modules/@sparticuz/chromium/**/*",
+    ],
   },
 };
 
