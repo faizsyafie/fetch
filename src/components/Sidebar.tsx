@@ -62,7 +62,20 @@ interface SidebarProps {
   onRemoveLinkCategory: (key: string) => void;
   onReorderLinkCategories: (ordered: string[]) => void;
   onSetLinkCategoryColor: (key: string, color: AccentColor) => void;
+
+  // Mobile-only — see useIsMobile. On mobile the sidebar is an off-canvas
+  // drawer (fixed width, slide in/out + backdrop) rather than the desktop
+  // resizable/collapsible column; `collapsed`/`width`/resize are ignored.
+  isMobile: boolean;
+  mobileOpen: boolean;
+  onCloseMobileNav: () => void;
 }
+
+// Fixed drawer width on mobile — not user-resizable (no drag handle, no
+// point resizing an overlay that covers most of a phone screen anyway) and
+// deliberately not tied to the desktop `width` preference, which could be
+// anything a user dragged it to on a completely different-sized screen.
+const MOBILE_DRAWER_WIDTH = 280;
 
 export function Sidebar({
   theme,
@@ -108,6 +121,9 @@ export function Sidebar({
   onRemoveLinkCategory,
   onReorderLinkCategories,
   onSetLinkCategoryColor,
+  isMobile,
+  mobileOpen,
+  onCloseMobileNav,
 }: SidebarProps) {
   const [sourcesListExpanded, setSourcesListExpanded] = useState(false);
   // Click-triggered "jump to list" flyout for switching Buried Bones
@@ -150,8 +166,33 @@ export function Sidebar({
   }
 
   const enabledSources = sources.filter((s) => s.enabled);
-  const renderedWidth = collapsed ? COLLAPSED_SIDEBAR_WIDTH : width;
+  // Collapsed-to-icon-rail is a desktop-only affordance — on mobile the
+  // drawer is either fully open (with labels) or fully hidden, never a
+  // narrow rail, so effectiveCollapsed ignores the `collapsed` preference
+  // entirely while on mobile.
+  const effectiveCollapsed = isMobile ? false : collapsed;
+  const renderedWidth = isMobile
+    ? MOBILE_DRAWER_WIDTH
+    : effectiveCollapsed
+      ? COLLAPSED_SIDEBAR_WIDTH
+      : width;
   const accentPreset = ACCENT_PRESETS[accent];
+
+  // Any navigation action (mode switch, or picking a sub-list item) also
+  // closes the mobile drawer — the point of tapping a destination is to go
+  // look at it, not keep the nav open over it.
+  function handleSelectMode(next: typeof mode) {
+    onSelectMode(next);
+    if (isMobile) onCloseMobileNav();
+  }
+  function withMobileClose<T extends unknown[]>(fn: (...args: T) => void) {
+    return (...args: T) => {
+      fn(...args);
+      if (isMobile) onCloseMobileNav();
+    };
+  }
+  const handleSelectIndustry = withMobileClose(onSelectIndustry);
+  const handleSelectLinkCategory = withMobileClose(onSelectLinkCategory);
 
   function renderNavRow({
     isActive,
@@ -179,7 +220,7 @@ export function Sidebar({
     // (see SidebarFlyout) for jumping straight to one of its sub-items.
     flyoutKey?: "saved" | "companies";
   }) {
-    if (collapsed) {
+    if (effectiveCollapsed) {
       return (
         <button
           type="button"
@@ -247,11 +288,27 @@ export function Sidebar({
   }
 
   return (
-    <aside
-      style={{ width: renderedWidth }}
-      className="relative flex h-full shrink-0 flex-col overflow-hidden border-r border-brand-200 bg-brand-50 text-brand-900 transition-[width] duration-300 ease-in-out dark:border-brand-800/80 dark:bg-brand-900 dark:text-brand-100"
-    >
-      {!collapsed && (
+    <>
+      {isMobile && (
+        <div
+          onClick={onCloseMobileNav}
+          aria-hidden="true"
+          className={`fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 ${
+            mobileOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+        />
+      )}
+      <aside
+        style={{ width: renderedWidth }}
+        className={`flex h-full shrink-0 flex-col overflow-hidden border-r border-brand-200 bg-brand-50 text-brand-900 transition-[width] duration-300 ease-in-out dark:border-brand-800/80 dark:bg-brand-900 dark:text-brand-100 ${
+          isMobile
+            ? `fixed inset-y-0 left-0 z-50 transition-transform duration-300 ease-in-out ${
+                mobileOpen ? "translate-x-0" : "-translate-x-full"
+              }`
+            : "relative"
+        }`}
+      >
+      {!effectiveCollapsed && !isMobile && (
         <div
           onMouseDown={handleResizeMouseDown}
           className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
@@ -267,27 +324,39 @@ export function Sidebar({
       >
         <button
           type="button"
-          onClick={() => onSelectMode("home")}
+          onClick={() => handleSelectMode("home")}
           title="fetch"
           aria-label="Go home"
           className="rounded-md transition-opacity hover:opacity-80"
         >
-          <Logo theme={theme} compact={collapsed} />
+          <Logo theme={theme} compact={effectiveCollapsed} />
         </button>
-        {!collapsed && (
+        {isMobile ? (
           <button
             type="button"
-            onClick={onToggleCollapsed}
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
+            onClick={onCloseMobileNav}
+            aria-label="Close menu"
+            title="Close menu"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
           >
-            «
+            ✕
           </button>
+        ) : (
+          !effectiveCollapsed && (
+            <button
+              type="button"
+              onClick={onToggleCollapsed}
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
+            >
+              «
+            </button>
+          )
         )}
       </div>
 
-      {collapsed && (
+      {!isMobile && effectiveCollapsed && (
         <button
           type="button"
           onClick={onToggleCollapsed}
@@ -309,12 +378,12 @@ export function Sidebar({
           subtitle: "Saved Articles and Notes",
           emoji: "🔖",
           dataTour: "nav-saved",
-          onClick: () => onSelectMode("saved"),
+          onClick: () => handleSelectMode("saved"),
           expanded: savedListExpanded,
-          onToggleExpanded: collapsed ? undefined : onToggleSavedListExpanded,
+          onToggleExpanded: effectiveCollapsed ? undefined : onToggleSavedListExpanded,
           flyoutKey: "saved",
         })}
-        {!collapsed && (
+        {!effectiveCollapsed && (
           <div
             className="grid transition-[grid-template-rows] duration-200 ease-out"
             style={{ gridTemplateRows: savedListExpanded ? "1fr" : "0fr" }}
@@ -329,7 +398,7 @@ export function Sidebar({
                 isModeActive={mode === "saved"}
                 accent={accent}
                 addPlaceholder="New category…"
-                onSelect={onSelectLinkCategory}
+                onSelect={handleSelectLinkCategory}
                 onAdd={onAddLinkCategory}
                 onRename={onRenameLinkCategory}
                 onRemove={onRemoveLinkCategory}
@@ -348,7 +417,7 @@ export function Sidebar({
           subtitle: "General News",
           emoji: "📰",
           dataTour: "nav-news",
-          onClick: () => onSelectMode("news"),
+          onClick: () => handleSelectMode("news"),
         })}
         {renderNavRow({
           isActive: mode === "companies",
@@ -356,12 +425,12 @@ export function Sidebar({
           subtitle: "Company News",
           emoji: "🏢",
           dataTour: "nav-companies",
-          onClick: () => onSelectMode("companies"),
+          onClick: () => handleSelectMode("companies"),
           expanded: companiesListExpanded,
-          onToggleExpanded: collapsed ? undefined : onToggleCompaniesListExpanded,
+          onToggleExpanded: effectiveCollapsed ? undefined : onToggleCompaniesListExpanded,
           flyoutKey: "companies",
         })}
-        {!collapsed && (
+        {!effectiveCollapsed && (
           <div
             className="grid transition-[grid-template-rows] duration-200 ease-out"
             style={{ gridTemplateRows: companiesListExpanded ? "1fr" : "0fr" }}
@@ -375,7 +444,7 @@ export function Sidebar({
                 isModeActive={mode === "companies"}
                 accent={accent}
                 addPlaceholder="New industry…"
-                onSelect={onSelectIndustry}
+                onSelect={handleSelectIndustry}
                 onAdd={onAddIndustry}
                 onRename={onRenameIndustry}
                 onRemove={onRemoveIndustry}
@@ -389,7 +458,7 @@ export function Sidebar({
 
       <div className="flex-1" />
 
-      {mode === "saved" && !collapsed && (
+      {mode === "saved" && !effectiveCollapsed && (
         <div className="border-t border-brand-200 p-3 dark:border-brand-800/80">
           <p className="mb-1.5 text-[0.625rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
             Manage
@@ -408,10 +477,10 @@ export function Sidebar({
         <div
           data-tour="sidebar-manage"
           className={`border-t border-brand-200 dark:border-brand-800/80 ${
-            collapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
+            effectiveCollapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
           }`}
         >
-          {collapsed ? (
+          {effectiveCollapsed ? (
             <>
               <button
                 type="button"
@@ -520,10 +589,10 @@ export function Sidebar({
         <div
           data-tour="sidebar-manage-themes"
           className={`border-t border-brand-200 dark:border-brand-800/80 ${
-            collapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
+            effectiveCollapsed ? "flex flex-col items-center gap-1 py-2" : "p-3"
           }`}
         >
-          {collapsed ? (
+          {effectiveCollapsed ? (
             <>
               <button
                 type="button"
@@ -589,7 +658,7 @@ export function Sidebar({
         </div>
       )}
 
-      {collapsed && openFlyout === "saved" && flyoutAnchor && (
+      {effectiveCollapsed && openFlyout === "saved" && flyoutAnchor && (
         <SidebarFlyout
           title="Buried Bones"
           anchor={flyoutAnchor}
@@ -605,7 +674,7 @@ export function Sidebar({
           onClose={() => setOpenFlyout(null)}
         />
       )}
-      {collapsed && openFlyout === "companies" && flyoutAnchor && (
+      {effectiveCollapsed && openFlyout === "companies" && flyoutAnchor && (
         <SidebarFlyout
           title="Pack Watch"
           anchor={flyoutAnchor}
@@ -620,6 +689,7 @@ export function Sidebar({
           onClose={() => setOpenFlyout(null)}
         />
       )}
-    </aside>
+      </aside>
+    </>
   );
 }

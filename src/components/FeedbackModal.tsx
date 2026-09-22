@@ -104,9 +104,9 @@ export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
+        className={`flex max-h-[85vh] w-full max-w-md flex-col rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
       >
-        <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
+        <div className="flex shrink-0 items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">
             🐾 Feedback
           </h2>
@@ -120,7 +120,7 @@ export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
           </button>
         </div>
 
-        <div className="space-y-3 px-4 py-4">
+        <div className="space-y-3 overflow-y-auto px-4 py-4">
           <p className="text-xs text-brand-500 dark:text-brand-400">
             Are things ruff? Any suggestions and feedback are welcome — just
             write to me here.
@@ -177,7 +177,7 @@ export function FeedbackModal({ open, accent, onClose }: FeedbackModalProps) {
           )}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-brand-200 px-4 py-3 dark:border-brand-800">
+        <div className="flex shrink-0 justify-end gap-2 border-t border-brand-200 px-4 py-3 dark:border-brand-800">
           <button
             type="button"
             onClick={onClose}

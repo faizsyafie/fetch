@@ -78,9 +78,9 @@ export function BulkAddCompaniesModal({
       <form
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-lg rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
+        className={`flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
       >
-        <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
+        <div className="flex shrink-0 items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">
             📋 Paste a list of companies
           </h2>
@@ -94,7 +94,7 @@ export function BulkAddCompaniesModal({
           </button>
         </div>
 
-        <div className="space-y-3 px-4 py-4">
+        <div className="space-y-3 overflow-y-auto px-4 py-4">
           <p className="text-xs text-brand-500 dark:text-brand-400">
             Each line becomes a new company in{" "}
             <span className="font-semibold text-brand-700 dark:text-brand-300">
@@ -134,7 +134,7 @@ export function BulkAddCompaniesModal({
           )}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-brand-200 px-4 py-3 dark:border-brand-800">
+        <div className="flex shrink-0 justify-end gap-2 border-t border-brand-200 px-4 py-3 dark:border-brand-800">
           <button
             type="button"
             onClick={onClose}

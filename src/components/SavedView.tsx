@@ -39,6 +39,14 @@ interface SavedViewProps {
    *  article's loaded inline (see articleLoaded below), also drag-resizable. */
   notesWidth: number;
   onResizeNotesWidth: (width: number) => void;
+  // Mobile-only — see useIsMobile. The three-pane desktop layout (list /
+  // article / notes side by side) becomes a single-pane stack+navigate flow:
+  // the list fills the screen until a link is selected, then a full-screen
+  // detail view (article stacked above notes, both scrolling as one column)
+  // replaces it, with `onBack` returning to the list. Resize handles are
+  // meaningless on a phone-width single pane, so they're not rendered.
+  isMobile: boolean;
+  onBack: () => void;
 }
 
 function domainOf(url: string): string {
@@ -64,6 +72,8 @@ export function SavedView({
   onResizeListWidth,
   notesWidth,
   onResizeNotesWidth,
+  isMobile,
+  onBack,
 }: SavedViewProps) {
   const accentPreset = ACCENT_PRESETS[accent];
   const resizeState = useRef<{ startX: number; startWidth: number } | null>(null);
@@ -216,19 +226,29 @@ export function SavedView({
   const activeTitle = titleDraft ?? selected?.title ?? "";
   const activeNotes = notesDraft ?? selected?.notes ?? "";
 
+  // On mobile, list and detail are separate full-screen panes — only one
+  // renders at a time, switched by whether a link is selected.
+  const showList = !isMobile || !selected;
+  const showDetail = !isMobile || Boolean(selected);
+
   return (
     <div className="flex min-h-0 flex-1">
+      {showList && (
       <div
-        style={{ width: listWidth }}
-        className="relative flex shrink-0 flex-col overflow-hidden border-r border-brand-200 dark:border-brand-800"
+        style={isMobile ? undefined : { width: listWidth }}
+        className={`relative flex shrink-0 flex-col overflow-hidden border-r border-brand-200 dark:border-brand-800 ${
+          isMobile ? "w-full" : ""
+        }`}
       >
-        <div
-          onMouseDown={handleResizeMouseDown}
-          className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize saved links list"
-        />
+        {!isMobile && (
+          <div
+            onMouseDown={handleResizeMouseDown}
+            className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize saved links list"
+          />
+        )}
         <div className="flex items-center justify-between border-b border-brand-200 p-3 dark:border-brand-800">
           <span className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
             {links.length} saved
@@ -280,15 +300,33 @@ export function SavedView({
           })}
         </div>
       </div>
+      )}
 
-      {!selected ? (
+      {showDetail && (!selected ? (
         <div className="flex min-w-0 flex-1 items-center justify-center text-sm text-brand-400 dark:text-brand-500">
           Select a link to see its notes.
         </div>
       ) : (
-        <div className="flex min-w-0 flex-1 overflow-hidden">
+        <div
+          className={`flex min-w-0 flex-1 ${isMobile ? "flex-col overflow-y-auto" : "overflow-hidden"}`}
+        >
+          {isMobile && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex shrink-0 items-center gap-1.5 border-b border-brand-200 p-3 text-left text-sm font-semibold text-brand-600 dark:border-brand-800 dark:text-brand-300"
+            >
+              ← Back to list
+            </button>
+          )}
           {articleLoaded && (
-            <article className="min-w-0 flex-1 overflow-y-auto border-r border-brand-200 p-6 dark:border-brand-800">
+            <article
+              className={`min-w-0 p-6 ${
+                isMobile
+                  ? ""
+                  : "flex-1 overflow-y-auto border-r border-brand-200 dark:border-brand-800"
+              }`}
+            >
               {articleLoaded.siteName && (
                 <div className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                   {articleLoaded.siteName}
@@ -310,12 +348,16 @@ export function SavedView({
           )}
 
           <div
-            style={articleLoaded ? { width: notesWidth } : undefined}
-            className={`relative flex min-w-0 flex-col overflow-y-auto p-5 ${
-              articleLoaded ? "shrink-0" : "flex-1"
+            style={isMobile ? undefined : articleLoaded ? { width: notesWidth } : undefined}
+            className={`relative flex min-w-0 flex-col p-5 ${
+              isMobile
+                ? "w-full"
+                : articleLoaded
+                  ? "shrink-0 overflow-y-auto"
+                  : "flex-1 overflow-y-auto"
             }`}
           >
-            {articleLoaded && (
+            {!isMobile && articleLoaded && (
               <div
                 onMouseDown={handleNotesResizeMouseDown}
                 className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
@@ -430,7 +472,7 @@ export function SavedView({
             </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

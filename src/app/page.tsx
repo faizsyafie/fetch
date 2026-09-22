@@ -28,6 +28,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSeenArticles } from "@/hooks/useSeenArticles";
 import { useTheme } from "@/hooks/useTheme";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { readUiSettings, useUiSettings } from "@/hooks/useUiSettings";
 import {
   ALL_INDUSTRY,
@@ -174,6 +175,8 @@ function DashboardForProfile({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Lands on the Home hub right after picking a profile, where the user
   // picks a mode themselves — there's no separate welcome screen anymore.
   const [mode, setMode] = useState<AppMode>("home");
@@ -908,6 +911,9 @@ function DashboardForProfile({
         onRemoveLinkCategory={removeLinkCategory}
         onReorderLinkCategories={reorderLinkCategories}
         onSetLinkCategoryColor={setLinkCategoryColor}
+        isMobile={isMobile}
+        mobileOpen={mobileNavOpen}
+        onCloseMobileNav={() => setMobileNavOpen(false)}
       />
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
@@ -953,6 +959,7 @@ function DashboardForProfile({
           onToggleStarredOnly={() => setStarredOnly((v) => !v)}
           pinnedOnly={pinnedOnly}
           onTogglePinnedOnly={() => setPinnedOnly((v) => !v)}
+          onOpenMobileNav={() => setMobileNavOpen(true)}
         />
 
         {mode === "home" ? (
@@ -1003,6 +1010,8 @@ function DashboardForProfile({
             onResizeListWidth={setSavedListWidth}
             notesWidth={uiSettings.savedNotesWidth}
             onResizeNotesWidth={setSavedNotesWidth}
+            isMobile={isMobile}
+            onBack={() => setSelectedLinkId(null)}
           />
         ) : (
           <>
