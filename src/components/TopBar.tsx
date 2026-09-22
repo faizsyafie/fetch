@@ -77,11 +77,16 @@ interface TopBarProps {
   // current category instead of the whole thing.
   pinnedOnly: boolean;
   onTogglePinnedOnly: () => void;
-  // Mobile-only — see useIsMobile/Sidebar. The hamburger trigger lives here
-  // (visible only below the md breakpoint via CSS) rather than threading an
-  // `isMobile` prop through, since it's the one piece of this bar's own
-  // behavior — not layout — that actually needs a JS-driven callback.
+  // Mobile-only — see useIsMobile/Sidebar.
   onOpenMobileNav: () => void;
+  // Also drives which of the two (mobile-row / desktop-row) copies of each
+  // shared control actually carries its data-tour attribute — see
+  // renderModeControls/renderSearchInput/renderRightIcons below. Both rows
+  // render unconditionally (CSS just hides one via `md:hidden`/`hidden
+  // md:flex`), so without this, SpotlightTour's querySelector-based
+  // targeting would always grab whichever copy happens to come first in the
+  // DOM, regardless of which one is actually visible.
+  isMobile: boolean;
 }
 
 export function TopBar({
@@ -121,6 +126,7 @@ export function TopBar({
   pinnedOnly,
   onTogglePinnedOnly,
   onOpenMobileNav,
+  isMobile,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
   const [bulkAddOpen, setBulkAddOpen] = useState(false);
@@ -349,29 +355,29 @@ export function TopBar({
           <span aria-hidden="true">☰</span>
         </button>
         <div className="min-w-0 flex-1" />
-        <div className="flex shrink-0 items-center gap-2">{renderRightIcons(false)}</div>
+        <div className="flex shrink-0 items-center gap-2">{renderRightIcons(isMobile)}</div>
       </div>
       {!isHome && (
         <div className="border-b border-brand-200 px-3 py-2 md:hidden dark:border-brand-800/80">
-          {renderSearchInput(false)}
+          {renderSearchInput(isMobile)}
         </div>
       )}
       {(isNews || isCompanies || isSaved) && (
         <div className="flex items-center gap-2 overflow-x-auto border-b border-brand-200 px-3 py-2 md:hidden dark:border-brand-800/80">
-          {renderModeControls(false)}
+          {renderModeControls(isMobile)}
         </div>
       )}
 
       {/* Desktop header — unchanged from before mobile support. */}
       <div className="hidden h-14 items-center gap-3 border-b border-brand-200 px-5 md:flex dark:border-brand-800/80">
         <div className="flex shrink-0 flex-wrap items-center gap-3">
-          {renderModeControls(true)}
+          {renderModeControls(!isMobile)}
         </div>
 
-        <div className="flex min-w-0 flex-1 justify-center">{renderSearchInput(true)}</div>
+        <div className="flex min-w-0 flex-1 justify-center">{renderSearchInput(!isMobile)}</div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-          {renderRightIcons(true)}
+          {renderRightIcons(!isMobile)}
         </div>
       </div>
 
