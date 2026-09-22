@@ -235,8 +235,15 @@ function DashboardForProfile({
   const rawHelpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
   const helpSteps: TourStep[] = rawHelpSteps.map((step) => ({
     ...step,
-    onEnter:
-      step.onEnterId === "enableEditMode" ? () => setEditMode(true) : undefined,
+    onEnter: () => {
+      if (step.onEnterId === "enableEditMode") setEditMode(true);
+      // Sidebar-hosted steps need the mobile drawer open to be visible at
+      // all (it's closed/off-screen by default there); every other step
+      // closes it again, so it doesn't linger open once the tour's moved
+      // on to a target elsewhere on the page — see sidebarTarget's comment
+      // in modeGuide.ts.
+      if (isMobile) setMobileNavOpen(Boolean(step.sidebarTarget));
+    },
   }));
 
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
@@ -960,6 +967,7 @@ function DashboardForProfile({
           pinnedOnly={pinnedOnly}
           onTogglePinnedOnly={() => setPinnedOnly((v) => !v)}
           onOpenMobileNav={() => setMobileNavOpen(true)}
+          isMobile={isMobile}
         />
 
         {mode === "home" ? (
@@ -1069,7 +1077,10 @@ function DashboardForProfile({
         <SpotlightTour
           steps={helpSteps}
           accent={uiSettings.accent}
-          onClose={() => setHelpOpen(false)}
+          onClose={() => {
+            setHelpOpen(false);
+            setMobileNavOpen(false);
+          }}
         />
       )}
 

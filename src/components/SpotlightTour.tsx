@@ -60,7 +60,11 @@ interface TooltipPosition {
 const SPOTLIGHT_PADDING = 8; // breathing room between the target and the spotlight ring
 const TOOLTIP_GAP = 16; // gap between the spotlight and the tooltip card
 const VIEWPORT_MARGIN = 12; // never let the tooltip touch the screen edge
-const MOBILE_BREAKPOINT = 640;
+// Matches useIsMobile's breakpoint — side (left/right) tooltip placements
+// rarely have room once the app itself has already switched into its mobile
+// layout (drawer nav, stacked panes), so this needs to agree with that
+// switch rather than pick its own narrower cutoff.
+const MOBILE_BREAKPOINT = 768;
 
 function measure(el: Element): Rect {
   const r = el.getBoundingClientRect();
