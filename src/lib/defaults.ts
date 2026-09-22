@@ -275,10 +275,13 @@ export const MAX_SAVED_LIST_WIDTH = 640;
 
 // Matches the notes panel's old fixed w-80 (20rem) before it became
 // drag-resizable — see SavedView. Only applies once an article's loaded
-// inline (otherwise that panel just takes the remaining flex space).
+// inline (otherwise that panel just takes the remaining flex space). Max is
+// generous (not just "a bit more room") since with the article pane's own
+// min-w-0 there's nothing else constraining it — SavedView's drag handler
+// still leaves the article column whatever space is left, down to zero.
 export const DEFAULT_SAVED_NOTES_WIDTH = 320;
 export const MIN_SAVED_NOTES_WIDTH = 240;
-export const MAX_SAVED_NOTES_WIDTH = 560;
+export const MAX_SAVED_NOTES_WIDTH = 960;
 
 interface AccentPreset {
   label: string;
