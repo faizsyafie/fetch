@@ -142,6 +142,12 @@ export interface UiSettings {
    *  NEWS_ARTICLE_LIMIT_OPTIONS in defaults.ts for the selectable values
    *  and MAX_ARTICLES_PER_TOPIC in rss.ts for the server-side hard cap. */
   newsArticleLimit: number;
+  /** Width of the saved-links list column in Buried Bones's two-pane view —
+   *  drag-resizable the same way the main sidebar is (see SavedView). */
+  savedListWidth: number;
+  /** Width of the notes/metadata panel when Buried Bones's inline reader is
+   *  showing an article — also drag-resizable (see SavedView). */
+  savedNotesWidth: number;
 }
 
 export interface TopicArticle {
@@ -173,6 +179,13 @@ export interface SuggestedSource {
 export interface SavedLink {
   id: string;
   url: string;
+  /** The URL this link was originally saved under (e.g. a Google News
+   *  wrapper link, before it's resolved to the real publisher URL in the
+   *  background) — kept stable so "already saved" matching (the bookmark
+   *  icon on an article card) keeps working after `url` gets patched to
+   *  the resolved address. Falls back to `url` itself for links saved
+   *  before this field existed. */
+  sourceUrl?: string;
   title: string;
   notes: string;
   /** One of AppPreferences.linkCategories, or any other value which is

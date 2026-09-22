@@ -85,6 +85,29 @@ function ensureSchema(): Promise<void> {
           `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS team_id TEXT REFERENCES teams(id)`
         )
       )
+      .then(() =>
+        // Deliberately NOT team-scoped: a URL's real content (or where its
+        // Google News wrapper actually points) is a fact about that URL,
+        // not about who's asking — sharing this cache across every team
+        // means the first person anywhere to open a given article pays the
+        // resolve/fetch/parse cost once, and everyone else after them
+        // (same team or not) gets it instantly. Only successes are ever
+        // stored (see the two set* functions below) — a transient failure
+        // never gets cached, so a fixed bug or a site coming back online
+        // is picked up on the very next attempt rather than staying stuck
+        // behind a stale cached error.
+        getPool().query(
+          `CREATE TABLE IF NOT EXISTS resolved_articles (
+            source_url TEXT PRIMARY KEY,
+            resolved_url TEXT,
+            title TEXT,
+            byline TEXT,
+            site_name TEXT,
+            content TEXT,
+            resolved_at TIMESTAMPTZ NOT NULL DEFAULT now()
+          )`
+        )
+      )
       .then(() => seedDefaultTeamIfNeeded())
       .then(() => undefined)
       .catch((error) => {
@@ -245,4 +268,81 @@ export async function moveProfileToTeam(
     teamId,
     name,
   ]);
+}
+
+// Shared cache for Google News wrapper -> real-URL resolution — see
+// resolved_articles in ensureSchema. Read by /api/resolve-news-link before
+// attempting a live resolve.
+export async function getCachedResolution(
+  sourceUrl: string
+): Promise<string | null> {
+  await ensureSchema();
+  const { rows } = await getPool().query<{ resolved_url: string | null }>(
+    "SELECT resolved_url FROM resolved_articles WHERE source_url = $1",
+    [sourceUrl]
+  );
+  return rows[0]?.resolved_url ?? null;
+}
+
+export async function setCachedResolution(
+  sourceUrl: string,
+  resolvedUrl: string
+): Promise<void> {
+  await ensureSchema();
+  await getPool().query(
+    `INSERT INTO resolved_articles (source_url, resolved_url)
+     VALUES ($1, $2)
+     ON CONFLICT (source_url)
+     DO UPDATE SET resolved_url = EXCLUDED.resolved_url, resolved_at = now()`,
+    [sourceUrl, resolvedUrl]
+  );
+}
+
+export interface CachedArticleContent {
+  title: string | null;
+  byline: string | null;
+  siteName: string | null;
+  content: string;
+}
+
+// Shared cache for a fully fetched-and-extracted article — see
+// resolved_articles in ensureSchema. Read by /api/article-content before
+// attempting a live fetch/parse; keyed by whatever URL the client actually
+// requested (already the resolved real URL for a Google News link whose
+// save-time resolution succeeded, or the URL as saved otherwise).
+export async function getCachedArticleContent(
+  sourceUrl: string
+): Promise<CachedArticleContent | null> {
+  await ensureSchema();
+  const { rows } = await getPool().query<{
+    title: string | null;
+    byline: string | null;
+    site_name: string | null;
+    content: string | null;
+  }>(
+    "SELECT title, byline, site_name, content FROM resolved_articles WHERE source_url = $1 AND content IS NOT NULL",
+    [sourceUrl]
+  );
+  const row = rows[0];
+  if (!row || row.content === null) return null;
+  return { title: row.title, byline: row.byline, siteName: row.site_name, content: row.content };
+}
+
+export async function setCachedArticleContent(
+  sourceUrl: string,
+  data: CachedArticleContent
+): Promise<void> {
+  await ensureSchema();
+  await getPool().query(
+    `INSERT INTO resolved_articles (source_url, title, byline, site_name, content)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (source_url)
+     DO UPDATE SET
+       title = EXCLUDED.title,
+       byline = EXCLUDED.byline,
+       site_name = EXCLUDED.site_name,
+       content = EXCLUDED.content,
+       resolved_at = now()`,
+    [sourceUrl, data.title, data.byline, data.siteName, data.content]
+  );
 }

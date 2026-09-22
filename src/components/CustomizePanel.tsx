@@ -88,10 +88,10 @@ export function CustomizePanel({
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-md rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
+        className={`flex max-h-[85vh] w-full max-w-md flex-col rounded-lg border border-brand-200 bg-white shadow-2xl dark:border-brand-700 dark:bg-brand-900 ${closing ? "animate-modal-panel-out" : "animate-modal-panel"}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
+        <div className="flex shrink-0 items-center justify-between border-b border-brand-200 px-4 py-3 dark:border-brand-800">
           <h2 className="text-sm font-bold text-brand-900 dark:text-white">
             Settings
           </h2>
@@ -105,7 +105,7 @@ export function CustomizePanel({
           </button>
         </div>
 
-        <div className="space-y-5 px-4 py-4">
+        <div className="space-y-5 overflow-y-auto px-4 py-4">
           <section>
             <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
               Theme

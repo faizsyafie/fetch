@@ -89,8 +89,12 @@ export const NEWS_TOPICS: NewsTopic[] = [
     emoji: "🇲🇾",
     sources: [
       {
+        // The site-wide feed (/feed/) carries FMT's World/Sport/Business
+        // sections too, which is why unrelated stories (foreign politics,
+        // football) were showing up here — their Nation category feed is
+        // scoped the same way The Star's below already is.
         name: "Free Malaysia Today",
-        feedUrl: "https://www.freemalaysiatoday.com/feed/",
+        feedUrl: "https://www.freemalaysiatoday.com/category/nation/feed/",
       },
       {
         name: "The Star",

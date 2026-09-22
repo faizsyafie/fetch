@@ -77,6 +77,11 @@ interface TopBarProps {
   // current category instead of the whole thing.
   pinnedOnly: boolean;
   onTogglePinnedOnly: () => void;
+  // Mobile-only — see useIsMobile/Sidebar. The hamburger trigger lives here
+  // (visible only below the md breakpoint via CSS) rather than threading an
+  // `isMobile` prop through, since it's the one piece of this bar's own
+  // behavior — not layout — that actually needs a JS-driven callback.
+  onOpenMobileNav: () => void;
 }
 
 export function TopBar({
@@ -115,6 +120,7 @@ export function TopBar({
   onToggleStarredOnly,
   pinnedOnly,
   onTogglePinnedOnly,
+  onOpenMobileNav,
 }: TopBarProps) {
   const [tagInput, setTagInput] = useState("");
   const [bulkAddOpen, setBulkAddOpen] = useState(false);
@@ -160,20 +166,22 @@ export function TopBar({
     setTagInput("");
   }
 
-  return (
-    <div className="bg-white dark:bg-brand-900">
-      <div className="flex h-14 items-center gap-3 border-b border-brand-200 px-5 dark:border-brand-800/80">
-        <div className="flex shrink-0 flex-wrap items-center gap-3">
-          {isNews && (
+  // Shared between the desktop row (unchanged) and the mobile-only
+  // horizontal-scroll row below it — same controls, just laid out
+  // differently per viewport, so this is built once rather than duplicated.
+  function renderModeControls(withTour: boolean) {
+    return (
+    <>
+      {isNews && (
             <div className="flex shrink-0 items-center gap-2">
               <TimeFramePills
-                dataTour="topbar-timerange"
+                dataTour={withTour ? "topbar-timerange" : undefined}
                 options={NEWS_TIME_FRAME_OPTIONS}
                 value={newsDays}
                 accent={accent}
                 onChange={onSetNewsDays}
               />
-              <div data-tour="topbar-fetch">
+              <div data-tour={withTour ? "topbar-fetch" : undefined}>
                 <BoneButton onClick={onRefreshNews} disabled={newsLoading} accent={accent}>
                   {newsLoading ? "Refreshing…" : "Re-fetch!"}
                 </BoneButton>
@@ -183,7 +191,7 @@ export function TopBar({
           {isCompanies && (
             <div className="flex shrink-0 items-center gap-2">
               <TimeFramePills
-                dataTour="topbar-timerange"
+                dataTour={withTour ? "topbar-timerange" : undefined}
                 options={companiesTimeFrameOptions}
                 value={days}
                 accent={accent}
@@ -191,7 +199,7 @@ export function TopBar({
               />
               <button
                 type="button"
-                data-tour="topbar-star-toggle"
+                data-tour={withTour ? "topbar-star-toggle" : undefined}
                 onClick={onToggleStarredOnly}
                 title={
                   starredOnly
@@ -207,7 +215,7 @@ export function TopBar({
               >
                 <span aria-hidden="true">⭐</span>
               </button>
-              <div data-tour="topbar-fetch">
+              <div data-tour={withTour ? "topbar-fetch" : undefined}>
                 <BoneButton
                   onClick={onFetchCompanies}
                   disabled={batchRunning || (selectedCount === 0 && totalCount === 0)}
@@ -233,7 +241,7 @@ export function TopBar({
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
-                data-tour="topbar-star-toggle"
+                data-tour={withTour ? "topbar-star-toggle" : undefined}
                 onClick={onTogglePinnedOnly}
                 title={
                   pinnedOnly
@@ -251,73 +259,119 @@ export function TopBar({
               </button>
             </div>
           )}
+    </>
+    );
+  }
+
+  function renderSearchInput(withTour: boolean) {
+    return !isHome && (
+    <div data-tour={withTour ? "topbar-search" : undefined} className="relative min-w-0 w-full md:w-80 md:max-w-full">
+      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
+        🔍
+      </span>
+      <input
+        id="company-search-input"
+        value={draftQuery}
+        onChange={(e) => {
+          const next = e.target.value;
+          setDraftQuery(next);
+          // Companies search just filters an in-memory list (no
+          // highlight spans, no per-keystroke RSS work), so it's safe
+          // — and nicer — to search live here. News stays Enter-gated;
+          // see the commit that introduced draftQuery for why.
+          if (isCompanies) onSearch(next);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
+        }}
+        placeholder={
+          isNews
+            ? "Search articles… (Enter)"
+            : isSaved
+              ? "Search saved links… (Enter)"
+              : "Search companies…"
+        }
+        className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
+      />
+    </div>
+    );
+  }
+
+  function renderRightIcons(withTour: boolean) {
+    return (
+    <>
+      <button
+        type="button"
+        data-tour={withTour ? "topbar-help" : undefined}
+        onClick={onOpenHelp}
+        title="Help"
+        aria-label="Help"
+        className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
+      >
+        <span aria-hidden="true">❓</span>
+      </button>
+
+      <button
+        type="button"
+        data-tour={withTour ? "topbar-settings" : undefined}
+        onClick={onOpenSettings}
+        title="Settings"
+        aria-label="Settings"
+        className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
+      >
+        <span aria-hidden="true">⚙️</span>
+      </button>
+
+      <div data-tour={withTour ? "topbar-user" : undefined}>
+        <UserMenu
+          name={profileName}
+          onLogOut={onLogOut}
+          onOpenFeedback={onOpenFeedback}
+          onOpenAbout={onOpenAbout}
+        />
+      </div>
+    </>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-brand-900">
+      {/* Mobile header — hamburger + right icons; search and mode controls
+         get their own full-width rows below since they don't fit here. */}
+      <div className="flex h-14 items-center gap-2 border-b border-brand-200 px-3 md:hidden dark:border-brand-800/80">
+        <button
+          type="button"
+          onClick={onOpenMobileNav}
+          aria-label="Open menu"
+          title="Open menu"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 text-base text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
+        <div className="min-w-0 flex-1" />
+        <div className="flex shrink-0 items-center gap-2">{renderRightIcons(false)}</div>
+      </div>
+      {!isHome && (
+        <div className="border-b border-brand-200 px-3 py-2 md:hidden dark:border-brand-800/80">
+          {renderSearchInput(false)}
+        </div>
+      )}
+      {(isNews || isCompanies || isSaved) && (
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-brand-200 px-3 py-2 md:hidden dark:border-brand-800/80">
+          {renderModeControls(false)}
+        </div>
+      )}
+
+      {/* Desktop header — unchanged from before mobile support. */}
+      <div className="hidden h-14 items-center gap-3 border-b border-brand-200 px-5 md:flex dark:border-brand-800/80">
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          {renderModeControls(true)}
         </div>
 
-        <div className="flex min-w-0 flex-1 justify-center">
-          {!isHome && (
-            <div data-tour="topbar-search" className="relative min-w-0 w-80 max-w-full">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-brand-400 dark:text-brand-500">
-                🔍
-              </span>
-              <input
-                id="company-search-input"
-                value={draftQuery}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setDraftQuery(next);
-                  // Companies search just filters an in-memory list (no
-                  // highlight spans, no per-keystroke RSS work), so it's safe
-                  // — and nicer — to search live here. News stays Enter-gated;
-                  // see the commit that introduced draftQuery for why.
-                  if (isCompanies) onSearch(next);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isCompanies) onSearch(draftQuery);
-                }}
-                placeholder={
-                  isNews
-                    ? "Search articles… (Enter)"
-                    : isSaved
-                      ? "Search saved links… (Enter)"
-                      : "Search companies…"
-                }
-                className={`w-full min-w-0 rounded-lg border border-brand-200 bg-brand-50 py-1.5 pl-8 pr-3 text-xs text-brand-900 outline-none transition-colors placeholder:text-brand-400 focus:${accentPreset.border} focus:bg-white dark:border-brand-800 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-600 dark:focus:bg-brand-950`}
-              />
-            </div>
-          )}
-        </div>
+        <div className="flex min-w-0 flex-1 justify-center">{renderSearchInput(true)}</div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            data-tour="topbar-help"
-            onClick={onOpenHelp}
-            title="Help"
-            aria-label="Help"
-            className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
-          >
-            <span aria-hidden="true">❓</span>
-          </button>
-
-          <button
-            type="button"
-            data-tour="topbar-settings"
-            onClick={onOpenSettings}
-            title="Settings"
-            aria-label="Settings"
-            className="flex shrink-0 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-medium text-brand-600 transition hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-800 dark:text-brand-300 dark:hover:bg-brand-700"
-          >
-            <span aria-hidden="true">⚙️</span>
-          </button>
-
-          <div data-tour="topbar-user">
-            <UserMenu
-              name={profileName}
-              onLogOut={onLogOut}
-              onOpenFeedback={onOpenFeedback}
-              onOpenAbout={onOpenAbout}
-            />
-          </div>
+          {renderRightIcons(true)}
         </div>
       </div>
 

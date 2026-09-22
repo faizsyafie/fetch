@@ -22,11 +22,13 @@ import { SourcesModal } from "@/components/SourcesModal";
 import { TopicSourcesModal } from "@/components/TopicSourcesModal";
 import { DebugLogModal } from "@/components/DebugLogModal";
 import { logDebug } from "@/lib/debugLog";
+import { isGoogleNewsArticleUrl } from "@/lib/googleNewsUrl";
 import { TopBar } from "@/components/TopBar";
 import { useProfile } from "@/hooks/useProfile";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useSeenArticles } from "@/hooks/useSeenArticles";
 import { useTheme } from "@/hooks/useTheme";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { readUiSettings, useUiSettings } from "@/hooks/useUiSettings";
 import {
   ALL_INDUSTRY,
@@ -136,6 +138,8 @@ function DashboardForProfile({
     settings: uiSettings,
     hydrated: uiHydrated,
     setSidebarWidth,
+    setSavedListWidth,
+    setSavedNotesWidth,
     toggleSidebarCollapsed,
     setDensity,
     markTourSeen,
@@ -171,6 +175,8 @@ function DashboardForProfile({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   // Lands on the Home hub right after picking a profile, where the user
   // picks a mode themselves — there's no separate welcome screen anymore.
   const [mode, setMode] = useState<AppMode>("home");
@@ -534,8 +540,43 @@ function DashboardForProfile({
       const id = saveLink(input);
       if (id) setSelectedLinkId(id);
       setSaveLinkModal(null);
+
+      // Google News links point at Google's redirect wrapper, not the real
+      // article — resolving that (and reliably fetching/parsing whatever it
+      // points to) is exactly what the inline reader was crashing on. Doing
+      // it here instead, right after a save, means future reads of this
+      // link go straight to the real URL and never hit that path at all.
+      // Fully best-effort and non-blocking: the save above already
+      // succeeded unconditionally, so a failure here just leaves the link
+      // as its original Google News URL, same as before this existed.
+      let url: URL | null;
+      try {
+        url = new URL(input.url.trim());
+      } catch {
+        url = null;
+      }
+      if (id && url && isGoogleNewsArticleUrl(url)) {
+        fetch("/api/resolve-news-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url.toString() }),
+        })
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && typeof data.url === "string") {
+              updateLink(id, { url: data.url });
+            } else {
+              logDebug(`Couldn't resolve Google News link for saved link: ${data.error || `HTTP ${res.status}`}`);
+            }
+          })
+          .catch((err) => {
+            logDebug(
+              `Couldn't resolve Google News link for saved link: ${err instanceof Error ? err.message : "network error"}`
+            );
+          });
+      }
     },
-    [saveLink]
+    [saveLink, updateLink]
   );
 
   const fetchCompanyNews = useCallback(
@@ -870,6 +911,9 @@ function DashboardForProfile({
         onRemoveLinkCategory={removeLinkCategory}
         onReorderLinkCategories={reorderLinkCategories}
         onSetLinkCategoryColor={setLinkCategoryColor}
+        isMobile={isMobile}
+        mobileOpen={mobileNavOpen}
+        onCloseMobileNav={() => setMobileNavOpen(false)}
       />
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-brand-100 dark:bg-brand-950">
@@ -915,6 +959,7 @@ function DashboardForProfile({
           onToggleStarredOnly={() => setStarredOnly((v) => !v)}
           pinnedOnly={pinnedOnly}
           onTogglePinnedOnly={() => setPinnedOnly((v) => !v)}
+          onOpenMobileNav={() => setMobileNavOpen(true)}
         />
 
         {mode === "home" ? (
@@ -961,6 +1006,12 @@ function DashboardForProfile({
               deleteLink(id);
               setSelectedLinkId((prev) => (prev === id ? null : prev));
             }}
+            listWidth={uiSettings.savedListWidth}
+            onResizeListWidth={setSavedListWidth}
+            notesWidth={uiSettings.savedNotesWidth}
+            onResizeNotesWidth={setSavedNotesWidth}
+            isMobile={isMobile}
+            onBack={() => setSelectedLinkId(null)}
           />
         ) : (
           <>

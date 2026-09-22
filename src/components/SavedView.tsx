@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, UNCATEGORIZED_CATEGORY } from "@/lib/defaults";
 import { highlightMatches } from "@/lib/highlight";
+import { logDebug } from "@/lib/debugLog";
+import { shortenErrorDetail } from "@/lib/errorMessage";
 import type { AccentColor, SavedLink } from "@/lib/types";
 
 interface ArticleData {
@@ -29,6 +31,22 @@ interface SavedViewProps {
   ) => void;
   onTogglePinned: (id: string) => void;
   onDeleteLink: (id: string) => void;
+  /** Width of the list column, in px — drag-resizable via the divider (see
+   *  handleResizeMouseDown below), the same interaction as the main sidebar. */
+  listWidth: number;
+  onResizeListWidth: (width: number) => void;
+  /** Width of the notes/metadata panel, in px — only meaningful once an
+   *  article's loaded inline (see articleLoaded below), also drag-resizable. */
+  notesWidth: number;
+  onResizeNotesWidth: (width: number) => void;
+  // Mobile-only — see useIsMobile. The three-pane desktop layout (list /
+  // article / notes side by side) becomes a single-pane stack+navigate flow:
+  // the list fills the screen until a link is selected, then a full-screen
+  // detail view (article stacked above notes, both scrolling as one column)
+  // replaces it, with `onBack` returning to the list. Resize handles are
+  // meaningless on a phone-width single pane, so they're not rendered.
+  isMobile: boolean;
+  onBack: () => void;
 }
 
 function domainOf(url: string): string {
@@ -50,8 +68,50 @@ export function SavedView({
   onUpdateLink,
   onTogglePinned,
   onDeleteLink,
+  listWidth,
+  onResizeListWidth,
+  notesWidth,
+  onResizeNotesWidth,
+  isMobile,
+  onBack,
 }: SavedViewProps) {
   const accentPreset = ACCENT_PRESETS[accent];
+  const resizeState = useRef<{ startX: number; startWidth: number } | null>(null);
+  const notesResizeState = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  // Shared by both dividers below — `direction` flips which way dragging
+  // grows the panel: the list column widens when dragged right (+1), the
+  // notes panel (anchored to the right edge) widens when dragged left (-1).
+  function startDrag(
+    e: React.MouseEvent,
+    state: React.RefObject<{ startX: number; startWidth: number } | null>,
+    startWidth: number,
+    direction: 1 | -1,
+    onResize: (width: number) => void
+  ) {
+    e.preventDefault();
+    state.current = { startX: e.clientX, startWidth };
+    function handleMove(moveEvent: MouseEvent) {
+      if (!state.current) return;
+      const delta = (moveEvent.clientX - state.current.startX) * direction;
+      onResize(state.current.startWidth + delta);
+    }
+    function handleUp() {
+      state.current = null;
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    }
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+  }
+
+  function handleResizeMouseDown(e: React.MouseEvent) {
+    startDrag(e, resizeState, listWidth, 1, onResizeListWidth);
+  }
+
+  function handleNotesResizeMouseDown(e: React.MouseEvent) {
+    startDrag(e, notesResizeState, notesWidth, -1, onResizeNotesWidth);
+  }
   const highlightClass = `${accentPreset.softBg} ${accentPreset.text}`;
   const query = searchQuery?.trim() ?? "";
   const selected = links.find((l) => l.id === selectedId) ?? null;
@@ -72,28 +132,74 @@ export function SavedView({
     let cancelled = false;
     const id = selected.id;
 
+    // The API route can legitimately take a while for a Google News link
+    // (two resolve round-trips before the real fetch even starts, each with
+    // its own budget) — but with no timeout here at all, a stalled or
+    // dropped connection left the spinner running forever instead of ever
+    // showing an error. Bounded slightly above the route's own maxDuration
+    // (25s) so the server gets a chance to answer first.
+    const controller = new AbortController();
+    const clientTimeout = setTimeout(() => controller.abort(), 30_000);
+
     fetch("/api/article-content", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: selected.url }),
+      signal: controller.signal,
     })
       .then(async (res) => {
-        const data = await res.json().catch(() => ({}));
+        // Read as text first rather than res.json() directly — a response
+        // that isn't valid JSON at all (e.g. a platform-level timeout or
+        // crash returning its own HTML/plaintext error page instead of ours)
+        // would otherwise silently collapse to "{}" with no trace of what
+        // actually came back. The raw body only goes to the Debug Log, never
+        // the on-screen message, since it can be arbitrary HTML.
+        const rawText = await res.text();
+        let data: Partial<ArticleData> & { error?: string } = {};
+        try {
+          data = rawText ? JSON.parse(rawText) : {};
+        } catch {
+          data = {};
+        }
         if (cancelled) return;
         if (!res.ok || data.error) {
-          setArticleResult({ id, status: "error", error: data.error || "Couldn't load this article." });
+          // The full, un-shortened error (which can be a long, multi-line
+          // diagnostic dump for some failure types) always goes to the
+          // Debug Log — only a short version ever reaches the on-screen
+          // message shown next to the saved link.
+          const rawMessage = data.error || "Couldn't load this article.";
+          const displayMessage = data.error
+            ? shortenErrorDetail(rawMessage)
+            : "Couldn't load this article.";
+          const logMessage = data.error
+            ? rawMessage
+            : `${rawMessage} (HTTP ${res.status}, non-JSON response: ${rawText.slice(0, 300)})`;
+          logDebug(`Inline reader failed for ${selected.url}: ${logMessage}`);
+          setArticleResult({ id, status: "error", error: displayMessage });
           return;
         }
-        setArticleResult({ id, status: "loaded", data });
+        setArticleResult({ id, status: "loaded", data: data as ArticleData });
       })
-      .catch(() => {
+      .catch((err) => {
         if (!cancelled) {
-          setArticleResult({ id, status: "error", error: "Couldn't reach that page." });
+          const timedOut = err instanceof Error && err.name === "AbortError";
+          const message = timedOut
+            ? "That page took too long to load."
+            : "Couldn't reach that page.";
+          logDebug(
+            `Inline reader failed for ${selected.url}: ${timedOut ? "client-side timeout after 30s" : err instanceof Error ? err.message : "network error"}`
+          );
+          setArticleResult({ id, status: "error", error: message });
         }
+      })
+      .finally(() => {
+        clearTimeout(clientTimeout);
       });
 
     return () => {
       cancelled = true;
+      clearTimeout(clientTimeout);
+      controller.abort();
     };
   }, [selected]);
 
@@ -120,9 +226,29 @@ export function SavedView({
   const activeTitle = titleDraft ?? selected?.title ?? "";
   const activeNotes = notesDraft ?? selected?.notes ?? "";
 
+  // On mobile, list and detail are separate full-screen panes — only one
+  // renders at a time, switched by whether a link is selected.
+  const showList = !isMobile || !selected;
+  const showDetail = !isMobile || Boolean(selected);
+
   return (
     <div className="flex min-h-0 flex-1">
-      <div className="flex w-full max-w-sm shrink-0 flex-col overflow-hidden border-r border-brand-200 dark:border-brand-800">
+      {showList && (
+      <div
+        style={isMobile ? undefined : { width: listWidth }}
+        className={`relative flex shrink-0 flex-col overflow-hidden border-r border-brand-200 dark:border-brand-800 ${
+          isMobile ? "w-full" : ""
+        }`}
+      >
+        {!isMobile && (
+          <div
+            onMouseDown={handleResizeMouseDown}
+            className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize saved links list"
+          />
+        )}
         <div className="flex items-center justify-between border-b border-brand-200 p-3 dark:border-brand-800">
           <span className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
             {links.length} saved
@@ -174,15 +300,33 @@ export function SavedView({
           })}
         </div>
       </div>
+      )}
 
-      {!selected ? (
+      {showDetail && (!selected ? (
         <div className="flex min-w-0 flex-1 items-center justify-center text-sm text-brand-400 dark:text-brand-500">
           Select a link to see its notes.
         </div>
       ) : (
-        <div className="flex min-w-0 flex-1 overflow-hidden">
+        <div
+          className={`flex min-w-0 flex-1 ${isMobile ? "flex-col overflow-y-auto" : "overflow-hidden"}`}
+        >
+          {isMobile && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex shrink-0 items-center gap-1.5 border-b border-brand-200 p-3 text-left text-sm font-semibold text-brand-600 dark:border-brand-800 dark:text-brand-300"
+            >
+              ← Back to list
+            </button>
+          )}
           {articleLoaded && (
-            <article className="min-w-0 flex-1 overflow-y-auto border-r border-brand-200 p-6 dark:border-brand-800">
+            <article
+              className={`min-w-0 p-6 ${
+                isMobile
+                  ? ""
+                  : "flex-1 overflow-y-auto border-r border-brand-200 dark:border-brand-800"
+              }`}
+            >
               {articleLoaded.siteName && (
                 <div className="text-[0.6875rem] font-bold uppercase tracking-widest text-brand-400 dark:text-brand-600">
                   {articleLoaded.siteName}
@@ -204,10 +348,24 @@ export function SavedView({
           )}
 
           <div
-            className={`flex min-w-0 flex-col overflow-y-auto p-5 ${
-              articleLoaded ? "w-80 shrink-0" : "flex-1"
+            style={isMobile ? undefined : articleLoaded ? { width: notesWidth } : undefined}
+            className={`relative flex min-w-0 flex-col p-5 ${
+              isMobile
+                ? "w-full"
+                : articleLoaded
+                  ? "shrink-0 overflow-y-auto"
+                  : "flex-1 overflow-y-auto"
             }`}
           >
+            {!isMobile && articleLoaded && (
+              <div
+                onMouseDown={handleNotesResizeMouseDown}
+                className="absolute left-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-blue-500/40"
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize notes panel"
+              />
+            )}
             <div className={articleLoaded ? "w-full" : "mx-auto w-full max-w-xl"}>
               <div className="flex items-start justify-between gap-2">
                 <input
@@ -314,7 +472,7 @@ export function SavedView({
             </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

@@ -3,8 +3,14 @@
 import { useCallback, useSyncExternalStore } from "react";
 import {
   DEFAULT_NEWS_ARTICLE_LIMIT,
+  DEFAULT_SAVED_LIST_WIDTH,
+  DEFAULT_SAVED_NOTES_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
+  MAX_SAVED_LIST_WIDTH,
+  MAX_SAVED_NOTES_WIDTH,
   MAX_SIDEBAR_WIDTH,
+  MIN_SAVED_LIST_WIDTH,
+  MIN_SAVED_NOTES_WIDTH,
   MIN_SIDEBAR_WIDTH,
   NEWS_ARTICLE_LIMIT_OPTIONS,
   UI_STORAGE_KEY,
@@ -29,6 +35,8 @@ const DEFAULT_UI_SETTINGS: UiSettings = {
   fontScale: "md",
   newsTopicOrder: DEFAULT_NEWS_TOPIC_ORDER,
   newsArticleLimit: DEFAULT_NEWS_ARTICLE_LIMIT,
+  savedListWidth: DEFAULT_SAVED_LIST_WIDTH,
+  savedNotesWidth: DEFAULT_SAVED_NOTES_WIDTH,
 };
 
 function sanitizeArticleLimit(value: unknown): number {
@@ -59,6 +67,14 @@ const UI_SETTINGS_EVENT = "credit-news-analyst-ui-change";
 
 function clampWidth(width: number): number {
   return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
+}
+
+function clampSavedListWidth(width: number): number {
+  return Math.min(MAX_SAVED_LIST_WIDTH, Math.max(MIN_SAVED_LIST_WIDTH, width));
+}
+
+function clampSavedNotesWidth(width: number): number {
+  return Math.min(MAX_SAVED_NOTES_WIDTH, Math.max(MIN_SAVED_NOTES_WIDTH, width));
 }
 
 // Validates a stored order against the full topic catalog (not just the
@@ -109,6 +125,12 @@ function readUiSettings(): UiSettings {
       ...parsed,
       sidebarWidth: clampWidth(
         parsed.sidebarWidth ?? DEFAULT_UI_SETTINGS.sidebarWidth
+      ),
+      savedListWidth: clampSavedListWidth(
+        parsed.savedListWidth ?? DEFAULT_UI_SETTINGS.savedListWidth
+      ),
+      savedNotesWidth: clampSavedNotesWidth(
+        parsed.savedNotesWidth ?? DEFAULT_UI_SETTINGS.savedNotesWidth
       ),
       newsTopicOrder: sanitizeTopicOrder(parsed.newsTopicOrder),
       newsArticleLimit: sanitizeArticleLimit(parsed.newsArticleLimit),
@@ -162,6 +184,20 @@ export function useUiSettings() {
   const setSidebarWidth = useCallback(
     (width: number) => {
       update((prev) => ({ ...prev, sidebarWidth: clampWidth(width) }));
+    },
+    [update]
+  );
+
+  const setSavedListWidth = useCallback(
+    (width: number) => {
+      update((prev) => ({ ...prev, savedListWidth: clampSavedListWidth(width) }));
+    },
+    [update]
+  );
+
+  const setSavedNotesWidth = useCallback(
+    (width: number) => {
+      update((prev) => ({ ...prev, savedNotesWidth: clampSavedNotesWidth(width) }));
     },
     [update]
   );
@@ -223,6 +259,8 @@ export function useUiSettings() {
     settings,
     hydrated: true,
     setSidebarWidth,
+    setSavedListWidth,
+    setSavedNotesWidth,
     toggleSidebarCollapsed,
     setDensity,
     markTourSeen,
