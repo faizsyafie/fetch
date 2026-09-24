@@ -20,6 +20,7 @@ interface NewsBoardProps {
   onCreateCategory: () => void;
   showCompanyPromo: boolean;
   onGoToCompanies: () => void;
+  onPullRefresh: () => void;
 }
 
 // Purely presentational — fetching, the time-range control and the refresh
@@ -40,6 +41,7 @@ export function NewsBoard({
   onCreateCategory,
   showCompanyPromo,
   onGoToCompanies,
+  onPullRefresh,
 }: NewsBoardProps) {
   const [dragId, setDragId] = useState<NewsTopicId | null>(null);
   const [dragOverId, setDragOverId] = useState<NewsTopicId | null>(null);
@@ -132,6 +134,7 @@ export function NewsBoard({
             onSaveArticle={onSaveArticle}
             searchQuery={searchQuery}
             accent={accent}
+            onPullRefresh={onPullRefresh}
           />
         ))}
       </div>

@@ -304,3 +304,16 @@ body {
     animation: none !important;
   }
 }
+
+/* iOS Safari auto-zooms the whole page when a focused form field's font-size
+   is under 16px — most of this app's inputs use Tailwind's text-xs/text-sm
+   (12-14px) for density, which is fine on desktop but triggers that zoom on
+   an iPhone. Forcing 16px only below the mobile breakpoint keeps the
+   desktop/tablet type scale untouched. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

@@ -61,10 +61,13 @@ export function ArticleCard({ article, isSaved, onSave, searchQuery, accent }: A
         }}
         aria-label={isSaved ? "Saved" : "Save link"}
         title={isSaved ? "Saved" : "Save link"}
-        className={`absolute right-1.5 top-1.5 rounded-md p-1 text-sm backdrop-blur-sm transition-opacity ${
+        className={`absolute right-1 top-1 rounded-md p-2 text-sm backdrop-blur-sm transition-opacity md:right-1.5 md:top-1.5 md:p-1 ${
           isSaved
             ? "bg-white/90 opacity-100 dark:bg-brand-900/90"
-            : "bg-white/70 opacity-0 hover:bg-white group-hover:opacity-100 dark:bg-brand-900/70 dark:hover:bg-brand-900"
+            : // Always visible on mobile — :hover doesn't fire reliably on
+              // touch, so hiding this behind group-hover there would make it
+              // effectively undiscoverable. Hover-reveal is desktop-only.
+              "bg-white/70 opacity-100 hover:bg-white dark:bg-brand-900/70 dark:hover:bg-brand-900 md:opacity-0 md:group-hover:opacity-100"
         }`}
       >
         {isSaved ? "🔖" : "📑"}

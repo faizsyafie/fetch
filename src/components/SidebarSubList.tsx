@@ -223,7 +223,11 @@ export function SidebarSubList({
           </span>
         </button>
         {editable && (
-          <div className="pointer-events-none absolute right-1.5 flex shrink-0 items-center gap-1 opacity-0 transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100">
+          // Always visible on mobile — :hover doesn't fire reliably on
+          // touch, so gating these behind group-hover there would make
+          // rename/delete undiscoverable; also sized up slightly there
+          // since these live inside a touch-driven drawer.
+          <div className="pointer-events-auto absolute right-1.5 flex shrink-0 items-center gap-1.5 opacity-100 transition-all duration-150 md:pointer-events-none md:gap-1 md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100">
             <button
               type="button"
               onClick={(e) => {
@@ -232,7 +236,7 @@ export function SidebarSubList({
               }}
               aria-label={`Rename ${item.label}`}
               title="Rename"
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.5625rem] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
+              className={`flex h-5 w-5 items-center justify-center rounded-full text-[0.625rem] text-white shadow md:h-4 md:w-4 md:text-[0.5625rem] ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✏
             </button>
@@ -244,7 +248,7 @@ export function SidebarSubList({
               }}
               aria-label={`Delete ${item.label}`}
               title="Delete"
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.5625rem] text-white shadow ${accentPreset.solid} ${accentPreset.solidHover}`}
+              className={`flex h-5 w-5 items-center justify-center rounded-full text-[0.625rem] text-white shadow md:h-4 md:w-4 md:text-[0.5625rem] ${accentPreset.solid} ${accentPreset.solidHover}`}
             >
               ✕
             </button>

@@ -1,6 +1,8 @@
 "use client";
 
 import { ArticleCard } from "@/components/ArticleCard";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import type { NewsTopic } from "@/lib/newsTopics";
 import type { AccentColor, TopicArticle } from "@/lib/types";
 
@@ -19,6 +21,10 @@ interface NewsColumnProps {
   onSaveArticle: (article: TopicArticle) => void;
   searchQuery: string;
   accent: AccentColor;
+  /** Touch-only pull-to-refresh (see usePullToRefresh) — same action as the
+   *  TopBar's Re-fetch! button (refreshes every column, not just this one),
+   *  just reachable by pulling down on any one column's list too. */
+  onPullRefresh: () => void;
 }
 
 function SkeletonCard() {
@@ -42,10 +48,12 @@ export function NewsColumn({
   onSaveArticle,
   searchQuery,
   accent,
+  onPullRefresh,
 }: NewsColumnProps) {
   const showSkeletons = loading && articles.length === 0;
   const showEmpty = !loading && articles.length === 0;
   const isSearching = searchQuery.trim().length > 0;
+  const [pullRef, pullToRefresh] = usePullToRefresh<HTMLDivElement>(onPullRefresh);
 
   return (
     <div
@@ -79,7 +87,12 @@ export function NewsColumn({
         </span>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-2.5">
+      <div ref={pullRef} className="flex-1 space-y-2 overflow-y-auto p-2.5">
+        <PullToRefreshIndicator
+          pullDistance={pullToRefresh.pullDistance}
+          refreshing={pullToRefresh.refreshing}
+          triggerDistance={pullToRefresh.triggerDistance}
+        />
         {showSkeletons &&
           Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
 

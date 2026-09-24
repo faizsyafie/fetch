@@ -17,6 +17,7 @@ import { ProfilePicker } from "@/components/ProfilePicker";
 import { SaveLinkModal } from "@/components/SaveLinkModal";
 import { SavedView } from "@/components/SavedView";
 import { Sidebar, type AppMode } from "@/components/Sidebar";
+import { MobileTabBar } from "@/components/MobileTabBar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesModal } from "@/components/SourcesModal";
 import { TopicSourcesModal } from "@/components/TopicSourcesModal";
@@ -998,6 +999,9 @@ function DashboardForProfile({
             onCreateCategory={() => selectMode("saved")}
             showCompanyPromo={preferences.companies.length === 0}
             onGoToCompanies={() => selectMode("companies")}
+            onPullRefresh={() =>
+              void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit)
+            }
           />
         ) : mode === "saved" ? (
           <SavedView
@@ -1056,10 +1060,13 @@ function DashboardForProfile({
               onUpdateNotes={updateCompanyNotes}
               onReorder={handleReorderCompanies}
               onSaveArticle={handleArticleBookmarkClick}
+              onPullRefresh={fetchSmart}
             />
           </>
         )}
         </div>
+
+        <MobileTabBar mode={mode} onSelectMode={selectMode} accent={uiSettings.accent} />
       </div>
 
       <CommandPalette
