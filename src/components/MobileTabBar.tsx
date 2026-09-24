@@ -29,7 +29,7 @@ export function MobileTabBar({ mode, onSelectMode, accent }: MobileTabBarProps) 
 
   return (
     <nav
-      className="flex shrink-0 items-stretch border-t border-brand-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden dark:border-brand-800 dark:bg-brand-900"
+      className="relative z-20 flex shrink-0 items-stretch border-t border-brand-300 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,0.08)] md:hidden dark:border-brand-700 dark:bg-brand-900 dark:shadow-[0_-2px_8px_rgba(0,0,0,0.35)]"
       aria-label="Primary"
     >
       {TABS.map((tab) => {
