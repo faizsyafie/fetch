@@ -892,7 +892,7 @@ function DashboardForProfile({
   };
 
   return (
-    <div style={fontStyle} className="flex h-screen overflow-hidden">
+    <div style={fontStyle} className="h-dvh-fallback flex overflow-hidden">
       <Sidebar
         theme={theme}
         mode={mode}

@@ -210,6 +210,18 @@ body {
   color: var(--foreground);
 }
 
+/* Mobile browsers' address bar shows/hides as you scroll without changing
+   100vh, so a fixed h-screen root mismatches the actual visible viewport —
+   the bottom tab bar can end up partially below the fold, or the layout
+   jumps as the chrome collapses. 100dvh tracks the real visible height;
+   the plain vh line above it is a fallback for browsers that don't
+   support dvh — an invalid `height: 100dvh` declaration is simply dropped
+   there, leaving the vh value in effect. */
+.h-dvh-fallback {
+  height: 100vh;
+  height: 100dvh;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #c9bca0 transparent;

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/Logo";
+import { MOBILE_MEDIA_QUERY } from "@/hooks/useIsMobile";
 import { useTheme } from "@/hooks/useTheme";
 import { logDebug } from "@/lib/debugLog";
 
@@ -11,6 +12,7 @@ interface ProfilePickerProps {
 
 export function ProfilePicker({ onPick }: ProfilePickerProps) {
   const { theme } = useTheme();
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [existingProfiles, setExistingProfiles] = useState<string[]>([]);
   const [loadError, setLoadError] = useState(false);
@@ -41,6 +43,19 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
     };
   }, []);
 
+  // A plain HTML autoFocus attribute (or useIsMobile's value, on its very
+  // first read) would fire before the mobile check is reliable —
+  // useIsMobile reports desktop on the first client render to avoid a
+  // hydration mismatch, correcting itself only on a later effect pass, by
+  // which point autoFocus has already acted at DOM insertion. Checking
+  // matchMedia directly here sidesteps that: this only ever runs client
+  // side, inside an effect, so there's no SSR value to reconcile against.
+  useEffect(() => {
+    if (!window.matchMedia(MOBILE_MEDIA_QUERY).matches) {
+      nameInputRef.current?.focus();
+    }
+  }, []);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (name.trim()) onPick(name.trim());
@@ -60,7 +75,7 @@ export function ProfilePicker({ onPick }: ProfilePickerProps) {
 
         <form onSubmit={handleSubmit} className="mt-4">
           <input
-            autoFocus
+            ref={nameInputRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
