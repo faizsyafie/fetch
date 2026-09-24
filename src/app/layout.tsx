@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter, Lora, Nunito, Poppins } from "next/font/google";
 import "./globals.css";
 
@@ -67,6 +67,22 @@ export const metadata: Metadata = {
     description: ogDescription,
     images: ["/og-image.png"],
   },
+};
+
+// viewportFit: "cover" is what makes env(safe-area-inset-*) resolve to real
+// values on notch/Dynamic-Island/home-indicator devices — without it iOS
+// Safari never extends the layout under those areas, so every safe-area
+// padding elsewhere in the app (TopBar, Sidebar, MobileTabBar) stays 0.
+// interactiveWidget: "resizes-content" makes the on-screen keyboard actually
+// shrink the layout viewport (not just the visual one) on browsers that
+// support it — without it, a modal sized with vh units (e.g. every
+// max-h-[85vh] dialog) keeps reserving space against the full, pre-keyboard
+// height, so its footer buttons can end up hidden behind the keyboard.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

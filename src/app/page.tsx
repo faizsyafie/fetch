@@ -17,6 +17,7 @@ import { ProfilePicker } from "@/components/ProfilePicker";
 import { SaveLinkModal } from "@/components/SaveLinkModal";
 import { SavedView } from "@/components/SavedView";
 import { Sidebar, type AppMode } from "@/components/Sidebar";
+import { MobileTabBar } from "@/components/MobileTabBar";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SourcesModal } from "@/components/SourcesModal";
 import { TopicSourcesModal } from "@/components/TopicSourcesModal";
@@ -185,6 +186,24 @@ function DashboardForProfile({
   // Yard, rather than always favoring one over the other.
   const [homeActiveMode, setHomeActiveMode] = useState<"news" | "companies">("news");
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
+
+  // On mobile, selecting a saved link replaces the list with a full-screen
+  // detail view (see SavedView) — without this, Android's back button or
+  // iOS's edge-swipe-back gesture would leave the app/tab entirely instead
+  // of returning to the list, since that navigation is otherwise pure React
+  // state with no corresponding browser history entry. Pushes one entry on
+  // entering detail and treats popping it as "go back to the list"; the
+  // on-screen "← Back to list" button (see onBack below) still works
+  // independently of this by just clearing the selection directly.
+  useEffect(() => {
+    if (!isMobile || mode !== "saved" || !selectedLinkId) return;
+    window.history.pushState({ savedDetailOpen: true }, "");
+    function handlePopState() {
+      setSelectedLinkId(null);
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isMobile, mode, selectedLinkId]);
   const [saveLinkModal, setSaveLinkModal] = useState<{
     url?: string;
     title?: string;
@@ -235,8 +254,15 @@ function DashboardForProfile({
   const rawHelpSteps = mode === "home" ? HOME_TOUR_STEPS : MODE_DETAILED_STEPS[mode];
   const helpSteps: TourStep[] = rawHelpSteps.map((step) => ({
     ...step,
-    onEnter:
-      step.onEnterId === "enableEditMode" ? () => setEditMode(true) : undefined,
+    onEnter: () => {
+      if (step.onEnterId === "enableEditMode") setEditMode(true);
+      // Sidebar-hosted steps need the mobile drawer open to be visible at
+      // all (it's closed/off-screen by default there); every other step
+      // closes it again, so it doesn't linger open once the tour's moved
+      // on to a target elsewhere on the page — see sidebarTarget's comment
+      // in modeGuide.ts.
+      if (isMobile) setMobileNavOpen(Boolean(step.sidebarTarget));
+    },
   }));
 
   const fetchNewsBoard = useCallback(async (days: NewsTimeFrame, topics: NewsTopicId[], limit: number) => {
@@ -866,7 +892,7 @@ function DashboardForProfile({
   };
 
   return (
-    <div style={fontStyle} className="flex h-screen overflow-hidden">
+    <div style={fontStyle} className="h-dvh-fallback flex overflow-hidden">
       <Sidebar
         theme={theme}
         mode={mode}
@@ -960,6 +986,7 @@ function DashboardForProfile({
           pinnedOnly={pinnedOnly}
           onTogglePinnedOnly={() => setPinnedOnly((v) => !v)}
           onOpenMobileNav={() => setMobileNavOpen(true)}
+          isMobile={isMobile}
         />
 
         {mode === "home" ? (
@@ -990,6 +1017,9 @@ function DashboardForProfile({
             onCreateCategory={() => selectMode("saved")}
             showCompanyPromo={preferences.companies.length === 0}
             onGoToCompanies={() => selectMode("companies")}
+            onPullRefresh={() =>
+              void fetchNewsBoard(newsDays, uiSettings.newsTopicOrder, uiSettings.newsArticleLimit)
+            }
           />
         ) : mode === "saved" ? (
           <SavedView
@@ -1048,10 +1078,13 @@ function DashboardForProfile({
               onUpdateNotes={updateCompanyNotes}
               onReorder={handleReorderCompanies}
               onSaveArticle={handleArticleBookmarkClick}
+              onPullRefresh={fetchSmart}
             />
           </>
         )}
         </div>
+
+        <MobileTabBar mode={mode} onSelectMode={selectMode} accent={uiSettings.accent} />
       </div>
 
       <CommandPalette
@@ -1069,7 +1102,10 @@ function DashboardForProfile({
         <SpotlightTour
           steps={helpSteps}
           accent={uiSettings.accent}
-          onClose={() => setHelpOpen(false)}
+          onClose={() => {
+            setHelpOpen(false);
+            setMobileNavOpen(false);
+          }}
         />
       )}
 

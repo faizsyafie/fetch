@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { NewsColumn } from "@/components/NewsColumn";
+import { useDragReorder } from "@/hooks/useDragReorder";
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import { NEWS_TOPICS } from "@/lib/newsTopics";
 import type { AccentColor, NewsTopicId, TopicArticle } from "@/lib/types";
@@ -20,6 +20,7 @@ interface NewsBoardProps {
   onCreateCategory: () => void;
   showCompanyPromo: boolean;
   onGoToCompanies: () => void;
+  onPullRefresh: () => void;
 }
 
 // Purely presentational — fetching, the time-range control and the refresh
@@ -40,9 +41,8 @@ export function NewsBoard({
   onCreateCategory,
   showCompanyPromo,
   onGoToCompanies,
+  onPullRefresh,
 }: NewsBoardProps) {
-  const [dragId, setDragId] = useState<NewsTopicId | null>(null);
-  const [dragOverId, setDragOverId] = useState<NewsTopicId | null>(null);
   const accentPreset = ACCENT_PRESETS[accent];
 
   const orderedTopics = topicOrder
@@ -53,24 +53,10 @@ export function NewsBoard({
   // completely empty (corrupted state), never based on a length mismatch.
   const columns = orderedTopics.length > 0 ? orderedTopics : NEWS_TOPICS;
 
-  function handleDrop(targetId: NewsTopicId) {
-    if (!dragId || dragId === targetId) {
-      setDragId(null);
-      setDragOverId(null);
-      return;
-    }
-    const ids = columns.map((topic) => topic.id);
-    const withoutDragged = ids.filter((id) => id !== dragId);
-    const targetIndex = withoutDragged.indexOf(targetId);
-    const reordered = [
-      ...withoutDragged.slice(0, targetIndex),
-      dragId,
-      ...withoutDragged.slice(targetIndex),
-    ];
-    onReorderTopics(reordered);
-    setDragId(null);
-    setDragOverId(null);
-  }
+  const dragReorder = useDragReorder(
+    columns.map((topic) => topic.id),
+    (ordered) => onReorderTopics(ordered as NewsTopicId[])
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -119,19 +105,15 @@ export function NewsBoard({
             articles={articlesByTopic[topic.id]}
             errors={errorsByTopic[topic.id]}
             loading={loading}
-            isDragging={dragId === topic.id}
-            isDragOver={dragOverId === topic.id && dragId !== topic.id}
-            onDragStart={() => setDragId(topic.id)}
-            onDragOver={() => setDragOverId(topic.id)}
-            onDrop={() => handleDrop(topic.id)}
-            onDragEnd={() => {
-              setDragId(null);
-              setDragOverId(null);
-            }}
+            isDragging={dragReorder.draggingId === topic.id}
+            isDragOver={dragReorder.dragOverId === topic.id && dragReorder.draggingId !== topic.id}
+            registerItem={dragReorder.registerItem(topic.id)}
+            dragHandleProps={dragReorder.dragHandleProps(topic.id)}
             isLinkSaved={isLinkSaved}
             onSaveArticle={onSaveArticle}
             searchQuery={searchQuery}
             accent={accent}
+            onPullRefresh={onPullRefresh}
           />
         ))}
       </div>

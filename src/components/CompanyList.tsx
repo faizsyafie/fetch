@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, industryPalette } from "@/lib/defaults";
 import { openArticleLink } from "@/lib/resolveLinkClick";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useDragReorder } from "@/hooks/useDragReorder";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import type { AccentColor, Company, Density, Industry, NewsArticle } from "@/lib/types";
 
 // Fixed row surface — no longer configurable (see CustomizePanel).
@@ -36,6 +38,10 @@ interface CompanyListProps {
   onUpdateNotes: (id: string, notes: string) => void;
   onReorder: (orderedIds: string[]) => void;
   onSaveArticle: (article: NewsArticle) => void;
+  /** Touch-only pull-to-refresh (see usePullToRefresh) — same action as the
+   *  TopBar's Fetch! button, just reachable by pulling down on the list
+   *  too. Never the only way to refresh, purely additive. */
+  onPullRefresh: () => void;
 }
 
 export function CompanyList({
@@ -63,11 +69,15 @@ export function CompanyList({
   onUpdateNotes,
   onReorder,
   onSaveArticle,
+  onPullRefresh,
 }: CompanyListProps) {
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const compact = density === "compact";
   const accentPreset = ACCENT_PRESETS[accent];
+  const [pullRef, pullToRefresh] = usePullToRefresh<HTMLDivElement>(onPullRefresh);
+  const dragReorder = useDragReorder(
+    companies.map((c) => c.id),
+    onReorder
+  );
 
   if (companies.length === 0) {
     return (
@@ -80,30 +90,21 @@ export function CompanyList({
     );
   }
 
-  function handleDrop(targetId: string) {
-    if (!dragId || dragId === targetId) {
-      setDragId(null);
-      setDragOverId(null);
-      return;
-    }
-    const ids = companies.map((c) => c.id);
-    const withoutDragged = ids.filter((id) => id !== dragId);
-    const targetIndex = withoutDragged.indexOf(targetId);
-    const reordered = [
-      ...withoutDragged.slice(0, targetIndex),
-      dragId,
-      ...withoutDragged.slice(targetIndex),
-    ];
-    onReorder(reordered);
-    setDragId(null);
-    setDragOverId(null);
-  }
-
   return (
+    // overscroll-y-contain is a backstop alongside usePullToRefresh's own
+    // preventDefault() — some Android/Chrome versions can still trigger
+    // their own native pull-to-refresh from this container even while the
+    // custom gesture handles it, double-firing a refresh.
     <div
+      ref={pullRef}
       data-tour="company-list"
-      className={`flex-1 overflow-y-auto px-4 py-3 ${compact ? "space-y-0.5" : "space-y-2.5"}`}
+      className={`flex-1 overflow-y-auto overscroll-y-contain px-4 py-3 ${compact ? "space-y-0.5" : "space-y-2.5"}`}
     >
+      <PullToRefreshIndicator
+        pullDistance={pullToRefresh.pullDistance}
+        refreshing={pullToRefresh.refreshing}
+        triggerDistance={pullToRefresh.triggerDistance}
+      />
       {companies.map((company) => {
         const palette = industryPalette(company.industry, industries);
         const isOpen = expanded.has(company.id);
@@ -119,22 +120,8 @@ export function CompanyList({
         return (
           <div
             key={company.id}
+            ref={enableDrag ? dragReorder.registerItem(company.id) : undefined}
             data-company-row={company.id}
-            draggable={enableDrag}
-            onDragStart={() => enableDrag && setDragId(company.id)}
-            onDragOver={(e) => {
-              if (!enableDrag) return;
-              e.preventDefault();
-              setDragOverId(company.id);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              handleDrop(company.id);
-            }}
-            onDragEnd={() => {
-              setDragId(null);
-              setDragOverId(null);
-            }}
             className={`overflow-hidden rounded-md border transition-all duration-150 ${CARD_CLASS} ${
               isSelected
                 ? `${accentPreset.border} ring-1 ${accentPreset.ring}`
@@ -142,13 +129,13 @@ export function CompanyList({
                   ? "border-brand-300 dark:border-brand-700"
                   : "border-brand-200 hover:border-brand-300 dark:border-brand-800 dark:hover:border-brand-700"
             } ${isFocused ? "ring-2 ring-amber-400/70 dark:ring-amber-400/50" : ""} ${
-              dragOverId === company.id && dragId !== company.id
+              dragReorder.dragOverId === company.id && dragReorder.draggingId !== company.id
                 ? "border-t-2 border-t-blue-500"
                 : ""
             } ${
-              dragId === company.id
+              dragReorder.draggingId === company.id
                 ? "scale-[0.98] opacity-70 shadow-xl"
-                : dragId
+                : dragReorder.draggingId
                   ? "shadow-none"
                   : ""
             }`}
@@ -157,7 +144,10 @@ export function CompanyList({
               className={`flex items-center ${compact ? "py-0.5 pl-3 pr-2.5" : "py-3 pl-4 pr-3.5"}`}
             >
               {enableDrag && (
-                <span className="mr-1 shrink-0 cursor-grab text-[0.625rem] text-brand-300 active:cursor-grabbing dark:text-brand-600">
+                <span
+                  {...dragReorder.dragHandleProps(company.id)}
+                  className="mr-1 shrink-0 cursor-grab text-[0.625rem] text-brand-300 active:cursor-grabbing dark:text-brand-600"
+                >
                   ⠿
                 </span>
               )}
@@ -229,7 +219,9 @@ export function CompanyList({
                     company.starred ? "Remove from Watchlist" : "Add to Watchlist"
                   }
                   className={`rounded transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
-                    compact ? "px-1 py-0.5 text-xs" : "px-1.5 py-1 text-sm"
+                    compact
+                      ? "px-2 py-1.5 text-sm md:px-1 md:py-0.5 md:text-xs"
+                      : "px-2 py-1.5 text-sm md:px-1.5 md:py-1"
                   } ${
                     company.starred
                       ? "opacity-100"
@@ -247,7 +239,9 @@ export function CompanyList({
                   aria-label={company.pinned ? "Unpin company" : "Pin company"}
                   title={company.pinned ? "Unpin" : "Pin to top"}
                   className={`rounded transition-opacity hover:bg-brand-100 dark:hover:bg-brand-800 ${
-                    compact ? "px-1 py-0.5 text-xs" : "px-1.5 py-1 text-sm"
+                    compact
+                      ? "px-2 py-1.5 text-sm md:px-1 md:py-0.5 md:text-xs"
+                      : "px-2 py-1.5 text-sm md:px-1.5 md:py-1"
                   } ${
                     company.pinned
                       ? "opacity-100"
@@ -288,7 +282,7 @@ export function CompanyList({
                     type="button"
                     onClick={() => onToggleExpand(company)}
                     className={`flex items-center justify-center rounded text-brand-400 transition-colors hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-800 dark:hover:text-brand-300 ${
-                      compact ? "h-5 w-5" : "h-6 w-6"
+                      compact ? "h-8 w-8 md:h-5 md:w-5" : "h-8 w-8 md:h-6 md:w-6"
                     }`}
                     aria-label={isOpen ? "Collapse" : "Expand"}
                   >
@@ -420,11 +414,16 @@ export function CompanyList({
                             aria-label={saved ? "Saved" : "Save link"}
                             title={saved ? "Saved" : "Save link"}
                             className={`absolute rounded text-xs transition-opacity ${
-                              compact ? "right-1.5 top-1 p-0.5" : "right-2 top-2 p-1"
+                              compact
+                                ? "right-1 top-0.5 p-2 md:right-1.5 md:top-1 md:p-0.5"
+                                : "right-1 top-1 p-2 md:right-2 md:top-2 md:p-1"
                             } ${
                               saved
                                 ? "opacity-100"
-                                : "opacity-0 hover:bg-brand-200 group-hover:opacity-60 hover:!opacity-100 dark:hover:bg-brand-700"
+                                : // Always visible on mobile — :hover doesn't
+                                  // fire reliably on touch, so hover-reveal
+                                  // is desktop-only (md+).
+                                  "opacity-60 hover:bg-brand-200 hover:!opacity-100 dark:hover:bg-brand-700 md:opacity-0 md:group-hover:opacity-60"
                             }`}
                           >
                             {saved ? "🔖" : "📑"}

@@ -7,7 +7,7 @@ import { useSyncExternalStore } from "react";
 // single-pane stack+navigate) — see Sidebar, TopBar, and SavedView. Matches
 // Tailwind's default `md` breakpoint so ad-hoc `md:` classes elsewhere stay
 // in sync with this hook's structural branches.
-const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
+export const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
 
 function subscribe(callback: () => void) {
   const mql = window.matchMedia(MOBILE_MEDIA_QUERY);

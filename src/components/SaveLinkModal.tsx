@@ -119,7 +119,7 @@ export function SaveLinkModal({
             type="button"
             onClick={handleClose}
             aria-label="Close"
-            className="rounded px-1.5 py-0.5 text-sm text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200"
+            className="rounded p-2 text-sm text-brand-400 hover:bg-brand-100 hover:text-brand-700 dark:hover:bg-brand-800 dark:hover:text-brand-200 md:px-1.5 md:py-0.5"
           >
             ✕
           </button>

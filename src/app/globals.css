@@ -210,6 +210,18 @@ body {
   color: var(--foreground);
 }
 
+/* Mobile browsers' address bar shows/hides as you scroll without changing
+   100vh, so a fixed h-screen root mismatches the actual visible viewport —
+   the bottom tab bar can end up partially below the fold, or the layout
+   jumps as the chrome collapses. 100dvh tracks the real visible height;
+   the plain vh line above it is a fallback for browsers that don't
+   support dvh — an invalid `height: 100dvh` declaration is simply dropped
+   there, leaving the vh value in effect. */
+.h-dvh-fallback {
+  height: 100vh;
+  height: 100dvh;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #c9bca0 transparent;
@@ -303,4 +315,34 @@ body {
   .animate-text-fade {
     animation: none !important;
   }
+}
+
+/* iOS Safari auto-zooms the whole page when a focused form field's font-size
+   is under 16px — most of this app's inputs use Tailwind's text-xs/text-sm
+   (12-14px) for density, which is fine on desktop but triggers that zoom on
+   an iPhone. Forcing 16px only below the mobile breakpoint keeps the
+   desktop/tablet type scale untouched. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Without this, a fast double-tap on a button/link (e.g. someone tapping
+   twice because the first tap didn't seem to register on a slow
+   connection) can trigger the browser's own double-tap-to-zoom instead of
+   registering as two clicks. Scoped to interactive elements rather than a
+   blanket rule on `*`/`body`, so pinch-to-zoom on genuinely zoomable
+   content (article images, a page opened externally) is unaffected. */
+/* Also covers mobile Safari/Chrome's own gray/blue tap-highlight box,
+   which doesn't respect border-radius and flashes on top of this app's
+   own hover/active styles — every interactive element here already has a
+   deliberate active/hover state, so the browser's default is pure noise. */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

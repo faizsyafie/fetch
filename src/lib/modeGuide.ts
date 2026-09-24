@@ -12,6 +12,14 @@ export type TourStepOnEnterId = "enableEditMode";
 
 export type TourStepData = Omit<TourStep, "onEnter"> & {
   onEnterId?: TourStepOnEnterId;
+  // True for any step whose target lives inside the Sidebar component. On
+  // mobile the sidebar is an off-canvas drawer, closed (translated
+  // off-screen) by default — a step's selector still matches its element
+  // even while closed, so without this the spotlight would land on a real
+  // but invisible, off-screen target. page.tsx uses this to open the mobile
+  // drawer only for the steps that need it and close it again for the rest
+  // — see the helpSteps mapping there.
+  sidebarTarget?: boolean;
 };
 
 // Home's own tour: jumps between all three modes, spotlighting each one's
@@ -33,6 +41,7 @@ export const HOME_TOUR_STEPS: TourStepData[] = [
     description:
       "Headlines roam free here — a live, multi-column stream from World, Markets, Tech and whatever else you let off the leash. Pick a time range, hit Re-fetch!, and see what's afoot.",
     placement: "right",
+    sidebarTarget: true,
   },
   {
     id: "nav-companies",
@@ -41,6 +50,7 @@ export const HOME_TOUR_STEPS: TourStepData[] = [
     description:
       "Keeps tabs on your pack of companies, organized by industry. Tick a few and Fetch! grabs just those — leave nothing ticked and it fetches the whole industry instead.",
     placement: "right",
+    sidebarTarget: true,
   },
   {
     id: "nav-saved",
@@ -49,6 +59,7 @@ export const HOME_TOUR_STEPS: TourStepData[] = [
     description:
       "Your stash — bookmark any article with 🔖, or bury a link of your own. Dig it back up anytime to read inline and jot down notes.",
     placement: "right",
+    sidebarTarget: true,
   },
   {
     id: "topbar-settings",
@@ -110,6 +121,7 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStepData[]> = {
       description:
         "Turn columns on or off, and raise how many articles each one fetches — though most feeds only carry their most recent ~20-50 items regardless.",
       placement: "right",
+      sidebarTarget: true,
     },
   ],
   companies: [
@@ -120,6 +132,7 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStepData[]> = {
       description:
         "Click one to see just its pack. Hover a row for the rename/delete circles, or add a new industry from the + row at the bottom.",
       placement: "right",
+      sidebarTarget: true,
     },
     {
       id: "companies-list",
@@ -152,6 +165,7 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStepData[]> = {
       description:
         "Edit Lists reveals an editing box up top for the current industry — Edit Sources manages the RSS feeds each search checks.",
       placement: "right",
+      sidebarTarget: true,
     },
     {
       id: "companies-paste",
@@ -171,6 +185,7 @@ export const MODE_DETAILED_STEPS: Record<GuidedMode, TourStepData[]> = {
       description:
         "Organize your buried bones by topic. Hover a category for the rename/delete circles, or add a new one from the + row.",
       placement: "right",
+      sidebarTarget: true,
     },
     {
       id: "saved-add",

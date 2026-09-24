@@ -1,6 +1,6 @@
 export function SkeletonLoader() {
   return (
-    <div className="flex h-screen flex-col overflow-hidden lg:flex-row">
+    <div className="h-dvh-fallback flex flex-col overflow-hidden lg:flex-row">
       <aside className="hidden h-full w-56 shrink-0 flex-col border-r border-brand-200 bg-white p-4 dark:border-brand-800/80 dark:bg-brand-900 lg:flex">
         <div className="mb-4 h-3 w-20 animate-pulse rounded bg-brand-200 dark:bg-brand-800" />
         {Array.from({ length: 4 }).map((_, i) => (
