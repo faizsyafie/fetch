@@ -343,8 +343,10 @@ export function TopBar({
   return (
     <div className="bg-white dark:bg-brand-900">
       {/* Mobile header — hamburger + right icons; search and mode controls
-         get their own full-width rows below since they don't fit here. */}
-      <div className="flex h-14 items-center gap-2 border-b border-brand-200 px-3 md:hidden dark:border-brand-800/80">
+         get their own full-width rows below since they don't fit here.
+         min-h (not h-) plus a safe-area top pad, so a notch/Dynamic Island
+         adds extra height instead of squeezing the existing 56px row. */}
+      <div className="flex min-h-14 items-center gap-2 border-b border-brand-200 px-3 pt-[env(safe-area-inset-top)] md:hidden dark:border-brand-800/80">
         <button
           type="button"
           onClick={onOpenMobileNav}

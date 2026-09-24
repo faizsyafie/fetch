@@ -13,10 +13,14 @@ interface NewsColumnProps {
   loading: boolean;
   isDragging: boolean;
   isDragOver: boolean;
-  onDragStart: () => void;
-  onDragOver: () => void;
-  onDrop: () => void;
-  onDragEnd: () => void;
+  /** Attaches this column to the drag-reorder hit-testing — see
+   *  useDragReorder in NewsBoard. */
+  registerItem: (el: HTMLElement | null) => void;
+  /** Spread onto the ⠿ handle — starts a drag on pointerdown+move past a
+   *  small threshold (see useDragReorder); a plain tap still works
+   *  normally. Replaces native HTML5 drag-and-drop, which mobile browsers
+   *  don't support via touch at all. */
+  dragHandleProps: React.HTMLAttributes<HTMLElement>;
   isLinkSaved: (url: string) => boolean;
   onSaveArticle: (article: TopicArticle) => void;
   searchQuery: string;
@@ -40,10 +44,8 @@ export function NewsColumn({
   loading,
   isDragging,
   isDragOver,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
+  registerItem,
+  dragHandleProps,
   isLinkSaved,
   onSaveArticle,
   searchQuery,
@@ -57,17 +59,7 @@ export function NewsColumn({
 
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={(e) => {
-        e.preventDefault();
-        onDragOver();
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop();
-      }}
-      onDragEnd={onDragEnd}
+      ref={registerItem}
       className={`flex h-full min-w-[280px] max-w-sm flex-1 flex-col overflow-hidden rounded-lg border bg-white/70 transition-all duration-150 dark:bg-brand-900/70 ${
         isDragOver
           ? "border-l-2 border-l-blue-500 border-t-brand-200 border-r-brand-200 border-b-brand-200 dark:border-t-brand-800 dark:border-r-brand-800 dark:border-b-brand-800"
@@ -76,7 +68,10 @@ export function NewsColumn({
     >
       <div className="flex items-center justify-between border-b border-brand-200 px-3 py-2.5 dark:border-brand-800">
         <div className="flex items-center gap-1.5 text-sm font-bold text-brand-900 dark:text-white">
-          <span className="cursor-grab text-[0.625rem] text-brand-300 active:cursor-grabbing dark:text-brand-600">
+          <span
+            {...dragHandleProps}
+            className="cursor-grab text-[0.625rem] text-brand-300 active:cursor-grabbing dark:text-brand-600"
+          >
             ⠿
           </span>
           <span aria-hidden="true">{topic.emoji}</span>

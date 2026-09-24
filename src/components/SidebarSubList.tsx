@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ACCENT_PRESETS } from "@/lib/defaults";
 import { EmojiPicker, ColorPicker } from "@/components/PickerPopovers";
+import { useDragReorder } from "@/hooks/useDragReorder";
 import type { AccentColor, SidebarListItem } from "@/lib/types";
 
 interface SidebarSubListProps {
@@ -65,10 +66,12 @@ export function SidebarSubList({
   const [renameValue, setRenameValue] = useState("");
   const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
   const [emojiAnchor, setEmojiAnchor] = useState<{ top: number; left: number } | null>(null);
-  const [dragKey, setDragKey] = useState<string | null>(null);
-  const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [addValue, setAddValue] = useState("");
+  const dragReorder = useDragReorder(
+    items.map((i) => i.key),
+    onReorder
+  );
 
   function startRename(item: SidebarListItem) {
     setRenaming(item.key);
@@ -80,25 +83,6 @@ export function SidebarSubList({
       onRename(renaming, renameValue.trim());
     }
     setRenaming(null);
-  }
-
-  function handleDrop(target: string) {
-    if (!dragKey || dragKey === target) {
-      setDragKey(null);
-      setDragOverKey(null);
-      return;
-    }
-    const keys = items.map((i) => i.key);
-    const withoutDragged = keys.filter((k) => k !== dragKey);
-    const targetIndex = withoutDragged.indexOf(target);
-    const reordered = [
-      ...withoutDragged.slice(0, targetIndex),
-      dragKey,
-      ...withoutDragged.slice(targetIndex),
-    ];
-    onReorder(reordered);
-    setDragKey(null);
-    setDragOverKey(null);
   }
 
   function confirmAdd() {
@@ -149,26 +133,13 @@ export function SidebarSubList({
     return (
       <div
         key={item.key}
-        draggable={editable}
-        onDragStart={() => setDragKey(item.key)}
-        onDragOver={(e) => {
-          if (!editable) return;
-          e.preventDefault();
-          setDragOverKey(item.key);
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          handleDrop(item.key);
-        }}
-        onDragEnd={() => {
-          setDragKey(null);
-          setDragOverKey(null);
-        }}
+        ref={editable ? dragReorder.registerItem(item.key) : undefined}
+        {...(editable ? dragReorder.dragHandleProps(item.key) : {})}
         className={`group relative flex items-center ${editable ? "cursor-grab active:cursor-grabbing" : ""} ${
-          editable && dragOverKey === item.key && dragKey !== item.key
+          editable && dragReorder.dragOverId === item.key && dragReorder.draggingId !== item.key
             ? "rounded-md ring-2 ring-offset-1 ring-blue-500 dark:ring-offset-brand-900"
             : ""
-        } ${editable && dragKey === item.key ? "opacity-50" : ""}`}
+        } ${editable && dragReorder.draggingId === item.key ? "opacity-50" : ""}`}
       >
         <button
           type="button"

@@ -317,3 +317,15 @@ body {
     font-size: 16px;
   }
 }
+
+/* Without this, a fast double-tap on a button/link (e.g. someone tapping
+   twice because the first tap didn't seem to register on a slow
+   connection) can trigger the browser's own double-tap-to-zoom instead of
+   registering as two clicks. Scoped to interactive elements rather than a
+   blanket rule on `*`/`body`, so pinch-to-zoom on genuinely zoomable
+   content (article images, a page opened externally) is unaffected. */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}

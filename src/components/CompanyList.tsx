@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ACCENT_PRESETS, industryPalette } from "@/lib/defaults";
 import { openArticleLink } from "@/lib/resolveLinkClick";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useDragReorder } from "@/hooks/useDragReorder";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import type { AccentColor, Company, Density, Industry, NewsArticle } from "@/lib/types";
 
@@ -71,11 +71,13 @@ export function CompanyList({
   onSaveArticle,
   onPullRefresh,
 }: CompanyListProps) {
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const compact = density === "compact";
   const accentPreset = ACCENT_PRESETS[accent];
   const [pullRef, pullToRefresh] = usePullToRefresh<HTMLDivElement>(onPullRefresh);
+  const dragReorder = useDragReorder(
+    companies.map((c) => c.id),
+    onReorder
+  );
 
   if (companies.length === 0) {
     return (
@@ -86,25 +88,6 @@ export function CompanyList({
         {emptyMessage}
       </div>
     );
-  }
-
-  function handleDrop(targetId: string) {
-    if (!dragId || dragId === targetId) {
-      setDragId(null);
-      setDragOverId(null);
-      return;
-    }
-    const ids = companies.map((c) => c.id);
-    const withoutDragged = ids.filter((id) => id !== dragId);
-    const targetIndex = withoutDragged.indexOf(targetId);
-    const reordered = [
-      ...withoutDragged.slice(0, targetIndex),
-      dragId,
-      ...withoutDragged.slice(targetIndex),
-    ];
-    onReorder(reordered);
-    setDragId(null);
-    setDragOverId(null);
   }
 
   return (
@@ -133,22 +116,8 @@ export function CompanyList({
         return (
           <div
             key={company.id}
+            ref={enableDrag ? dragReorder.registerItem(company.id) : undefined}
             data-company-row={company.id}
-            draggable={enableDrag}
-            onDragStart={() => enableDrag && setDragId(company.id)}
-            onDragOver={(e) => {
-              if (!enableDrag) return;
-              e.preventDefault();
-              setDragOverId(company.id);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              handleDrop(company.id);
-            }}
-            onDragEnd={() => {
-              setDragId(null);
-              setDragOverId(null);
-            }}
             className={`overflow-hidden rounded-md border transition-all duration-150 ${CARD_CLASS} ${
               isSelected
                 ? `${accentPreset.border} ring-1 ${accentPreset.ring}`
@@ -156,13 +125,13 @@ export function CompanyList({
                   ? "border-brand-300 dark:border-brand-700"
                   : "border-brand-200 hover:border-brand-300 dark:border-brand-800 dark:hover:border-brand-700"
             } ${isFocused ? "ring-2 ring-amber-400/70 dark:ring-amber-400/50" : ""} ${
-              dragOverId === company.id && dragId !== company.id
+              dragReorder.dragOverId === company.id && dragReorder.draggingId !== company.id
                 ? "border-t-2 border-t-blue-500"
                 : ""
             } ${
-              dragId === company.id
+              dragReorder.draggingId === company.id
                 ? "scale-[0.98] opacity-70 shadow-xl"
-                : dragId
+                : dragReorder.draggingId
                   ? "shadow-none"
                   : ""
             }`}
@@ -171,7 +140,10 @@ export function CompanyList({
               className={`flex items-center ${compact ? "py-0.5 pl-3 pr-2.5" : "py-3 pl-4 pr-3.5"}`}
             >
               {enableDrag && (
-                <span className="mr-1 shrink-0 cursor-grab text-[0.625rem] text-brand-300 active:cursor-grabbing dark:text-brand-600">
+                <span
+                  {...dragReorder.dragHandleProps(company.id)}
+                  className="mr-1 shrink-0 cursor-grab text-[0.625rem] text-brand-300 active:cursor-grabbing dark:text-brand-600"
+                >
                   ⠿
                 </span>
               )}

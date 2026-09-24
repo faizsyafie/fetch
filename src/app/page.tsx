@@ -186,6 +186,24 @@ function DashboardForProfile({
   // Yard, rather than always favoring one over the other.
   const [homeActiveMode, setHomeActiveMode] = useState<"news" | "companies">("news");
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
+
+  // On mobile, selecting a saved link replaces the list with a full-screen
+  // detail view (see SavedView) — without this, Android's back button or
+  // iOS's edge-swipe-back gesture would leave the app/tab entirely instead
+  // of returning to the list, since that navigation is otherwise pure React
+  // state with no corresponding browser history entry. Pushes one entry on
+  // entering detail and treats popping it as "go back to the list"; the
+  // on-screen "← Back to list" button (see onBack below) still works
+  // independently of this by just clearing the selection directly.
+  useEffect(() => {
+    if (!isMobile || mode !== "saved" || !selectedLinkId) return;
+    window.history.pushState({ savedDetailOpen: true }, "");
+    function handlePopState() {
+      setSelectedLinkId(null);
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isMobile, mode, selectedLinkId]);
   const [saveLinkModal, setSaveLinkModal] = useState<{
     url?: string;
     title?: string;
