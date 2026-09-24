@@ -82,7 +82,7 @@ export function NewsColumn({
         </span>
       </div>
 
-      <div ref={pullRef} className="flex-1 space-y-2 overflow-y-auto p-2.5">
+      <div ref={pullRef} className="flex-1 space-y-2 overflow-y-auto overscroll-y-contain p-2.5">
         <PullToRefreshIndicator
           pullDistance={pullToRefresh.pullDistance}
           refreshing={pullToRefresh.refreshing}

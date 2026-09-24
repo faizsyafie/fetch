@@ -134,10 +134,18 @@ export function useDragReorder(ids: string[], onReorder: (ordered: string[]) => 
     registerItem,
     /** Spread onto the drag handle element. touchAction "none" stops the
      *  browser's native scroll/pan gesture from competing with the drag for
-     *  the touch that started on the handle. */
+     *  the touch that started on the handle; the callout/user-select
+     *  suppressions stop a press held just under the drag threshold from
+     *  popping iOS's text-selection/copy callout instead of starting a
+     *  drag. */
     dragHandleProps: (id: string) => ({
       onPointerDown: handlePointerDown(id),
-      style: { touchAction: "none" as const },
+      style: {
+        touchAction: "none" as const,
+        WebkitTouchCallout: "none" as const,
+        WebkitUserSelect: "none" as const,
+        userSelect: "none" as const,
+      },
     }),
   };
 }

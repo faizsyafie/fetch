@@ -324,8 +324,13 @@ body {
    registering as two clicks. Scoped to interactive elements rather than a
    blanket rule on `*`/`body`, so pinch-to-zoom on genuinely zoomable
    content (article images, a page opened externally) is unaffected. */
+/* Also covers mobile Safari/Chrome's own gray/blue tap-highlight box,
+   which doesn't respect border-radius and flashes on top of this app's
+   own hover/active styles — every interactive element here already has a
+   deliberate active/hover state, so the browser's default is pure noise. */
 button,
 a,
 [role="button"] {
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

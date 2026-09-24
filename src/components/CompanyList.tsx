@@ -91,10 +91,14 @@ export function CompanyList({
   }
 
   return (
+    // overscroll-y-contain is a backstop alongside usePullToRefresh's own
+    // preventDefault() — some Android/Chrome versions can still trigger
+    // their own native pull-to-refresh from this container even while the
+    // custom gesture handles it, double-firing a refresh.
     <div
       ref={pullRef}
       data-tour="company-list"
-      className={`flex-1 overflow-y-auto px-4 py-3 ${compact ? "space-y-0.5" : "space-y-2.5"}`}
+      className={`flex-1 overflow-y-auto overscroll-y-contain px-4 py-3 ${compact ? "space-y-0.5" : "space-y-2.5"}`}
     >
       <PullToRefreshIndicator
         pullDistance={pullToRefresh.pullDistance}
